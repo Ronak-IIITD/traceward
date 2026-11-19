@@ -1,0 +1,126 @@
+# TraceWard
+
+**Trace the risk. Secure the code.**
+
+An experimental, local-first Java source scanner. This repository implements the
+first scanner milestone (M1A) from [the PRD](TraceWard_PRD_v1.0.md), with a narrow
+method-local CWE-89 rule, actual source-to-sink evidence, an installable Python CLI,
+and a versioned JSON contract. It never executes scanned code or installs project
+dependencies. Scans need no network connection.
+
+## Run locally
+
+Install [uv](https://docs.astral.sh/uv/), then from this directory:
+
+```sh
+uv sync --locked --python 3.12
+uv run traceward --version
+uv run traceward doctor
+uv run traceward rules list --language java
+uv run traceward scan fixtures/java/Vulnerable.java
+# Expected exit 1: one experimental CWE-89 candidate at line 8.
+uv run traceward scan fixtures/java/Safe.java
+# Expected exit 0: no supported findings; coverage remains partial.
+uv run traceward scan fixtures/java --format json --output traceward-results.json
+```
+
+The initial supported OS is Linux. Python 3.11–3.14 is supported by the package;
+local verification currently uses Python 3.12. CI is configured for 3.11–3.14.
+The Java source need not compile or have
+dependencies installed, but must be syntactically valid Java (wrap a bare snippet
+in a class and method). No Java runtime is required.
+
+```python
+from pathlib import Path
+from traceward.scanner import scan_path, scan_snippet
+
+result = scan_path(Path("fixtures/java"))
+print(result.model_dump_json(indent=2))
+```
+
+`scan_snippet(java_source)` analyzes a UTF-8 string in memory with the same contract.
+Only Java is enabled. No model is loaded and no metric is inferred from the source
+research. API, dashboard, model training, repository download and SARIF are future
+milestones; this is not the complete M1 release.
+
+## Detection and limits
+
+The experimental rule recognizes `HttpServletRequest` / `ServletRequest`
+`getParameter` and `getHeader` sources, local declarations, assignments, `+`, `+=`,
+parentheses, and aliases of **values** inside a straight-line method. Sinks are
+explicitly typed `Statement.executeQuery/executeUpdate/execute/addBatch` and
+`Connection.prepareStatement/prepareCall`. A tainted concatenated query at a
+recognized sink raises a high-severity, medium-confidence `heuristic_candidate`.
+Each finding includes source, assignments, concatenation, and sink locations.
+Constant templates with `PreparedStatement` bindings do not trigger this rule;
+concatenating untrusted input before `prepareStatement` can still trigger it.
+
+Java types are syntactic hints: imports, inheritance, dispatch, aliases of API
+receivers, fields, framework wrappers, string builders, sanitizers and calls across
+methods are unresolved. Control flow (including `try`, loops and nested scopes)
+causes the rest of that method to be skipped with a diagnostic. Unknown expression
+and call propagation is reported where tainted arguments are observed. No complete
+control-flow or symbol graph is claimed. Dead comments and unused strings are not
+SQL evidence. Methods are analyzed regardless of whole-program reachability.
+
+All results declare **partial coverage**. No supported findings does not certify
+security. Other languages and the other 11 planned CWEs have no detectors.
+No rule is externally validated or ready for production assurance.
+
+Discovery skips `.git`, `.venv`, `node_modules`, `vendor`, `dist`, `build`, and
+`target`; `--exclude 'relative/glob/*'` adds repeatable root-relative exclusions.
+Symlinks are skipped. Inputs are bounded to 2 MiB per file, 20 MiB total, 2,000
+source files, 20,000 discovered entries, a 120-second scan budget, a 500 ms native
+parse budget per file, 100,000 AST nodes and 128 expression levels. Skips and
+limits produce diagnostics. These are initial engineering caps, not benchmarked
+service guarantees. Discovery is designed for local trees, not hostile concurrently
+mutating filesystems. ZIP uploads and public hosting are not implemented.
+
+## CLI policy and result contract
+
+Exit codes: `0` no policy-violating findings, `1` findings meet policy, `2` invalid
+input or analysis error, `3` partial scan with `--fail-on-partial`. Errors take
+precedence over strict partial coverage, then findings. Default policy is
+`--fail-on high --min-confidence medium`. `--fail-on none` disables finding-based
+failure. Confidence controls exit policy, not report visibility. `--min-confidence
+high` does not fail on the current medium-confidence candidates. YAML configuration
+is not loaded yet; supported options are listed by `traceward scan --help`.
+
+[JSON Schema](schemas/scan-result.schema.json) is generated from Pydantic models.
+Paths are relative to the scanned directory (a file scan uses its basename).
+Lines and columns are one-based; columns count **UTF-8 bytes** and end positions
+are exclusive, matching Tree-sitter. Consumers must convert byte columns for
+UTF-16 editors. Fingerprints hash rule, relative path, method signature, sink text
+and duplicate occurrence; identical inputs under different roots produce the
+same findings. Scan IDs and timings are intentionally volatile. Editing sink or
+method text can change fingerprints; no semantic baseline matching is promised.
+Evidence stores locations and symbol names, not copied SQL or request values.
+
+## Verify
+
+```sh
+uv run pytest -q
+uv run ruff check .
+uv run ruff format --check .
+uv run mypy packages/traceward-core/src
+uv build
+```
+
+Tests check vulnerable/safe fixtures, parser and Unicode byte spans, scope
+isolation, branch limitations, reproducibility, committed schema consistency,
+discovery, symlink/FIFO handling, size limits and installed CLI behavior. These
+fixtures are regression tests, not independent accuracy measurements.
+
+See [implementation status](docs/status.md), [coverage](docs/coverage.md),
+[security policy](SECURITY.md), and [contribution notes](CONTRIBUTING.md).
+
+## Attribution and distribution
+
+The product proposal is inspired by Group 38 TCOM's *Efficient Machine Learning
+Models for Automated Source Code Vulnerability Classification*, as attributed in
+the PRD. No original team dataset, research code, trained model or benchmark result
+is bundled. Original research ownership and dataset/model reuse rights still need
+verification. A repository distribution license has not been selected; no license
+grant for this project should be inferred. Audit third-party dependency licenses
+and choose a project license before publication.
+# traceward
