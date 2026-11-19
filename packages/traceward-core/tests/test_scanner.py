@@ -206,3 +206,32 @@ def test_installed_cli(tmp_path: Path) -> None:
     assert run.returncode == 1
     assert ScanResult.model_validate_json(output.read_text()).summary.findings == 1
     assert run.stdout == ""
+
+
+def test_cli_shows_locations_and_scan_policy(tmp_path: Path) -> None:
+    java = ROOT / "fixtures/java/Vulnerable.java"
+    run = subprocess.run(["traceward", "scan", str(java)], capture_output=True, text=True)
+    assert run.returncode == 1
+    assert "Vulnerable.java:8:9" in run.stdout
+    assert "source: line 6" in run.stdout and "sink: line 8" in run.stdout
+    assert "PARTIAL COVERAGE" in run.stdout
+
+    missing = subprocess.run(
+        ["traceward", "scan", str(tmp_path / "missing.java")], capture_output=True, text=True
+    )
+    assert missing.returncode == 2 and "INVALID_PATH" in missing.stdout
+    strict = subprocess.run(["traceward", "scan", str(java), "--fail-on-partial"])
+    assert strict.returncode == 3
+    failed_write = subprocess.run(
+        ["traceward", "scan", str(java), "--output", str(tmp_path)], capture_output=True, text=True
+    )
+    assert failed_write.returncode == 2 and "Cannot write report" in failed_write.stderr
+
+
+def test_unrecognized_file_and_empty_directory(tmp_path: Path) -> None:
+    unknown = tmp_path / "only.txt"
+    unknown.write_text("unrecognized file")
+    assert scan_path(unknown).summary.errors
+    result = scan_path(tmp_path)
+    assert result.summary.files_analyzed == 0
+    assert "NO_SUPPORTED_FILES" in {d.code for d in result.diagnostics}

@@ -1,0 +1,25 @@
+{
+  "schema_version": "1.0.0",
+  "dataset_id": "nist-sard-juliet-java-1.3",
+  "version": "1.3",
+  "source_page": "https://samate.nist.gov/SARD/test-suites/111",
+  "archive_url": "https://samate.nist.gov/SARD/downloads/test-suites/2017-10-01-juliet-test-suite-for-java-v1-3.zip",
+  "filename": "juliet-java-1.3.zip",
+  "archive_bytes": 76798417,
+  "sha256": "d985f4177c2bcd7b03455a05c1c8f2e755f55c9eb250accd052f05f877347e60",
+  "checksum_origin": "NIST SARD suite 111 published SHA-256, verified against the downloaded bytes.",
+  "reviewed_at": "2026-11-19",
+  "license": "CC0-1.0",
+  "license_scope": "Juliet Java test-suite source is public domain in the United States under 17 USC 105; NIST makes claimed foreign rights available under CC0 1.0. Bundled third-party libraries retain their own licenses and are excluded from extraction.",
+  "license_statements": [
+    "This software is not subject to copyright protection and is in the public domain. NIST assumes no responsibility whatsoever for its use by other parties, and makes no guaranties, expressed or implied, about its quality, reliability, or any other characteristic.",
+    "Pursuant to 17 USC 105, Juliet Test Suite for Java version 1.3 is not subject to copyright protection in the United States. To the extent NIST may claim Foreign Rights in Juliet Test Suite for Java version 1.3, the Test Suite is being made available to you under the CC0 1.0 Public Domain License."
+  ],
+  "source_prefix": "Java/src/testcases/CWE89_SQL_Injection/",
+  "metadata_members": [
+    "Java/manifest.xml",
+    "Java/doc/changelog_Juliet_Java.txt",
+    "Java/doc/Juliet Test Suite v1.2 for Java - User Guide.pdf",
+    "Java/doc/Juliet_1.3_Changes_From_1.2_for_java.pdf"
+  ]
+}

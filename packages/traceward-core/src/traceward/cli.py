@@ -7,7 +7,8 @@ from importlib.metadata import version
 from pathlib import Path
 
 from traceward import __version__
-from traceward.models import Detector, ScanResult
+from traceward.models import ScanResult
+from traceward.registry import RULES
 from traceward.scanner import scan_path
 
 
@@ -75,7 +76,9 @@ def main() -> int:
         print("Java parser available. ML disabled: no validated model artifact installed.")
         return 0
     if args.command == "rules":
-        print(json.dumps(Detector().model_dump(), indent=2))
+        for rule in RULES.values():
+            if rule.language == args.language:
+                print(json.dumps(rule.model_dump(), indent=2))
         return 0
     result = scan_path(args.path, tuple(args.exclude))
     output = (

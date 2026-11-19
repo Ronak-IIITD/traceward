@@ -1,0 +1,13 @@
+[
+  {
+    "id": "java.sql.concatenated-untrusted-input",
+    "version": "0.1.0",
+    "type": "taint_rule",
+    "language": "java",
+    "cwe": "CWE-89",
+    "maturity": "experimental",
+    "title": "Potential SQL injection via query concatenation",
+    "guidance": "Use a constant SQL template with PreparedStatement and bind untrusted values.",
+    "reference": "https://cwe.mitre.org/data/definitions/89.html"
+  }
+]

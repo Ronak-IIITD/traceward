@@ -1,0 +1,768 @@
+{
+  "code_revision": "46250de059f7a7dac965f4b2b5a962917903173b",
+  "code_revision_role": "Base revision; source file digests identify the run code",
+  "corpus_kind": "synthetic",
+  "dataset": {
+    "acquired_at": "2026-11-19",
+    "attribution": "NIST SARD Juliet Java 1.3",
+    "corpus_kind": "synthetic",
+    "cwe": "CWE-89",
+    "dataset_id": "nist-sard-juliet-java-1.3",
+    "dataset_sha256": "e429ba287954273a84ed71978f73583be20c2f570fcb2adb03e038673d346a8c",
+    "label_provenance": "Case conventions checked against NIST flaw lines.",
+    "language": "java",
+    "license": "CC0-1.0",
+    "preparation_sha256": "bf174a39dea81d1f152feaa5b3f0408abd8ebd1a04a58ad6cc6cf8fe1b748146",
+    "preprocessing": "juliet-java-v1",
+    "record_count": 2403,
+    "schema_version": "1.0.0",
+    "source_url": "https://samate.nist.gov/SARD/downloads/test-suites/2017-10-01-juliet-test-suite-for-java-v1-3.zip",
+    "upstream_revision": "1.3"
+  },
+  "dataset_manifest_sha256": "4f909eaaea12d7d6af6bc04b6b3696813a11d04da3f488695f395878c5cc599c",
+  "dependencies": {
+    "numpy": "2.5.5",
+    "scikit-learn": "1.9.1",
+    "scipy": "1.18.1",
+    "xgboost": "3.4.1"
+  },
+  "feature_contract_sha256": "90debd804b09f068c5b64a5b35319c86184292d29a5d56df16381fecc4e9fe7f",
+  "hardware": {
+    "platform": "Linux-7.0.0-43-generic-x86_64-with-glibc2.39",
+    "processor": "x86_64",
+    "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]"
+  },
+  "limitations": [
+    "Lexical research baseline; corpus labels require independent review.",
+    "No hyperparameter selection or calibration is performed.",
+    "Repeated model selection on the test split invalidates held-out measurements.",
+    "Rule baseline uses candidate presence; review its coverage limits."
+  ],
+  "local_full_report_sha256": "f918c11ffe707aacab363ce8543d853b56ad477425e8d94454b55bc44b848dce",
+  "lock_sha256": "157d94de63965c13ae3fe06d87e0dbf5728e4be426a83c00fde105836ec9208f",
+  "models": {
+    "logreg": {
+      "artifact": {
+        "bytes": 11604,
+        "file": "logreg.json",
+        "format": "portable-json-with-fitted-tfidf",
+        "prediction_roundtrip_verified": true,
+        "sha256": "3ef4815e30407837d7a05cf896f49a01e991e54867c1814dde5af21b8e98c547"
+      },
+      "feature_count": 172,
+      "fit_seconds": 0.1584216799965361,
+      "latency": {
+        "includes": "TF-IDF transform plus classifier predict",
+        "p50_ms": 0.56195,
+        "p95_ms": 0.978604,
+        "samples": 100
+      },
+      "metrics": {
+        "test": {
+          "average_precision": 0.9490273346036638,
+          "confusion_matrix": {
+            "fn": 110,
+            "fp": 2,
+            "tn": 245,
+            "tp": 31
+          },
+          "count": 388,
+          "false_positive_rate": 0.008097165991902834,
+          "macro_f1": 0.5851376637262764,
+          "macro_precision": 0.814767392232181,
+          "macro_recall": 0.605880495018233,
+          "per_class": {
+            "0": {
+              "f1": 0.813953488372093,
+              "precision": 0.6901408450704225,
+              "recall": 0.9919028340080972,
+              "support": 247
+            },
+            "1": {
+              "f1": 0.3563218390804598,
+              "precision": 0.9393939393939394,
+              "recall": 0.2198581560283688,
+              "support": 141
+            }
+          },
+          "undefined_metric_policy": "zero precision/recall for undefined class ratios; null FPR when no negatives"
+        },
+        "train": {
+          "average_precision": 0.8964701228208674,
+          "confusion_matrix": {
+            "fn": 360,
+            "fp": 10,
+            "tn": 999,
+            "tp": 172
+          },
+          "count": 1541,
+          "false_positive_rate": 0.009910802775024777,
+          "macro_f1": 0.6627713585434174,
+          "macro_precision": 0.8400771414016447,
+          "macro_recall": 0.6566987339508334,
+          "per_class": {
+            "0": {
+              "f1": 0.84375,
+              "precision": 0.7350993377483444,
+              "recall": 0.9900891972249752,
+              "support": 1009
+            },
+            "1": {
+              "f1": 0.48179271708683474,
+              "precision": 0.945054945054945,
+              "recall": 0.3233082706766917,
+              "support": 532
+            }
+          },
+          "undefined_metric_policy": "zero precision/recall for undefined class ratios; null FPR when no negatives"
+        },
+        "validation": {
+          "average_precision": 0.8342148807987515,
+          "confusion_matrix": {
+            "fn": 131,
+            "fp": 4,
+            "tn": 302,
+            "tp": 37
+          },
+          "count": 474,
+          "false_positive_rate": 0.013071895424836602,
+          "macro_f1": 0.5856938446497595,
+          "macro_precision": 0.799949304342928,
+          "macro_recall": 0.6035830999066294,
+          "per_class": {
+            "0": {
+              "f1": 0.8173207036535859,
+              "precision": 0.6974595842956121,
+              "recall": 0.9869281045751634,
+              "support": 306
+            },
+            "1": {
+              "f1": 0.35406698564593303,
+              "precision": 0.9024390243902439,
+              "recall": 0.22023809523809523,
+              "support": 168
+            }
+          },
+          "undefined_metric_policy": "zero precision/recall for undefined class ratios; null FPR when no negatives"
+        }
+      },
+      "parameters": {
+        "C": 1.0,
+        "class_weight": null,
+        "dual": false,
+        "fit_intercept": true,
+        "intercept_scaling": 1,
+        "l1_ratio": 0.0,
+        "max_iter": 1000,
+        "n_jobs": null,
+        "penalty": "deprecated",
+        "random_state": 38,
+        "solver": "liblinear",
+        "tol": 0.0001,
+        "verbose": 0,
+        "warm_start": false
+      },
+      "peak_process_rss_kib": 168272
+    },
+    "rf": {
+      "artifact": {
+        "bytes": 164588,
+        "file": "rf.json",
+        "format": "portable-json-with-fitted-tfidf",
+        "prediction_roundtrip_verified": true,
+        "sha256": "5ae17d12e2435d5c506186da4619622804267c513c4457a6c0b936028092fab2"
+      },
+      "feature_count": 172,
+      "fit_seconds": 0.3028049260028638,
+      "latency": {
+        "includes": "TF-IDF transform plus classifier predict",
+        "p50_ms": 2.6436915,
+        "p95_ms": 2.788517,
+        "samples": 100
+      },
+      "metrics": {
+        "test": {
+          "average_precision": 1.0,
+          "confusion_matrix": {
+            "fn": 0,
+            "fp": 2,
+            "tn": 245,
+            "tp": 141
+          },
+          "count": 388,
+          "false_positive_rate": 0.008097165991902834,
+          "macro_f1": 0.9944463529142333,
+          "macro_precision": 0.993006993006993,
+          "macro_recall": 0.9959514170040487,
+          "per_class": {
+            "0": {
+              "f1": 0.9959349593495935,
+              "precision": 1.0,
+              "recall": 0.9919028340080972,
+              "support": 247
+            },
+            "1": {
+              "f1": 0.9929577464788732,
+              "precision": 0.986013986013986,
+              "recall": 1.0,
+              "support": 141
+            }
+          },
+          "undefined_metric_policy": "zero precision/recall for undefined class ratios; null FPR when no negatives"
+        },
+        "train": {
+          "average_precision": 0.9999291708876574,
+          "confusion_matrix": {
+            "fn": 4,
+            "fp": 2,
+            "tn": 1007,
+            "tp": 528
+          },
+          "count": 1541,
+          "false_positive_rate": 0.0019821605550049554,
+          "macro_f1": 0.9956899927280864,
+          "macro_precision": 0.9961349681802064,
+          "macro_recall": 0.9952495212262569,
+          "per_class": {
+            "0": {
+              "f1": 0.997029702970297,
+              "precision": 0.9960435212660732,
+              "recall": 0.998017839444995,
+              "support": 1009
+            },
+            "1": {
+              "f1": 0.9943502824858758,
+              "precision": 0.9962264150943396,
+              "recall": 0.9924812030075187,
+              "support": 532
+            }
+          },
+          "undefined_metric_policy": "zero precision/recall for undefined class ratios; null FPR when no negatives"
+        },
+        "validation": {
+          "average_precision": 0.9954363574411728,
+          "confusion_matrix": {
+            "fn": 23,
+            "fp": 2,
+            "tn": 304,
+            "tp": 145
+          },
+          "count": 474,
+          "false_positive_rate": 0.006535947712418301,
+          "macro_f1": 0.9405702249304144,
+          "macro_precision": 0.9580290831929101,
+          "macro_recall": 0.9282796451914099,
+          "per_class": {
+            "0": {
+              "f1": 0.9605055292259084,
+              "precision": 0.9296636085626911,
+              "recall": 0.9934640522875817,
+              "support": 306
+            },
+            "1": {
+              "f1": 0.9206349206349206,
+              "precision": 0.9863945578231292,
+              "recall": 0.8630952380952381,
+              "support": 168
+            }
+          },
+          "undefined_metric_policy": "zero precision/recall for undefined class ratios; null FPR when no negatives"
+        }
+      },
+      "parameters": {
+        "bootstrap": true,
+        "ccp_alpha": 0.0,
+        "class_weight": null,
+        "criterion": "gini",
+        "max_depth": 4,
+        "max_features": "sqrt",
+        "max_leaf_nodes": null,
+        "max_samples": null,
+        "min_impurity_decrease": 0.0,
+        "min_samples_leaf": 1,
+        "min_samples_split": 2,
+        "min_weight_fraction_leaf": 0.0,
+        "monotonic_cst": null,
+        "n_estimators": 50,
+        "n_jobs": 1,
+        "oob_score": false,
+        "random_state": 38,
+        "verbose": 0,
+        "warm_start": false
+      },
+      "peak_process_rss_kib": 174804
+    },
+    "svm": {
+      "artifact": {
+        "bytes": 11760,
+        "file": "svm.json",
+        "format": "portable-json-with-fitted-tfidf",
+        "prediction_roundtrip_verified": true,
+        "sha256": "dd30d877764479ce4e6fea29de38883e46ab57ac21229aa428f8d5d9b921dd6f"
+      },
+      "feature_count": 172,
+      "fit_seconds": 0.16130729599535698,
+      "latency": {
+        "includes": "TF-IDF transform plus classifier predict",
+        "p50_ms": 0.6061785,
+        "p95_ms": 0.681615,
+        "samples": 100
+      },
+      "metrics": {
+        "test": {
+          "average_precision": 0.9439444468363348,
+          "confusion_matrix": {
+            "fn": 117,
+            "fp": 1,
+            "tn": 246,
+            "tp": 24
+          },
+          "count": 388,
+          "false_positive_rate": 0.004048582995951417,
+          "macro_f1": 0.5478570017776022,
+          "macro_precision": 0.8188429752066115,
+          "macro_recall": 0.5830820914807476,
+          "per_class": {
+            "0": {
+              "f1": 0.8065573770491803,
+              "precision": 0.6776859504132231,
+              "recall": 0.9959514170040485,
+              "support": 247
+            },
+            "1": {
+              "f1": 0.2891566265060241,
+              "precision": 0.96,
+              "recall": 0.1702127659574468,
+              "support": 141
+            }
+          },
+          "undefined_metric_policy": "zero precision/recall for undefined class ratios; null FPR when no negatives"
+        },
+        "train": {
+          "average_precision": 0.889261778996139,
+          "confusion_matrix": {
+            "fn": 398,
+            "fp": 7,
+            "tn": 1002,
+            "tp": 134
+          },
+          "count": 1541,
+          "false_positive_rate": 0.006937561942517344,
+          "macro_f1": 0.6150486936987781,
+          "macro_precision": 0.8330344478216819,
+          "macro_recall": 0.6224710686528014,
+          "per_class": {
+            "0": {
+              "f1": 0.8318804483188045,
+              "precision": 0.7157142857142857,
+              "recall": 0.9930624380574826,
+              "support": 1009
+            },
+            "1": {
+              "f1": 0.39821693907875183,
+              "precision": 0.950354609929078,
+              "recall": 0.2518796992481203,
+              "support": 532
+            }
+          },
+          "undefined_metric_policy": "zero precision/recall for undefined class ratios; null FPR when no negatives"
+        },
+        "validation": {
+          "average_precision": 0.8313033661418444,
+          "confusion_matrix": {
+            "fn": 140,
+            "fp": 3,
+            "tn": 303,
+            "tp": 28
+          },
+          "count": 474,
+          "false_positive_rate": 0.00980392156862745,
+          "macro_f1": 0.5452429034357368,
+          "macro_precision": 0.7935993592077477,
+          "macro_recall": 0.5784313725490197,
+          "per_class": {
+            "0": {
+              "f1": 0.8090787716955942,
+              "precision": 0.6839729119638827,
+              "recall": 0.9901960784313726,
+              "support": 306
+            },
+            "1": {
+              "f1": 0.2814070351758794,
+              "precision": 0.9032258064516129,
+              "recall": 0.16666666666666666,
+              "support": 168
+            }
+          },
+          "undefined_metric_policy": "zero precision/recall for undefined class ratios; null FPR when no negatives"
+        }
+      },
+      "parameters": {
+        "C": 0.1,
+        "class_weight": null,
+        "dual": "auto",
+        "fit_intercept": true,
+        "intercept_scaling": 1,
+        "loss": "squared_hinge",
+        "max_iter": 1000,
+        "multi_class": "ovr",
+        "penalty": "l2",
+        "random_state": 38,
+        "tol": 0.0001,
+        "verbose": 0
+      },
+      "peak_process_rss_kib": 171088
+    },
+    "xgboost": {
+      "artifact": {
+        "bytes": 108035,
+        "file": "xgboost.json",
+        "format": "portable-json-with-fitted-tfidf",
+        "prediction_roundtrip_verified": true,
+        "sha256": "54d23bc7de7b97398f47dc4c7e3b77a25c49c97a6281bf9c6371a1e894f306ab"
+      },
+      "feature_count": 172,
+      "fit_seconds": 0.2591416499999468,
+      "latency": {
+        "includes": "TF-IDF transform plus classifier predict",
+        "p50_ms": 0.6442285,
+        "p95_ms": 0.74317,
+        "samples": 100
+      },
+      "metrics": {
+        "test": {
+          "average_precision": 1.0,
+          "confusion_matrix": {
+            "fn": 0,
+            "fp": 0,
+            "tn": 247,
+            "tp": 141
+          },
+          "count": 388,
+          "false_positive_rate": 0.0,
+          "macro_f1": 1.0,
+          "macro_precision": 1.0,
+          "macro_recall": 1.0,
+          "per_class": {
+            "0": {
+              "f1": 1.0,
+              "precision": 1.0,
+              "recall": 1.0,
+              "support": 247
+            },
+            "1": {
+              "f1": 1.0,
+              "precision": 1.0,
+              "recall": 1.0,
+              "support": 141
+            }
+          },
+          "undefined_metric_policy": "zero precision/recall for undefined class ratios; null FPR when no negatives"
+        },
+        "train": {
+          "average_precision": 0.9999999999999998,
+          "confusion_matrix": {
+            "fn": 0,
+            "fp": 0,
+            "tn": 1009,
+            "tp": 532
+          },
+          "count": 1541,
+          "false_positive_rate": 0.0,
+          "macro_f1": 1.0,
+          "macro_precision": 1.0,
+          "macro_recall": 1.0,
+          "per_class": {
+            "0": {
+              "f1": 1.0,
+              "precision": 1.0,
+              "recall": 1.0,
+              "support": 1009
+            },
+            "1": {
+              "f1": 1.0,
+              "precision": 1.0,
+              "recall": 1.0,
+              "support": 532
+            }
+          },
+          "undefined_metric_policy": "zero precision/recall for undefined class ratios; null FPR when no negatives"
+        },
+        "validation": {
+          "average_precision": 0.9999999999999998,
+          "confusion_matrix": {
+            "fn": 0,
+            "fp": 0,
+            "tn": 306,
+            "tp": 168
+          },
+          "count": 474,
+          "false_positive_rate": 0.0,
+          "macro_f1": 1.0,
+          "macro_precision": 1.0,
+          "macro_recall": 1.0,
+          "per_class": {
+            "0": {
+              "f1": 1.0,
+              "precision": 1.0,
+              "recall": 1.0,
+              "support": 306
+            },
+            "1": {
+              "f1": 1.0,
+              "precision": 1.0,
+              "recall": 1.0,
+              "support": 168
+            }
+          },
+          "undefined_metric_policy": "zero precision/recall for undefined class ratios; null FPR when no negatives"
+        }
+      },
+      "parameters": {
+        "base_score": null,
+        "booster": null,
+        "callbacks": null,
+        "colsample_bylevel": null,
+        "colsample_bynode": null,
+        "colsample_bytree": null,
+        "device": null,
+        "early_stopping_rounds": null,
+        "enable_categorical": true,
+        "eval_metric": null,
+        "feature_types": null,
+        "feature_weights": null,
+        "gamma": null,
+        "grow_policy": null,
+        "importance_type": null,
+        "interaction_constraints": null,
+        "learning_rate": null,
+        "max_bin": null,
+        "max_cat_threshold": null,
+        "max_cat_to_onehot": null,
+        "max_delta_step": null,
+        "max_depth": 2,
+        "max_leaves": null,
+        "min_child_weight": null,
+        "missing": {
+          "nonfinite_float": "nan"
+        },
+        "monotone_constraints": null,
+        "multi_strategy": null,
+        "n_estimators": 50,
+        "n_jobs": 1,
+        "num_parallel_tree": null,
+        "objective": "binary:logistic",
+        "random_state": 38,
+        "reg_alpha": null,
+        "reg_lambda": null,
+        "sampling_method": null,
+        "scale_pos_weight": null,
+        "subsample": null,
+        "tree_method": null,
+        "validate_parameters": null,
+        "verbosity": null
+      },
+      "peak_process_rss_kib": 203208
+    }
+  },
+  "preparation": {
+    "archive_sha256": "d985f4177c2bcd7b03455a05c1c8f2e755f55c9eb250accd052f05f877347e60",
+    "candidates": 4800,
+    "counts": {
+      "test": {
+        "0": 247,
+        "1": 141
+      },
+      "train": {
+        "0": 1009,
+        "1": 532
+      },
+      "validation": {
+        "0": 306,
+        "1": 168
+      }
+    },
+    "deduplication_sha256": "f8e64015c19560619dcef30e38ef449abfb407b76184545737a4dd020222a008",
+    "diagnostics_sha256": "57f07a92bfa6a77682bdc3acc0ad0812c5dfd02f8bd6a8028fd0a7bb54041c95",
+    "families": {
+      "Environment": "validation",
+      "File": "train",
+      "PropertiesFile": "test",
+      "Property": "train",
+      "URLConnection": "train",
+      "connect_tcp": "train",
+      "console_readLine": "test",
+      "database": "train",
+      "getCookies_Servlet": "validation",
+      "getParameter_Servlet": "train",
+      "getQueryString_Servlet": "train",
+      "listen_tcp": "train"
+    },
+    "kept": 2403,
+    "near_duplicate_policy": {
+      "jaccard_percent": 95,
+      "shingle_width": 5
+    },
+    "normalization": "juliet-java-v1",
+    "partition_seed": 38,
+    "preparation_code_sha256": {
+      "acquisition.py": "e1fead1532e556d14cb36c8e8bcbc61ef3670a3701b96f2a144fbbd2fddb9ec9",
+      "features.py": "b2244b884b41b30e164df09a7792b09568a3d6853df96b44c802338181ce1dab",
+      "juliet.py": "ddfe146b91697af7997cbaca7e926c7427de66beaa898567cfb925393bdb5da3",
+      "preparation.py": "d792672dfcd84d505a1fd48ebc5df8e8657032afabf9cf5efc12a7e1877aa826"
+    },
+    "skipped": {
+      "CONTEXT_DEPENDENT_METHOD": 780,
+      "MISSING_FLAW_METADATA": 1440,
+      "UNLABELED_METHOD": 3540,
+      "UNSUPPORTED_CASE": 900
+    },
+    "source_lock": {
+      "archive_bytes": 76798417,
+      "archive_url": "https://samate.nist.gov/SARD/downloads/test-suites/2017-10-01-juliet-test-suite-for-java-v1-3.zip",
+      "checksum_origin": "NIST SARD suite 111 published SHA-256, verified against the downloaded bytes.",
+      "dataset_id": "nist-sard-juliet-java-1.3",
+      "filename": "juliet-java-1.3.zip",
+      "license": "CC0-1.0",
+      "license_scope": "Juliet Java test-suite source is public domain in the United States under 17 USC 105; NIST makes claimed foreign rights available under CC0 1.0. Bundled third-party libraries retain their own licenses and are excluded from extraction.",
+      "license_statements": [
+        "This software is not subject to copyright protection and is in the public domain. NIST assumes no responsibility whatsoever for its use by other parties, and makes no guaranties, expressed or implied, about its quality, reliability, or any other characteristic.",
+        "Pursuant to 17 USC 105, Juliet Test Suite for Java version 1.3 is not subject to copyright protection in the United States. To the extent NIST may claim Foreign Rights in Juliet Test Suite for Java version 1.3, the Test Suite is being made available to you under the CC0 1.0 Public Domain License."
+      ],
+      "metadata_members": [
+        "Java/manifest.xml",
+        "Java/doc/changelog_Juliet_Java.txt",
+        "Java/doc/Juliet Test Suite v1.2 for Java - User Guide.pdf",
+        "Java/doc/Juliet_1.3_Changes_From_1.2_for_java.pdf"
+      ],
+      "reviewed_at": "2026-11-19",
+      "schema_version": "1.0.0",
+      "sha256": "d985f4177c2bcd7b03455a05c1c8f2e755f55c9eb250accd052f05f877347e60",
+      "source_page": "https://samate.nist.gov/SARD/test-suites/111",
+      "source_prefix": "Java/src/testcases/CWE89_SQL_Injection/",
+      "version": "1.3"
+    },
+    "tree_sitter": "0.25.2",
+    "tree_sitter_java": "0.23.5"
+  },
+  "preprocessing": "juliet-java-v1",
+  "production_enabled": false,
+  "rule_baseline": {
+    "interpretation": "Method-level candidate presence under the current rule scope",
+    "metrics": {
+      "test": {
+        "analysis_errors": 0,
+        "average_precision": 0.3634020618556701,
+        "confusion_matrix": {
+          "fn": 141,
+          "fp": 0,
+          "tn": 247,
+          "tp": 0
+        },
+        "count": 388,
+        "false_positive_rate": 0.0,
+        "macro_f1": 0.3889763779527559,
+        "macro_precision": 0.31829896907216493,
+        "macro_recall": 0.5,
+        "partial_scans": 388,
+        "per_class": {
+          "0": {
+            "f1": 0.7779527559055118,
+            "precision": 0.6365979381443299,
+            "recall": 1.0,
+            "support": 247
+          },
+          "1": {
+            "f1": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "support": 141
+          }
+        },
+        "undefined_metric_policy": "zero precision/recall for undefined class ratios; null FPR when no negatives"
+      },
+      "train": {
+        "analysis_errors": 0,
+        "average_precision": 0.34523036988968203,
+        "confusion_matrix": {
+          "fn": 532,
+          "fp": 0,
+          "tn": 1009,
+          "tp": 0
+        },
+        "count": 1541,
+        "false_positive_rate": 0.0,
+        "macro_f1": 0.3956862745098039,
+        "macro_precision": 0.327384815055159,
+        "macro_recall": 0.5,
+        "partial_scans": 1541,
+        "per_class": {
+          "0": {
+            "f1": 0.7913725490196079,
+            "precision": 0.654769630110318,
+            "recall": 1.0,
+            "support": 1009
+          },
+          "1": {
+            "f1": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "support": 532
+          }
+        },
+        "undefined_metric_policy": "zero precision/recall for undefined class ratios; null FPR when no negatives"
+      },
+      "validation": {
+        "analysis_errors": 0,
+        "average_precision": 0.35443037974683544,
+        "confusion_matrix": {
+          "fn": 168,
+          "fp": 0,
+          "tn": 306,
+          "tp": 0
+        },
+        "count": 474,
+        "false_positive_rate": 0.0,
+        "macro_f1": 0.3923076923076923,
+        "macro_precision": 0.3227848101265823,
+        "macro_recall": 0.5,
+        "partial_scans": 474,
+        "per_class": {
+          "0": {
+            "f1": 0.7846153846153846,
+            "precision": 0.6455696202531646,
+            "recall": 1.0,
+            "support": 306
+          },
+          "1": {
+            "f1": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "support": 168
+          }
+        },
+        "undefined_metric_policy": "zero precision/recall for undefined class ratios; null FPR when no negatives"
+      }
+    }
+  },
+  "schema_version": "1.0.0",
+  "seed": 38,
+  "split_id_sha256": {
+    "test": "9c1c51292ce4cced04a137fafd2b9af33acbbed460dd74ca93ceadecac32b344",
+    "train": "3bd4ae48bf4efa377a829333a730fe5f2a16f6a78911b0fb3a7f291508f76850",
+    "validation": "096b217c2e7641adaec99ac214d99e1df7693666edf66b4a7ae211bb27d4ead0"
+  },
+  "training_source_files_sha256": {
+    "__init__.py": "bccb45a2f5cb1b6de7d5aa3a4a3d75116fe70998debd1e70321ded9a8e8b26d8",
+    "acquisition.py": "e1fead1532e556d14cb36c8e8bcbc61ef3670a3701b96f2a144fbbd2fddb9ec9",
+    "artifacts.py": "e9175ddff12cee375f83faf9f1ed30fbc81d2f6048396eb761d892dbd2b41f88",
+    "cli.py": "041df57e6ea45529099e10516fca58f3d90a17c696cf5202add0cd009c39eb5b",
+    "dataset.py": "bcb4922127880ff06ca453d4a71f4e46f703bfb6201e545af4d0186e21d111d9",
+    "experiment.py": "6ed3d20bbf6c8eef8d8b8e9aa663f5cb1558a2f4c22b8b4d2b490f940eee7429",
+    "features.py": "b2244b884b41b30e164df09a7792b09568a3d6853df96b44c802338181ce1dab",
+    "inference.py": "06e52b81daf0d10b615a8e54440a8be5f34bc3b730c2c7887e36d84f230ee557",
+    "juliet.py": "ddfe146b91697af7997cbaca7e926c7427de66beaa898567cfb925393bdb5da3",
+    "preparation.py": "d792672dfcd84d505a1fd48ebc5df8e8657032afabf9cf5efc12a7e1877aa826"
+  },
+  "training_source_sha256": "d2ba364cb0d03912a44d68dfdc20c7bb42e7b8317e952d00b1322388f8cb30c4"
+}

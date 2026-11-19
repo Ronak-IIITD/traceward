@@ -11,9 +11,10 @@ import tree_sitter_java
 from tree_sitter import Language, Node, Parser
 
 from traceward.models import Diagnostic, Evidence, Finding, FlowNode, Location
+from traceward.registry import JAVA_SQL
 
 JAVA = Language(tree_sitter_java.language())
-RULE = "java.sql.concatenated-untrusted-input"
+RULE = JAVA_SQL.id
 REQUEST_TYPES = {"HttpServletRequest", "ServletRequest"}
 JDBC_TYPES = {"Statement", "Connection", "PreparedStatement"}
 
@@ -106,7 +107,7 @@ class JavaAnalysis:
                     level="error",
                     location=self.location(n),
                 )
-                for n in errors[:10]
+                for n in (errors[:10] or [tree.root_node])
             )
             return
         for node in nodes:
