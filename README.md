@@ -170,6 +170,12 @@ fixtures are regression tests, not independent accuracy measurements.
 See [implementation status](docs/status.md), [coverage](docs/coverage.md),
 [security policy](SECURITY.md), and [contribution notes](CONTRIBUTING.md).
 
+## Offline ML research
+
+The [Juliet Java CWE-89 workflow](docs/evaluation/juliet-java-cwe89.md) verifies
+the official NIST archive, prepares a family-disjoint method corpus and trains
+four offline baselines with reproducible JSON artifacts.
+
 ## Ownership and distribution
 
 TraceWard is an independent solo-developed project. The earlier benchmark

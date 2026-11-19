@@ -14,12 +14,21 @@ from traceward_ml.dataset import load_dataset, read_bounded, sha256
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest="command", required=True)
+    fetch = commands.add_parser("fetch-juliet", help="Download and verify official Juliet Java 1.3")
+    fetch.add_argument("--output", type=Path, required=True)
+    prepare = commands.add_parser("prepare-juliet", help="Prepare the pinned Java CWE-89 dataset")
+    prepare.add_argument("--archive", type=Path, required=True)
+    prepare.add_argument("--output", type=Path, required=True)
+    prepare.add_argument("--seed", type=int, default=38)
     train = commands.add_parser("train", help="Run fixed model baselines on declared corpus splits")
     train.add_argument("--manifest", type=Path, required=True)
     train.add_argument("--dataset", type=Path, required=True)
     train.add_argument("--output", type=Path, required=True, help="New output directory")
     train.add_argument(
-        "--models", nargs="+", choices=["svm", "rf", "xgboost"], default=["svm", "rf", "xgboost"]
+        "--models",
+        nargs="+",
+        choices=["logreg", "svm", "rf", "xgboost"],
+        default=["logreg", "svm", "rf", "xgboost"],
     )
     train.add_argument("--seed", type=int, default=38)
     train.add_argument(
@@ -27,7 +36,7 @@ def main() -> int:
     )
     train.add_argument("--lock", type=Path, required=True, help="Training dependency lockfile")
     predict = commands.add_parser(
-        "predict", help="Score Java code with an offline JSON SVM artifact"
+        "predict", help="Score Java code with an offline JSON model artifact"
     )
     predict.add_argument("--model", type=Path, required=True)
     predict.add_argument(
@@ -36,7 +45,16 @@ def main() -> int:
     predict.add_argument("path", type=Path)
     args = parser.parse_args()
     try:
-        if args.command == "train":
+        if args.command == "fetch-juliet":
+            from traceward_ml.acquisition import fetch_archive
+
+            print(fetch_archive(args.output))
+        elif args.command == "prepare-juliet":
+            from traceward_ml.preparation import prepare_juliet
+
+            summary = prepare_juliet(args.archive, args.output, args.seed)
+            print(json.dumps({"output": str(args.output), "counts": summary["counts"]}, indent=2))
+        elif args.command == "train":
             from traceward_ml.experiment import run_experiment
 
             if not re.fullmatch(r"[a-f0-9]{40}", args.code_revision):

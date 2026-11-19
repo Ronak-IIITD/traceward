@@ -26,7 +26,23 @@ def canonical_json(value: Any) -> bytes:
     return (json.dumps(value, indent=2, sort_keys=True, allow_nan=False) + "\n").encode()
 
 
+def json_parameters(parameters: dict[str, Any]) -> dict[str, Any]:
+    """Retain all constructor settings, including an explicit JSON-safe NaN sentinel."""
+    import math
+
+    return {
+        key: {"nonfinite_float": str(value)}
+        if isinstance(value, float) and not math.isfinite(value)
+        else value
+        for key, value in parameters.items()
+    }
+
+
 def build_classifier(name: str, seed: int) -> Any:
+    if name == "logreg":
+        from sklearn.linear_model import LogisticRegression
+
+        return LogisticRegression(C=1.0, max_iter=1000, solver="liblinear", random_state=seed)
     if name == "svm":
         from sklearn.svm import LinearSVC
 
@@ -61,7 +77,14 @@ def classifier_metrics(labels: list[int], predictions: Any, scores: Any) -> dict
         "count": len(labels),
         "confusion_matrix": {"tn": tn, "fp": fp, "fn": fn, "tp": tp},
         "false_positive_rate": fp / (tn + fp) if tn + fp else None,
-        "macro_f1": float(f1_score(labels, predictions, labels=[0, 1], average="macro")),
+        "macro_f1": float(
+            f1_score(labels, predictions, labels=[0, 1], average="macro", zero_division=0)
+        ),
+        "macro_precision": float(precision.mean()),
+        "macro_recall": float(recall.mean()),
+        "undefined_metric_policy": (
+            "zero precision/recall for undefined class ratios; null FPR when no negatives"
+        ),
         "average_precision": float(average_precision_score(labels, scores))
         if 1 in labels
         else None,
@@ -92,12 +115,13 @@ def measure_latency(pipeline: Any, codes: list[str]) -> dict[str, Any]:
     }
 
 
-def export_svm(pipeline: Any) -> dict[str, Any]:
+def export_svm(pipeline: Any, preprocessing: str = "identity") -> dict[str, Any]:
     vectorizer = pipeline.named_steps["tfidf"]
     classifier = pipeline.named_steps["classifier"]
     return {
         "schema_version": "1.0.0",
         "usage": "offline_research_only",
+        "preprocessing": preprocessing,
         "feature_contract": FEATURE_CONTRACT,
         "vocabulary": {token: int(index) for token, index in vectorizer.vocabulary_.items()},
         "idf": vectorizer.idf_.tolist(),
@@ -140,7 +164,7 @@ def run_experiment(
     if not models or len(models) != len(set(models)):
         raise ValueError("Select one or more unique model names")
     for name in models:
-        if name not in {"svm", "rf", "xgboost"}:
+        if name not in {"logreg", "svm", "rf", "xgboost"}:
             raise ValueError(f"Unknown model {name}")
     output.mkdir(parents=True, exist_ok=False)
     split_rows = {
@@ -150,6 +174,7 @@ def run_experiment(
     report: dict[str, Any] = {
         "schema_version": "1.0.0",
         "dataset": manifest.model_dump(mode="json"),
+        "dataset_manifest_sha256": sha256(canonical_json(manifest.model_dump(mode="json"))),
         "corpus_kind": manifest.corpus_kind,
         "production_enabled": False,
         "code_revision": code_revision,
@@ -186,6 +211,14 @@ def run_experiment(
         },
         "models": {},
     }
+    preprocessing = getattr(manifest, "preprocessing", "identity")
+    from traceward_ml.inference import preprocess_code
+
+    texts = {
+        split: [preprocess_code(row.code, preprocessing) for row in rows]
+        for split, rows in split_rows.items()
+    }
+    report["preprocessing"] = preprocessing
     train = split_rows["train"]
     try:
         for name in models:
@@ -199,12 +232,12 @@ def run_experiment(
                 [("tfidf", vectorizer), ("classifier", build_classifier(name, seed))]
             )
             start = time.perf_counter()
-            pipeline.fit([row.code for row in train], [row.label for row in train])
+            pipeline.fit(texts["train"], [row.label for row in train])
             fit_seconds = time.perf_counter() - start
             measurements = {}
             for split in ("train", "validation", "test"):
                 rows = split_rows[split]
-                codes = [row.code for row in rows]
+                codes = texts[split]
                 predictions = pipeline.predict(codes)
                 classifier = pipeline.named_steps["classifier"]
                 features = vectorizer.transform(codes)
@@ -218,24 +251,35 @@ def run_experiment(
             record: dict[str, Any] = {
                 "fit_seconds": fit_seconds,
                 "peak_process_rss_kib": resource.getrusage(resource.RUSAGE_SELF).ru_maxrss,
-                "parameters": {
-                    key: value
-                    for key, value in pipeline.named_steps["classifier"].get_params().items()
-                    if key in {"C", "dual", "random_state", "n_estimators", "max_depth", "n_jobs"}
-                },
+                "parameters": json_parameters(pipeline.named_steps["classifier"].get_params()),
                 "feature_count": len(vectorizer.vocabulary_),
                 "metrics": measurements,
-                "latency": measure_latency(pipeline, [row.code for row in split_rows["test"]]),
+                "latency": measure_latency(pipeline, texts["test"]),
                 "artifact": None,
             }
             if name == "svm":
-                data = canonical_json(export_svm(pipeline))
-                (output / "svm.json").write_bytes(data)
-                record["artifact"] = {
-                    "file": "svm.json",
-                    "sha256": sha256(data),
-                    "bytes": len(data),
-                }
+                state = export_svm(pipeline, preprocessing)
+            else:
+                from traceward_ml.artifacts import export_portable
+
+                state = export_portable(pipeline, name, preprocessing)
+            data = canonical_json(state)
+            artifact_name = f"{name}.json"
+            (output / artifact_name).write_bytes(data)
+            record["artifact"] = {
+                "file": artifact_name,
+                "format": "portable-json-with-fitted-tfidf",
+                "sha256": sha256(data),
+                "bytes": len(data),
+            }
+            from traceward_ml.inference import load_artifact, predict_codes
+
+            restored = load_artifact(output / artifact_name, sha256(data))
+            for split, rows in split_rows.items():
+                reloaded_predictions, _ = predict_codes(restored, [row.code for row in rows])
+                if reloaded_predictions != pipeline.predict(texts[split]).tolist():
+                    raise ValueError("Exported classifier predictions differ from the fitted model")
+            record["artifact"]["prediction_roundtrip_verified"] = True
             if name == "xgboost":
                 try:
                     report["dependencies"]["xgboost"] = version("xgboost")

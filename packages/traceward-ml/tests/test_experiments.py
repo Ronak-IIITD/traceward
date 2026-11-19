@@ -168,3 +168,79 @@ def test_known_json_linear_scores(tmp_path: Path) -> None:
     assert signal["evidence_level"] == "ml_suspected"
     unseen = score_code(artifact, "new vocabulary")
     assert unseen["label"] == 0 and unseen["decision_value"] == pytest.approx(-1.0)
+
+
+def test_all_models_reproducible_artifacts_and_roundtrip(tmp_path: Path) -> None:
+    from traceward_ml.inference import predict_codes
+
+    manifest_path, dataset_path, _ = corpus(tmp_path)
+    manifest, examples = load_dataset(manifest_path, dataset_path)
+    models = ["logreg", "svm", "rf", "xgboost"]
+    reports = [
+        run_experiment(
+            manifest, examples, tmp_path / f"run-{index}", models, 38, "a" * 40, "b" * 64
+        )
+        for index in range(2)
+    ]
+    for name in models:
+        first = reports[0]["models"][name]
+        second = reports[1]["models"][name]
+        assert first["artifact"]["sha256"] == second["artifact"]["sha256"]
+        assert first["artifact"]["prediction_roundtrip_verified"]
+        assert first["metrics"] == second["metrics"]
+        assert "random_state" in first["parameters"]
+        artifact = load_artifact(tmp_path / "run-0" / f"{name}.json", first["artifact"]["sha256"])
+        assert "unique0" in artifact.vocabulary
+        assert "unique1" not in artifact.vocabulary and "unique2" not in artifact.vocabulary
+        predictions, scores = predict_codes(artifact, [example.code for example in examples])
+        assert len(predictions) == len(scores) == len(examples)
+        test_predictions = predictions[-2:]
+        expected = first["metrics"]["test"]["confusion_matrix"]
+        assert expected["fp"] == int(test_predictions[0] == 1)
+        assert expected["tp"] == int(test_predictions[1] == 1)
+        assert "macro_precision" in first["metrics"]["test"]
+        assert "macro_recall" in first["metrics"]["test"]
+        assert "false_positive_rate" in first["metrics"]["test"]
+    assert reports[0]["dataset_manifest_sha256"] == reports[1]["dataset_manifest_sha256"]
+
+
+def test_portable_random_forest_rejects_cycles_and_invalid_probabilities(tmp_path: Path) -> None:
+    from traceward_ml.artifacts import PortableArtifact
+    from traceward_ml.experiment import FEATURE_CONTRACT
+
+    artifact = {
+        "schema_version": "1.1.0",
+        "usage": "offline_research_only",
+        "model_type": "rf",
+        "feature_contract": FEATURE_CONTRACT,
+        "vocabulary": {"value": 0},
+        "idf": [1.0],
+        "classes": [0, 1],
+        "trees": [
+            {
+                "children_left": [0],
+                "children_right": [0],
+                "feature": [0],
+                "threshold": [0.0],
+                "probabilities": [[0.5, 0.5]],
+            }
+        ],
+    }
+    with pytest.raises(ValidationError, match="acyclic"):
+        PortableArtifact.model_validate(artifact)
+    tree = artifact["trees"][0]
+    tree.update(children_left=[-1], children_right=[-1], feature=[-2], probabilities=[[0.0, 2.0]])
+    with pytest.raises(ValidationError, match="probabilities"):
+        PortableArtifact.model_validate(artifact)
+    tree.update(probabilities=[[0.5, 0.5]], threshold=[])
+    with pytest.raises(ValidationError, match="dimensions"):
+        PortableArtifact.model_validate(artifact)
+
+
+def test_undefined_metrics_explicit() -> None:
+    from traceward_ml.experiment import classifier_metrics
+
+    metrics = classifier_metrics([1, 1], [0, 0], [0.1, 0.1])
+    assert metrics["false_positive_rate"] is None
+    assert metrics["per_class"]["1"]["precision"] == 0.0
+    assert metrics["per_class"]["0"]["recall"] == 0.0

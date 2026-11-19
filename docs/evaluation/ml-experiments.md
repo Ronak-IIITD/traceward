@@ -1,7 +1,9 @@
 # Offline Java CWE-89 experiments
 
+See [Juliet Java 1.3 CWE-89](juliet-java-cwe89.md) for the NIST ingestion workflow.
+
 The research harness trains fixed lexical baselines on a provenance-checked JSONL
-corpus. It supports Linear SVM (`C=0.1`), Random Forest (50 trees, depth 4), and
+corpus. It supports Logistic Regression, Linear SVM (`C=0.1`), Random Forest (50 trees, depth 4), and
 XGBoost (50 estimators, depth 2). TF-IDF learns its vocabulary and IDF from the
 training partition. These settings provide repeatable comparisons. A successful
 run produces measured results for its declared corpus and feature extractor.
