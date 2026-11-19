@@ -1,0 +1,21 @@
+# Security and data handling
+
+This is an experimental local CLI/library, not a hardened public scanning service.
+It parses source without executing it, running project scripts, fetching models,
+installing scanned dependencies, or making network requests. The scanner reads
+UTF-8 source in memory and writes reports only with an explicit output option.
+Reports include local paths, locations, variable names and evidence metadata;
+treat reports as potentially sensitive. There is no telemetry or scan database.
+
+Discovery skips symlinks and opens final components with `O_NOFOLLOW`; it rejects
+devices/FIFOs before reading. Parent-directory replacement races are not fully
+isolated. Use stable local checkouts. Native parsers remain an untrusted-input
+attack surface despite byte/time limits. Before accepting hostile remote input,
+add process isolation, OS memory/time quotas, service authentication where needed,
+request/rate limits and independent abuse tests. Archives and repository retrieval
+must remain disabled until dedicated security controls exist.
+
+For a suspected vulnerability, contact the repository owner privately through an
+established channel before public disclosure. A dedicated reporting address must
+be configured before publication. Do not post private source or credentials in
+public issues. No deployed-service security claim is made.

@@ -1,0 +1,426 @@
+{
+  "$defs": {
+    "Coverage": {
+      "additionalProperties": false,
+      "properties": {
+        "languages_detected": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Languages Detected",
+          "type": "array"
+        },
+        "supported_checks": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Supported Checks",
+          "type": "array"
+        },
+        "unsupported_checks": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Unsupported Checks",
+          "type": "array"
+        },
+        "partial": {
+          "default": true,
+          "title": "Partial",
+          "type": "boolean"
+        },
+        "limitations": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Limitations",
+          "type": "array"
+        }
+      },
+      "title": "Coverage",
+      "type": "object"
+    },
+    "Detector": {
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "taint_rule",
+          "default": "taint_rule",
+          "title": "Type",
+          "type": "string"
+        },
+        "id": {
+          "default": "java.sql.concatenated-untrusted-input",
+          "title": "Id",
+          "type": "string"
+        },
+        "version": {
+          "default": "0.1.0",
+          "title": "Version",
+          "type": "string"
+        },
+        "maturity": {
+          "const": "experimental",
+          "default": "experimental",
+          "title": "Maturity",
+          "type": "string"
+        }
+      },
+      "title": "Detector",
+      "type": "object"
+    },
+    "Diagnostic": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "title": "Code",
+          "type": "string"
+        },
+        "message": {
+          "title": "Message",
+          "type": "string"
+        },
+        "level": {
+          "default": "warning",
+          "enum": [
+            "info",
+            "warning",
+            "error"
+          ],
+          "title": "Level",
+          "type": "string"
+        },
+        "location": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Location"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "code",
+        "message"
+      ],
+      "title": "Diagnostic",
+      "type": "object"
+    },
+    "Evidence": {
+      "additionalProperties": false,
+      "properties": {
+        "source": {
+          "$ref": "#/$defs/Location"
+        },
+        "sink": {
+          "$ref": "#/$defs/Location"
+        },
+        "flow": {
+          "items": {
+            "$ref": "#/$defs/FlowNode"
+          },
+          "title": "Flow",
+          "type": "array"
+        },
+        "uncertainties": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Uncertainties",
+          "type": "array"
+        }
+      },
+      "required": [
+        "source",
+        "sink",
+        "flow",
+        "uncertainties"
+      ],
+      "title": "Evidence",
+      "type": "object"
+    },
+    "Finding": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "fingerprint": {
+          "title": "Fingerprint",
+          "type": "string"
+        },
+        "rule_id": {
+          "default": "java.sql.concatenated-untrusted-input",
+          "title": "Rule Id",
+          "type": "string"
+        },
+        "cwe": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Cwe",
+          "type": "array"
+        },
+        "title": {
+          "default": "Potential SQL injection via query concatenation",
+          "title": "Title",
+          "type": "string"
+        },
+        "severity": {
+          "const": "high",
+          "default": "high",
+          "title": "Severity",
+          "type": "string"
+        },
+        "confidence": {
+          "const": "medium",
+          "default": "medium",
+          "title": "Confidence",
+          "type": "string"
+        },
+        "evidence_level": {
+          "const": "heuristic_candidate",
+          "default": "heuristic_candidate",
+          "title": "Evidence Level",
+          "type": "string"
+        },
+        "analysis_completeness": {
+          "const": "partial",
+          "default": "partial",
+          "title": "Analysis Completeness",
+          "type": "string"
+        },
+        "location": {
+          "$ref": "#/$defs/Location"
+        },
+        "evidence": {
+          "$ref": "#/$defs/Evidence"
+        },
+        "detectors": {
+          "items": {
+            "$ref": "#/$defs/Detector"
+          },
+          "title": "Detectors",
+          "type": "array"
+        },
+        "guidance": {
+          "default": "Use a constant SQL template with PreparedStatement and bind untrusted values.",
+          "title": "Guidance",
+          "type": "string"
+        },
+        "references": {
+          "items": {
+            "type": "string"
+          },
+          "title": "References",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "fingerprint",
+        "location",
+        "evidence"
+      ],
+      "title": "Finding",
+      "type": "object"
+    },
+    "FlowNode": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "source",
+            "assignment",
+            "concatenation",
+            "sink"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "location": {
+          "$ref": "#/$defs/Location"
+        },
+        "symbol": {
+          "title": "Symbol",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "location",
+        "symbol"
+      ],
+      "title": "FlowNode",
+      "type": "object"
+    },
+    "Location": {
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "title": "Path",
+          "type": "string"
+        },
+        "start_line": {
+          "minimum": 1,
+          "title": "Start Line",
+          "type": "integer"
+        },
+        "start_column": {
+          "minimum": 1,
+          "title": "Start Column",
+          "type": "integer"
+        },
+        "end_line": {
+          "minimum": 1,
+          "title": "End Line",
+          "type": "integer"
+        },
+        "end_column": {
+          "minimum": 1,
+          "title": "End Column",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "path",
+        "start_line",
+        "start_column",
+        "end_line",
+        "end_column"
+      ],
+      "title": "Location",
+      "type": "object"
+    },
+    "Scanner": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "const": "TraceWard",
+          "default": "TraceWard",
+          "title": "Name",
+          "type": "string"
+        },
+        "version": {
+          "default": "0.1.0",
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "title": "Scanner",
+      "type": "object"
+    },
+    "Source": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "file",
+            "directory",
+            "snippet"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "revision": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Revision"
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "title": "Source",
+      "type": "object"
+    },
+    "Summary": {
+      "additionalProperties": false,
+      "properties": {
+        "files_discovered": {
+          "default": 0,
+          "title": "Files Discovered",
+          "type": "integer"
+        },
+        "files_analyzed": {
+          "default": 0,
+          "title": "Files Analyzed",
+          "type": "integer"
+        },
+        "findings": {
+          "default": 0,
+          "title": "Findings",
+          "type": "integer"
+        },
+        "errors": {
+          "default": 0,
+          "title": "Errors",
+          "type": "integer"
+        }
+      },
+      "title": "Summary",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "1.0.0",
+      "default": "1.0.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "scan_id": {
+      "title": "Scan Id",
+      "type": "string"
+    },
+    "source": {
+      "$ref": "#/$defs/Source"
+    },
+    "scanner": {
+      "$ref": "#/$defs/Scanner"
+    },
+    "coverage": {
+      "$ref": "#/$defs/Coverage"
+    },
+    "summary": {
+      "$ref": "#/$defs/Summary"
+    },
+    "findings": {
+      "items": {
+        "$ref": "#/$defs/Finding"
+      },
+      "title": "Findings",
+      "type": "array"
+    },
+    "diagnostics": {
+      "items": {
+        "$ref": "#/$defs/Diagnostic"
+      },
+      "title": "Diagnostics",
+      "type": "array"
+    },
+    "duration_ms": {
+      "default": 0,
+      "title": "Duration Ms",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "scan_id",
+    "source"
+  ],
+  "title": "ScanResult",
+  "type": "object"
+}
