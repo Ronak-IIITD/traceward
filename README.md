@@ -3,7 +3,7 @@
 **Trace the risk. Secure the code.**
 
 An experimental, local-first Java source scanner. This repository implements the
-first scanner milestone (M1A) from [the PRD](TraceWard_PRD_v1.0.md), with a narrow
+first scanner milestone (M1A), with a narrow
 method-local CWE-89 rule, actual source-to-sink evidence, an installable Python CLI,
 and a versioned JSON contract. It never executes scanned code or installs project
 dependencies. Scans need no network connection.
