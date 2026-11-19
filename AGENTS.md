@@ -41,7 +41,7 @@ If network access, GitHub authentication, permissions, a remote, or CI configura
 Before making changes, read the documents that exist in this repository, especially:
 
 1. `AGENTS.md` — agent workflow, safety, testing, Git and GitHub responsibilities.
-2. `docs/prd/TraceWard_PRD_v1.0.md` — product functionality, release boundaries, contracts and acceptance criteria. If stored elsewhere, locate the actual file and use its real path. Do not pretend to have read a missing document.
+2. `TraceWard_PRD_v1.0.md` — the local product requirements document, when available. It is excluded from Git. Use the README and tracked docs when working from a fresh clone.
 3. Relevant architecture decision records in `docs/adr/`, API schemas, test fixtures, README, package configuration and CI workflows.
 4. The user's latest explicit task and applicable instructions.
 
@@ -532,7 +532,7 @@ If even one required checkbox fails, mark the task **INCOMPLETE / BLOCKED / UNVE
 ## 14. First action when starting a fresh TraceWard repository
 
 1. Confirm this is the correct authorized Git repository and inspect its remotes/branch.
-2. Read the actual PRD from `docs/prd/TraceWard_PRD_v1.0.md` (or locate the uploaded file).
+2. Read the local PRD when available, along with the README and tracked docs.
 3. Bootstrap a minimal installable Python scanner core and testing/configuration infrastructure.
 4. Establish **real** GitHub Actions CI that runs against push and PR events and checks Python quality, tests and CLI smoke behavior.
 5. Implement a Java Tree-sitter parser and conservative CWE-89 detector with both positive and hard-negative fixtures.

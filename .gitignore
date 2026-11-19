@@ -1,4 +1,16 @@
-.venv/
+# Local planning document and workspaces
+/TraceWard_PRD_v1.0.md
+/.vscode/
+/.idea/
+.DS_Store
+.env
+.env.*
+!.env.example
+
+# Python environments, caches, and build output
+/.venv
+/venv
+.pyre/
 __pycache__/
 *.pyc
 .pytest_cache/
@@ -22,5 +34,3 @@ test-results/
 
 /models/local/
 /research-runs/
-
-/venv
