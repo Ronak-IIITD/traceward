@@ -1,19 +1,134 @@
-name: Scanner checks
-on: [push, pull_request]
+name: TraceWard CI and delivery
+on:
+  push:
+    branches: ['**']
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 5 * * 1'
+
 permissions:
   contents: read
+
+env:
+  UV_VERSION: '0.13.7'
+
 jobs:
-  test:
-    runs-on: ubuntu-latest
+  quality:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@1e862dfacbd1d6d858c55d9b792c756523627244 # v7.1.4
+        with:
+          version: ${{ env.UV_VERSION }}
+          python-version: '3.12'
+      - run: uv lock --check
+      - run: uv run --locked ruff format --check .
+      - run: uv run --locked ruff check .
+      - run: uv run --locked --extra api mypy packages/traceward-core/src services/api/traceward_api
+      - name: Validate Actions workflows
+        run: go run github.com/rhysd/actionlint/cmd/actionlint@v1.7.9
+
+  audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@1e862dfacbd1d6d858c55d9b792c756523627244 # v7.1.4
+        with:
+          version: ${{ env.UV_VERSION }}
+          python-version: '3.12'
+      - run: uv audit --locked
+
+  tests:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
     strategy:
+      fail-fast: false
       matrix:
         python: ['3.11', '3.12', '3.13', '3.14']
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v7
-      - run: uv sync --locked --python '${{ matrix.python }}'
-      - run: uv run ruff check .
-      - run: uv run ruff format --check .
-      - run: uv run mypy packages/traceward-core/src
-      - run: uv run pytest -q
-      - run: uv build
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@1e862dfacbd1d6d858c55d9b792c756523627244 # v7.1.4
+        with:
+          version: ${{ env.UV_VERSION }}
+          python-version: ${{ matrix.python }}
+      - run: uv sync --locked --extra api
+      - run: uv run --no-sync coverage run -m pytest -q --junitxml=ci-reports/junit.xml
+      - name: Report and enforce 90% coverage including branches
+        if: ${{ !cancelled() }}
+        run: |
+          uv run --no-sync coverage xml -o ci-reports/coverage.xml
+          uv run --no-sync coverage report
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: ${{ !cancelled() }}
+        with:
+          name: reports-${{ matrix.python }}-${{ github.run_attempt }}
+          path: ci-reports/
+          retention-days: 14
+
+  package:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    outputs:
+      artifact_id: ${{ steps.upload.outputs.artifact-id }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@1e862dfacbd1d6d858c55d9b792c756523627244 # v7.1.4
+        with:
+          version: ${{ env.UV_VERSION }}
+          python-version: '3.12'
+      - run: uv build --out-dir dist
+      - name: Install and smoke-test wheel and source archive
+        shell: bash
+        run: |
+          args=(dist)
+          if [[ "$GITHUB_REF_TYPE" == tag ]]; then args+=(--tag "$GITHUB_REF_NAME"); fi
+          uv run --locked python scripts/ci/check_distributions.py "${args[@]}"
+      - run: cd dist && sha256sum -- *.whl *.tar.gz > SHA256SUMS
+      - id: upload
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: distributions-${{ github.run_attempt }}
+          path: dist/
+          if-no-files-found: error
+          retention-days: 14
+
+  release:
+    name: Stage GitHub release
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    needs: [quality, audit, tests, package]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    concurrency: release-${{ github.ref }}
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          artifact-ids: ${{ needs.package.outputs.artifact_id }}
+          merge-multiple: true
+          path: dist
+      - run: cd dist && sha256sum --check --strict SHA256SUMS
+      - name: Stage the verified artifacts on a draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          if state=$(gh release view "$GITHUB_REF_NAME" --json isDraft --jq .isDraft); then
+            [[ "$state" == true ]] || { echo "Release is already published"; exit 1; }
+            gh release upload "$GITHUB_REF_NAME" dist/* --clobber
+          else
+            gh release create "$GITHUB_REF_NAME" dist/* --draft --verify-tag \
+              --title "TraceWard $GITHUB_REF_NAME" --generate-notes
+          fi

@@ -8,3 +8,6 @@ dist/
 *.egg-info/
 traceward-results.json
 
+.coverage
+.coverage.*
+ci-reports/

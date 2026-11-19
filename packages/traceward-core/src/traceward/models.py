@@ -2,9 +2,10 @@
 
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from traceward import __version__
+from traceward.registry import JAVA_SQL
 
 
 class Contract(BaseModel):
@@ -25,26 +26,37 @@ class FlowNode(Contract):
     symbol: str
 
 
-class Evidence(Contract):
+class FlowTrace(Contract):
     source: Location
     sink: Location
     flow: list[FlowNode]
+
+    @model_validator(mode="after")
+    def check_endpoints(self) -> "FlowTrace":
+        if len(self.flow) < 2 or self.flow[0].kind != "source" or self.flow[-1].kind != "sink":
+            raise ValueError("A flow trace must start at a source and end at a sink")
+        if self.flow[0].location != self.source or self.flow[-1].location != self.sink:
+            raise ValueError("Trace endpoints must match their recorded locations")
+        return self
+
+
+class Evidence(FlowTrace):
     uncertainties: list[str]
 
 
 class Detector(Contract):
     type: Literal["taint_rule"] = "taint_rule"
-    id: str = "java.sql.concatenated-untrusted-input"
-    version: str = "0.1.0"
+    id: str = JAVA_SQL.id
+    version: str = JAVA_SQL.version
     maturity: Literal["experimental"] = "experimental"
 
 
 class Finding(Contract):
     id: str
     fingerprint: str
-    rule_id: str = "java.sql.concatenated-untrusted-input"
-    cwe: list[str] = Field(default_factory=lambda: ["CWE-89"])
-    title: str = "Potential SQL injection via query concatenation"
+    rule_id: str = JAVA_SQL.id
+    cwe: list[str] = Field(default_factory=lambda: [JAVA_SQL.cwe])
+    title: str = JAVA_SQL.title
     severity: Literal["high"] = "high"
     confidence: Literal["medium"] = "medium"
     evidence_level: Literal["heuristic_candidate"] = "heuristic_candidate"
@@ -52,10 +64,8 @@ class Finding(Contract):
     location: Location
     evidence: Evidence
     detectors: list[Detector] = Field(default_factory=lambda: [Detector()])
-    guidance: str = "Use a constant SQL template with PreparedStatement and bind untrusted values."
-    references: list[str] = Field(
-        default_factory=lambda: ["https://cwe.mitre.org/data/definitions/89.html"]
-    )
+    guidance: str = JAVA_SQL.guidance
+    references: list[str] = Field(default_factory=lambda: [JAVA_SQL.reference])
 
 
 class Diagnostic(Contract):
@@ -67,7 +77,7 @@ class Diagnostic(Contract):
 
 class Coverage(Contract):
     languages_detected: list[str] = Field(default_factory=list)
-    supported_checks: list[str] = Field(default_factory=lambda: ["CWE-89"])
+    supported_checks: list[str] = Field(default_factory=lambda: [JAVA_SQL.cwe])
     unsupported_checks: list[str] = Field(
         default_factory=lambda: [
             "CWE-79",

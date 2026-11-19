@@ -1,6 +1,6 @@
 # Security and data handling
 
-This is an experimental local CLI/library, not a hardened public scanning service.
+This is an experimental local scanner with an optional loopback HTTP service.
 It parses source without executing it, running project scripts, fetching models,
 installing scanned dependencies, or making network requests. The scanner reads
 UTF-8 source in memory and writes reports only with an explicit output option.
@@ -10,9 +10,11 @@ treat reports as potentially sensitive. There is no telemetry or scan database.
 Discovery skips symlinks and opens final components with `O_NOFOLLOW`; it rejects
 devices/FIFOs before reading. Parent-directory replacement races are not fully
 isolated. Use stable local checkouts. Native parsers remain an untrusted-input
-attack surface despite byte/time limits. Before accepting hostile remote input,
-add process isolation, OS memory/time quotas, service authentication where needed,
-request/rate limits and independent abuse tests. Archives and repository retrieval
+attack surface despite byte/time limits. The local HTTP service caps request and source bytes and simultaneous scans.
+Each snippet runs in a disposable Linux subprocess with a five-second wall deadline,
+a CPU limit and a 256 MiB address-space limit. The worker inherits the server user’s
+filesystem and network permissions. Public hosting still requires deployment
+isolation, per-client abuse controls and independent security review. Archives and repository retrieval
 must remain disabled until dedicated security controls exist.
 
 For a suspected vulnerability, contact the repository owner privately through an

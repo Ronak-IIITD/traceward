@@ -1,6 +1,32 @@
 # Implementation status
 
-## Delivered: initial M1A scanner
+## Initial backlog checkpoint
+
+**12 of the 20 implementation issues in PRD section 26 are complete (60%).**
+Each issue counts once. This measures the initial backlog. Effort estimates and
+production readiness are tracked separately.
+
+| Completed issue | Verified behavior |
+|---|---|
+| 1 · Tooling | Locked install, lint, type checks, tests and CI configuration |
+| 3 · Java parser | Syntax diagnostics and UTF-8 byte spans |
+| 4 · Fixtures | Vulnerable sink at line 8 and parameterized safe control |
+| 5 · Discovery | Relative exclusions, traversal limits and symlink handling |
+| 6 · Analysis records | Method, call site, flow node and validated source-to-sink trace |
+| 7 · Extraction | Method and invocation collection with source locations |
+| 8 · Rule registry | Packaged versioned manifest with unique IDs and field validation |
+| 9 · SQL detection | Concatenated servlet input reported at supported JDBC sinks |
+| 10 · Local flow | Straight-line assignments and diagnostics for unsupported flow |
+| 11 · Reports | Versioned schema and reproducible finding fingerprints |
+| 12 · CLI | Installed scan, rules and doctor commands, text/JSON and policy exits |
+| 17 · Snippet API | Strict request validation, byte limits, worker isolation and CLI parity |
+
+Eight issues remain open. Issue 2 awaits distribution and reporting decisions.
+Issues 13–16 cover corpus reproduction, training, artifacts and optional inference.
+Issues 18–20 cover the dashboard, full browser/API/CLI acceptance suite, benchmark
+methodology and release checklist. Partial work on these issues earns no credit.
+
+## Delivered scanner
 
 - Installable `traceward-core`, pinned uv environment, CLI and typed result model.
 - Tree-sitter Java parser, byte spans, method and call extraction.
@@ -17,12 +43,11 @@
    versioned optional classifier adapter after artifact/feature contracts exist.
 3. Evaluate on independent repositories, publish precision/recall and false
    positives, and review evidence before promoting any rule.
-4. M1B: FastAPI, bounded isolated snippet workers, API abuse protection, Next.js
-   workspace, browser verification and local Docker deployment.
+4. M1B: Next.js workspace, browser verification, deployment controls and local Docker deployment.
 5. Review licensing/ownership, distribution permissions and full P0 acceptance.
 
 The complete M1 definition of done has **not** been met. Do not claim seven-language
-support, ML inference, independent accuracy, API/UI parity or deployed-demo safety.
+support, ML inference, independent accuracy, web UI parity or deployed-demo safety.
 
 ## Initial architecture decisions
 

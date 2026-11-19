@@ -12,14 +12,27 @@ dependencies = ["tree-sitter==0.25.2", "tree-sitter-java==0.23.5", "pydantic==2.
 [project.scripts]
 traceward = "traceward.cli:main"
 
+[project.optional-dependencies]
+api = [
+    "fastapi>=0.119,<1",
+    "uvicorn>=0.37,<1",
+]
+
 [dependency-groups]
-dev = ["pytest==9.0.1", "jsonschema==4.25.1", "ruff==0.14.5", "mypy==1.18.2"]
+dev = [
+    "pytest==9.0.3",
+    "jsonschema==4.25.1",
+    "ruff==0.14.5",
+    "mypy==1.18.2",
+    "httpx>=0.28,<0.29",
+    "coverage[toml]>=7.11,<8",
+]
 
 [tool.hatch.build.targets.wheel]
-packages = ["packages/traceward-core/src/traceward"]
+packages = ["packages/traceward-core/src/traceward", "services/api/traceward_api"]
 
 [tool.pytest.ini_options]
-testpaths = ["packages/traceward-core/tests"]
+testpaths = ["packages/traceward-core/tests", "services/api/tests"]
 
 [tool.ruff]
 line-length = 100
@@ -32,3 +45,14 @@ select = ["E", "F", "I", "B", "UP"]
 python_version = "3.11"
 strict = true
 
+
+[tool.coverage.run]
+branch = true
+source = ["traceward", "traceward_api"]
+relative_files = true
+patch = ["subprocess"]
+
+[tool.coverage.report]
+show_missing = true
+precision = 2
+fail_under = 90
