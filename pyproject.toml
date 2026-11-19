@@ -11,8 +11,10 @@ dependencies = ["tree-sitter==0.25.2", "tree-sitter-java==0.23.5", "pydantic==2.
 
 [project.scripts]
 traceward = "traceward.cli:main"
+traceward-ml = "traceward_ml.cli:main"
 
 [project.optional-dependencies]
+ml = ["scikit-learn>=1.7,<2", "xgboost>=3.1,<4"]
 api = [
     "fastapi>=0.119,<1",
     "uvicorn>=0.37,<1",
@@ -29,10 +31,10 @@ dev = [
 ]
 
 [tool.hatch.build.targets.wheel]
-packages = ["packages/traceward-core/src/traceward", "services/api/traceward_api"]
+packages = ["packages/traceward-core/src/traceward", "services/api/traceward_api", "packages/traceward-ml/src/traceward_ml"]
 
 [tool.pytest.ini_options]
-testpaths = ["packages/traceward-core/tests", "services/api/tests"]
+testpaths = ["packages/traceward-core/tests", "services/api/tests", "scripts/datasets/tests"]
 
 [tool.ruff]
 line-length = 100

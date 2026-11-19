@@ -11,3 +11,16 @@ traceward-results.json
 .coverage
 .coverage.*
 ci-reports/
+
+node_modules/
+.next/
+playwright-report/
+test-results/
+*.tsbuildinfo
+/data/
+/experiments/
+
+/models/local/
+/research-runs/
+
+/venv

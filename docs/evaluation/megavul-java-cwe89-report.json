@@ -1,0 +1,456 @@
+{
+  "code_revision": "17ab82956b86315bb82340490a2995890cfeafc3",
+  "code_revision_role": "Base revision; source file digests identify the run code",
+  "corpus_kind": "real_world",
+  "dataset": {
+    "acquired_at": "2026-11-19",
+    "attribution": "Ni et al., MegaVul, MSR 2024; Hugging Face mirror by athrv",
+    "corpus_kind": "real_world",
+    "cwe": "CWE-89",
+    "dataset_id": "megavul-java-cwe89-research-v1",
+    "dataset_sha256": "b989109ab78727a82f1996658d285bbfee213b4ffa53df32889fd53fe572e7e9",
+    "label_provenance": "MegaVul CVE-linked automated changed-function mining. Positive and negative labels are inherited, not independently verified. Negative means dataset-labeled non-vulnerable, not certified safe.",
+    "language": "java",
+    "license": "MegaVul GPL-3.0; original project licenses recorded in provenance.jsonl",
+    "record_count": 921,
+    "schema_version": "1.0.0",
+    "source_url": "https://huggingface.co/datasets/athrv/megavul-vulnerability-detection-java",
+    "upstream_revision": "38ccb0e531503c682b7e0eab7e8e73897e3ce899"
+  },
+  "dependencies": {
+    "numpy": "2.5.5",
+    "scikit-learn": "1.9.1",
+    "scipy": "1.18.1",
+    "xgboost": "3.4.1"
+  },
+  "feature_contract_sha256": "90debd804b09f068c5b64a5b35319c86184292d29a5d56df16381fecc4e9fe7f",
+  "hardware": {
+    "platform": "Linux-7.0.0-43-generic-x86_64-with-glibc2.39",
+    "processor": "x86_64",
+    "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]"
+  },
+  "limitations": [
+    "Lexical research baseline; corpus labels require independent review.",
+    "No hyperparameter selection or calibration is performed.",
+    "Repeated model selection on the test split invalidates held-out measurements.",
+    "Rule baseline uses candidate presence; review its coverage limits."
+  ],
+  "lock_sha256": "157d94de63965c13ae3fe06d87e0dbf5728e4be426a83c00fde105836ec9208f",
+  "measurement_context": {
+    "artifact_distribution": "Only aggregate report committed. Corpus and svm.json remain local.",
+    "label_limits": "Upstream CVE-linked mined labels are inherited and not independently reviewed.",
+    "prior_exposure": "An earlier repository-only split was measured before related repositories were grouped. Final grouping was frozen before re-running fixed baselines. Repeated runs changed metadata and logging, not features, model hyperparameters, thresholds or splits.",
+    "promotion_decision": "Keep normal scanner ML disabled. SVM/RF recall was zero and XGBoost recall low on the declared test split.",
+    "revision_context": "Run from a working tree based on code_revision, exact training files identified by digests.",
+    "study_status": "exploratory_research"
+  },
+  "models": {
+    "rf": {
+      "artifact": null,
+      "feature_count": 2224,
+      "fit_seconds": 0.049884283002029406,
+      "latency": {
+        "includes": "TF-IDF transform plus classifier predict",
+        "p50_ms": 2.5163115,
+        "p95_ms": 2.665202,
+        "samples": 100
+      },
+      "metrics": {
+        "test": {
+          "average_precision": 0.6028183726234291,
+          "confusion_matrix": {
+            "fn": 32,
+            "fp": 0,
+            "tn": 151,
+            "tp": 0
+          },
+          "count": 183,
+          "false_positive_rate": 0.0,
+          "macro_f1": 0.45209580838323354,
+          "per_class": {
+            "0": {
+              "f1": 0.9041916167664671,
+              "precision": 0.825136612021858,
+              "recall": 1.0,
+              "support": 151
+            },
+            "1": {
+              "f1": 0.0,
+              "precision": 0.0,
+              "recall": 0.0,
+              "support": 32
+            }
+          }
+        },
+        "train": {
+          "average_precision": 0.8744633226012218,
+          "confusion_matrix": {
+            "fn": 31,
+            "fp": 0,
+            "tn": 217,
+            "tp": 10
+          },
+          "count": 258,
+          "false_positive_rate": 0.0,
+          "macro_f1": 0.6627450980392157,
+          "per_class": {
+            "0": {
+              "f1": 0.9333333333333333,
+              "precision": 0.875,
+              "recall": 1.0,
+              "support": 217
+            },
+            "1": {
+              "f1": 0.39215686274509803,
+              "precision": 1.0,
+              "recall": 0.24390243902439024,
+              "support": 41
+            }
+          }
+        },
+        "validation": {
+          "average_precision": 0.1554776080642894,
+          "confusion_matrix": {
+            "fn": 5,
+            "fp": 0,
+            "tn": 475,
+            "tp": 0
+          },
+          "count": 480,
+          "false_positive_rate": 0.0,
+          "macro_f1": 0.4973821989528796,
+          "per_class": {
+            "0": {
+              "f1": 0.9947643979057592,
+              "precision": 0.9895833333333334,
+              "recall": 1.0,
+              "support": 475
+            },
+            "1": {
+              "f1": 0.0,
+              "precision": 0.0,
+              "recall": 0.0,
+              "support": 5
+            }
+          }
+        }
+      },
+      "parameters": {
+        "max_depth": 4,
+        "n_estimators": 50,
+        "n_jobs": 1,
+        "random_state": 38
+      },
+      "peak_process_rss_kib": 148828
+    },
+    "svm": {
+      "artifact": {
+        "bytes": 165023,
+        "file": "svm.json",
+        "sha256": "c8796861c1e59bb80fd4c6635fe5a0545f330d8091a04a431e2e908788056c2f"
+      },
+      "feature_count": 2224,
+      "fit_seconds": 0.014713708002091153,
+      "latency": {
+        "includes": "TF-IDF transform plus classifier predict",
+        "p50_ms": 0.396341,
+        "p95_ms": 0.526194,
+        "samples": 100
+      },
+      "metrics": {
+        "test": {
+          "average_precision": 0.34800884580806224,
+          "confusion_matrix": {
+            "fn": 32,
+            "fp": 0,
+            "tn": 151,
+            "tp": 0
+          },
+          "count": 183,
+          "false_positive_rate": 0.0,
+          "macro_f1": 0.45209580838323354,
+          "per_class": {
+            "0": {
+              "f1": 0.9041916167664671,
+              "precision": 0.825136612021858,
+              "recall": 1.0,
+              "support": 151
+            },
+            "1": {
+              "f1": 0.0,
+              "precision": 0.0,
+              "recall": 0.0,
+              "support": 32
+            }
+          }
+        },
+        "train": {
+          "average_precision": 0.9062940005399424,
+          "confusion_matrix": {
+            "fn": 41,
+            "fp": 0,
+            "tn": 217,
+            "tp": 0
+          },
+          "count": 258,
+          "false_positive_rate": 0.0,
+          "macro_f1": 0.4568421052631579,
+          "per_class": {
+            "0": {
+              "f1": 0.9136842105263158,
+              "precision": 0.8410852713178295,
+              "recall": 1.0,
+              "support": 217
+            },
+            "1": {
+              "f1": 0.0,
+              "precision": 0.0,
+              "recall": 0.0,
+              "support": 41
+            }
+          }
+        },
+        "validation": {
+          "average_precision": 0.08029874777812318,
+          "confusion_matrix": {
+            "fn": 5,
+            "fp": 0,
+            "tn": 475,
+            "tp": 0
+          },
+          "count": 480,
+          "false_positive_rate": 0.0,
+          "macro_f1": 0.4973821989528796,
+          "per_class": {
+            "0": {
+              "f1": 0.9947643979057592,
+              "precision": 0.9895833333333334,
+              "recall": 1.0,
+              "support": 475
+            },
+            "1": {
+              "f1": 0.0,
+              "precision": 0.0,
+              "recall": 0.0,
+              "support": 5
+            }
+          }
+        }
+      },
+      "parameters": {
+        "C": 0.1,
+        "dual": "auto",
+        "random_state": 38
+      },
+      "peak_process_rss_kib": 142212
+    },
+    "xgboost": {
+      "artifact": null,
+      "feature_count": 2224,
+      "fit_seconds": 0.05352037899865536,
+      "latency": {
+        "includes": "TF-IDF transform plus classifier predict",
+        "p50_ms": 0.5515975,
+        "p95_ms": 0.671542,
+        "samples": 100
+      },
+      "metrics": {
+        "test": {
+          "average_precision": 0.40523130274246694,
+          "confusion_matrix": {
+            "fn": 30,
+            "fp": 1,
+            "tn": 150,
+            "tp": 2
+          },
+          "count": 183,
+          "false_positive_rate": 0.006622516556291391,
+          "macro_f1": 0.5103150625809236,
+          "per_class": {
+            "0": {
+              "f1": 0.9063444108761329,
+              "precision": 0.8333333333333334,
+              "recall": 0.9933774834437086,
+              "support": 151
+            },
+            "1": {
+              "f1": 0.11428571428571428,
+              "precision": 0.6666666666666666,
+              "recall": 0.0625,
+              "support": 32
+            }
+          }
+        },
+        "train": {
+          "average_precision": 0.989507625723129,
+          "confusion_matrix": {
+            "fn": 4,
+            "fp": 0,
+            "tn": 217,
+            "tp": 37
+          },
+          "count": 258,
+          "false_positive_rate": 0.0,
+          "macro_f1": 0.9697927643133122,
+          "per_class": {
+            "0": {
+              "f1": 0.9908675799086758,
+              "precision": 0.9819004524886877,
+              "recall": 1.0,
+              "support": 217
+            },
+            "1": {
+              "f1": 0.9487179487179487,
+              "precision": 1.0,
+              "recall": 0.9024390243902439,
+              "support": 41
+            }
+          }
+        },
+        "validation": {
+          "average_precision": 0.24738153407644933,
+          "confusion_matrix": {
+            "fn": 2,
+            "fp": 6,
+            "tn": 469,
+            "tp": 3
+          },
+          "count": 480,
+          "false_positive_rate": 0.01263157894736842,
+          "macro_f1": 0.7100573844759891,
+          "per_class": {
+            "0": {
+              "f1": 0.9915433403805497,
+              "precision": 0.9957537154989384,
+              "recall": 0.9873684210526316,
+              "support": 475
+            },
+            "1": {
+              "f1": 0.42857142857142855,
+              "precision": 0.3333333333333333,
+              "recall": 0.6,
+              "support": 5
+            }
+          }
+        }
+      },
+      "parameters": {
+        "max_depth": 2,
+        "n_estimators": 50,
+        "n_jobs": 1,
+        "random_state": 38
+      },
+      "peak_process_rss_kib": 174992
+    }
+  },
+  "production_enabled": false,
+  "rule_baseline": {
+    "interpretation": "Method-level candidate presence under the current rule scope",
+    "metrics": {
+      "test": {
+        "analysis_errors": 0,
+        "average_precision": 0.17486338797814208,
+        "confusion_matrix": {
+          "fn": 32,
+          "fp": 0,
+          "tn": 151,
+          "tp": 0
+        },
+        "count": 183,
+        "false_positive_rate": 0.0,
+        "macro_f1": 0.45209580838323354,
+        "partial_scans": 183,
+        "per_class": {
+          "0": {
+            "f1": 0.9041916167664671,
+            "precision": 0.825136612021858,
+            "recall": 1.0,
+            "support": 151
+          },
+          "1": {
+            "f1": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "support": 32
+          }
+        }
+      },
+      "train": {
+        "analysis_errors": 0,
+        "average_precision": 0.15891472868217055,
+        "confusion_matrix": {
+          "fn": 41,
+          "fp": 0,
+          "tn": 217,
+          "tp": 0
+        },
+        "count": 258,
+        "false_positive_rate": 0.0,
+        "macro_f1": 0.4568421052631579,
+        "partial_scans": 258,
+        "per_class": {
+          "0": {
+            "f1": 0.9136842105263158,
+            "precision": 0.8410852713178295,
+            "recall": 1.0,
+            "support": 217
+          },
+          "1": {
+            "f1": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "support": 41
+          }
+        }
+      },
+      "validation": {
+        "analysis_errors": 0,
+        "average_precision": 0.010416666666666666,
+        "confusion_matrix": {
+          "fn": 5,
+          "fp": 0,
+          "tn": 475,
+          "tp": 0
+        },
+        "count": 480,
+        "false_positive_rate": 0.0,
+        "macro_f1": 0.4973821989528796,
+        "partial_scans": 480,
+        "per_class": {
+          "0": {
+            "f1": 0.9947643979057592,
+            "precision": 0.9895833333333334,
+            "recall": 1.0,
+            "support": 475
+          },
+          "1": {
+            "f1": 0.0,
+            "precision": 0.0,
+            "recall": 0.0,
+            "support": 5
+          }
+        }
+      }
+    }
+  },
+  "schema_version": "1.0.0",
+  "seed": 38,
+  "split_counts": {
+    "test": 183,
+    "train": 258,
+    "validation": 480
+  },
+  "split_ids_sha256": {
+    "test": "56105caa0b5f59424e735fd07cea3364baaabd5ef9b03954e0a52a8c19dab8eb",
+    "train": "518a90dc30bb6308ebeb365ff0ece992b6f50ff589c4ee081a0b76b8a447e3aa",
+    "validation": "b4b8ad39f66973cc27afeedde590a428ff3ac0672ebdabfaa9b7cab0543c88f6"
+  },
+  "training_source_files_sha256": {
+    "__init__.py": "bccb45a2f5cb1b6de7d5aa3a4a3d75116fe70998debd1e70321ded9a8e8b26d8",
+    "cli.py": "4c4e351a570c4045300a849cfa4a818c121dc64b46679bac51b024c813ff4180",
+    "dataset.py": "1574d1863625217062f7e648f351f4ad00b1aacb0e72a98b58abe1c321a90659",
+    "experiment.py": "7434c0bb4288dd885cc1442bb04aa47a5f999c5ef62b734f953d2064cc48de42",
+    "inference.py": "2903b312c07db020f0ae8f47a2b8a50aba028293d560fd012d37fa19ccb88c00"
+  },
+  "training_source_sha256": "02973ef9e49bbb0a0da09e547ce8acb2f203f598c457690b90cb2cd9cc6c5679"
+}

@@ -1,0 +1,341 @@
+{
+  "dataset_revision": "38ccb0e531503c682b7e0eab7e8e73897e3ce899",
+  "upstream_repository": "https://github.com/Icyrockton/MegaVul",
+  "upstream_revision": "2b34eb3685b2a215d44c08d34fe9cec0f49eada3",
+  "license_snapshot_date": "2026-11-19",
+  "repository_license_scope": "Current repository-level GitHub license detection, not a per-file or historical legal audit",
+  "repositories": {
+    "94fzb/zrlog": {
+      "repository": "94fzb/zrlog",
+      "spdx_id": "Apache-2.0",
+      "license_api_url": "https://api.github.com/repos/94fzb/zrlog/license"
+    },
+    "AnantLabs/google-enterprise-connector-dctm": {
+      "repository": "AnantLabs/google-enterprise-connector-dctm",
+      "spdx_id": "Apache-2.0",
+      "license_api_url": "https://api.github.com/repos/AnantLabs/google-enterprise-connector-dctm/license"
+    },
+    "OHDSI/WebAPI": {
+      "repository": "OHDSI/WebAPI",
+      "spdx_id": "Apache-2.0",
+      "license_api_url": "https://api.github.com/repos/OHDSI/WebAPI/license"
+    },
+    "apache/skywalking": {
+      "repository": "apache/skywalking",
+      "spdx_id": "Apache-2.0",
+      "license_api_url": "https://api.github.com/repos/apache/skywalking/license"
+    },
+    "dhis2/dhis2-core": {
+      "repository": "dhis2/dhis2-core",
+      "spdx_id": "BSD-3-Clause",
+      "license_api_url": "https://api.github.com/repos/dhis2/dhis2-core/license"
+    },
+    "dimtion/Shaarlier": {
+      "repository": "dimtion/Shaarlier",
+      "spdx_id": "GPL-3.0",
+      "license_api_url": "https://api.github.com/repos/dimtion/Shaarlier/license"
+    },
+    "fit2cloud/rackshift": {
+      "repository": "fit2cloud/rackshift",
+      "spdx_id": "GPL-3.0",
+      "license_api_url": "https://api.github.com/repos/fit2cloud/rackshift/license"
+    },
+    "folio-org/raml-module-builder": {
+      "repository": "folio-org/raml-module-builder",
+      "spdx_id": "Apache-2.0",
+      "license_api_url": "https://api.github.com/repos/folio-org/raml-module-builder/license"
+    },
+    "getrebuild/rebuild": {
+      "repository": "getrebuild/rebuild",
+      "spdx_id": "GPL-3.0",
+      "license_api_url": "https://api.github.com/repos/getrebuild/rebuild/license"
+    },
+    "hmcts/ccd-data-store-api": {
+      "repository": "hmcts/ccd-data-store-api",
+      "spdx_id": "MIT",
+      "license_api_url": "https://api.github.com/repos/hmcts/ccd-data-store-api/license"
+    },
+    "jeecgboot/jeecg-boot": {
+      "repository": "jeecgboot/JeecgBoot",
+      "spdx_id": "Apache-2.0",
+      "license_api_url": "https://api.github.com/repos/jeecgboot/JeecgBoot/license"
+    },
+    "karsany/obridge": {
+      "repository": "karsany/obridge",
+      "spdx_id": "MIT",
+      "license_api_url": "https://api.github.com/repos/karsany/obridge/license"
+    },
+    "pagehelper/Mybatis-PageHelper": {
+      "repository": "pagehelper-org/Mybatis-PageHelper",
+      "spdx_id": "MIT",
+      "license_api_url": "https://api.github.com/repos/pagehelper-org/Mybatis-PageHelper/license"
+    },
+    "spring-projects/spring-data-jpa": {
+      "repository": "spring-projects/spring-data-jpa",
+      "spdx_id": "Apache-2.0",
+      "license_api_url": "https://api.github.com/repos/spring-projects/spring-data-jpa/license"
+    },
+    "steve-community/ocpp-jaxb": {
+      "repository": "steve-community/ocpp-jaxb",
+      "spdx_id": "GPL-3.0",
+      "license_api_url": "https://api.github.com/repos/steve-community/ocpp-jaxb/license"
+    },
+    "thinkgem/jeesite": {
+      "repository": "thinkgem/jeesite",
+      "spdx_id": "Apache-2.0",
+      "license_api_url": "https://api.github.com/repos/thinkgem/jeesite/license"
+    },
+    "xm-online/xm-commons": {
+      "repository": "xm-online/xm-commons",
+      "spdx_id": "Apache-2.0",
+      "license_api_url": "https://api.github.com/repos/xm-online/xm-commons/license"
+    },
+    "xm-online/xm-uaa": {
+      "repository": "xm-online/xm-uaa",
+      "spdx_id": "Apache-2.0",
+      "license_api_url": "https://api.github.com/repos/xm-online/xm-uaa/license"
+    },
+    "pgjdbc": {
+      "repository": "pgjdbc/pgjdbc",
+      "spdx_id": "BSD-2-Clause",
+      "license_api_url": "https://api.github.com/repos/pgjdbc/pgjdbc/license"
+    },
+    "OpenRefine": {
+      "repository": "OpenRefine/OpenRefine",
+      "spdx_id": "BSD-3-Clause",
+      "license_api_url": "https://api.github.com/repos/OpenRefine/OpenRefine/license"
+    }
+  },
+  "commits": {
+    "94fzb/zrlog@157b8fbbb64eb22ddb52e7c5754e88180b7c3d4f": {
+      "parents": [
+        "6dd8b66724fe64d11472966602bca6176519f77f"
+      ],
+      "sha": "157b8fbbb64eb22ddb52e7c5754e88180b7c3d4f"
+    },
+    "AnantLabs/google-enterprise-connector-dctm@6fba04f18ab7764002a1da308e7cd9712b501cb7": {
+      "parents": [
+        "6c98659b563ae55fd24112ef4392b63238790803"
+      ],
+      "sha": "6fba04f18ab7764002a1da308e7cd9712b501cb7"
+    },
+    "OHDSI/WebAPI@b3944074a1976c95d500239cbbf0741917ed75ca": {
+      "parents": [
+        "259b6a253d35a9f69aee78cbbd2cf9984b44cdb3"
+      ],
+      "sha": "b3944074a1976c95d500239cbbf0741917ed75ca"
+    },
+    "OpenRefine/OpenRefine@2de1439f5be63d9d0e89bbacbd24fa28c8c3e29d": {
+      "parents": [
+        "4f44598c336e4a7c139a256494175be87f30a748"
+      ],
+      "sha": "2de1439f5be63d9d0e89bbacbd24fa28c8c3e29d"
+    },
+    "OpenRefine/OpenRefine@693fde606d4b5b78b16391c29d110389eb605511": {
+      "parents": [
+        "6b7d981b298f454ef6d97a2f68d6873eb3c4e2be"
+      ],
+      "sha": "693fde606d4b5b78b16391c29d110389eb605511"
+    },
+    "apache/skywalking@2b6aae3b733f9dbeae1d6eff4f1975c723e1e7d1": {
+      "parents": [
+        "5646dfbb2365d3232ddb35263c34e0377fce4dc2"
+      ],
+      "sha": "2b6aae3b733f9dbeae1d6eff4f1975c723e1e7d1"
+    },
+    "apache/skywalking@ddb6d9a5019a9c1fe31c364485a4e4b5066fefc3": {
+      "parents": [
+        "c11ad038cceb0cb550dbec304b8f92db733eb0d0"
+      ],
+      "sha": "ddb6d9a5019a9c1fe31c364485a4e4b5066fefc3"
+    },
+    "dhis2/dhis2-core@3b245d04a58b78f0dc9bae8559f36ee4ca36dfac": {
+      "parents": [
+        "0a0d8e393ed4f8bcd3cdc5a1bdd389051fe2a1b1"
+      ],
+      "sha": "3b245d04a58b78f0dc9bae8559f36ee4ca36dfac"
+    },
+    "dhis2/dhis2-core@ef04483a9b177d62e48dcf4e498b302a11f95e7d": {
+      "parents": [
+        "57f2dacde7ac90733caf6593fe2502575dc6fc2e"
+      ],
+      "sha": "ef04483a9b177d62e48dcf4e498b302a11f95e7d"
+    },
+    "dimtion/Shaarlier@3d1d9b239d9b3cd87e8bed45a0f02da583ad371e": {
+      "parents": [
+        "7f0bcb70bc927aebbfceca9d72154b5989dd81c3"
+      ],
+      "sha": "3d1d9b239d9b3cd87e8bed45a0f02da583ad371e"
+    },
+    "fit2cloud/rackshift@305aea3b20d36591d519f7d04e0a25be05a51e93": {
+      "parents": [
+        "2a0d8ff317f9f30eec761187754254c32fc74555"
+      ],
+      "sha": "305aea3b20d36591d519f7d04e0a25be05a51e93"
+    },
+    "folio-org/raml-module-builder@b7ef741133e57add40aa4cb19430a0065f378a94": {
+      "parents": [
+        "cd79bfdcbd16091f54befe0c6409922cf2e52638"
+      ],
+      "sha": "b7ef741133e57add40aa4cb19430a0065f378a94"
+    },
+    "getrebuild/rebuild@c9474f84e5f376dd2ade2078e3039961a9425da7": {
+      "parents": [
+        "9057a41b547522384693a61dd7523761a9d258a0"
+      ],
+      "sha": "c9474f84e5f376dd2ade2078e3039961a9425da7"
+    },
+    "hmcts/ccd-data-store-api@56d10ec6c1cb854f6f9eb68dfaeb89adf01fef5a": {
+      "parents": [
+        "67f65d6859eda67bca3632eadcc28f7993c49851"
+      ],
+      "sha": "56d10ec6c1cb854f6f9eb68dfaeb89adf01fef5a"
+    },
+    "hmcts/ccd-data-store-api@c942d5ce847ab1b4acce8753320096e596b42c72": {
+      "parents": [
+        "56d10ec6c1cb854f6f9eb68dfaeb89adf01fef5a"
+      ],
+      "sha": "c942d5ce847ab1b4acce8753320096e596b42c72"
+    },
+    "hmcts/ccd-data-store-api@f151e694307dd59dc0f111d44bbd329276ab0004": {
+      "parents": [
+        "8d2396b412c726bc6d4eff2a3c29497bc6c4a159"
+      ],
+      "sha": "f151e694307dd59dc0f111d44bbd329276ab0004"
+    },
+    "jeecgboot/JeecgBoot@0fc374de4745eac52620eeb8caf6a7b76127529a": {
+      "parents": [
+        "f94c5e1f3f68c6cfa4d9be9c6ff47188616f46a7"
+      ],
+      "sha": "0fc374de4745eac52620eeb8caf6a7b76127529a"
+    },
+    "jeecgboot/JeecgBoot@51e2227bfe54f5d67b09411ee9a336750164e73d": {
+      "parents": [
+        "ff77973a6ccbe0423f85f0861e1632a230186fd4"
+      ],
+      "sha": "51e2227bfe54f5d67b09411ee9a336750164e73d"
+    },
+    "jeecgboot/JeecgBoot@8632a835c23f558dfee3584d7658cc6a13ccec6f": {
+      "parents": [
+        "958cf01649e67c79887c21f9c0ada42b552b7ee3"
+      ],
+      "sha": "8632a835c23f558dfee3584d7658cc6a13ccec6f"
+    },
+    "jeecgboot/JeecgBoot@ca1218f792369ed3c8196e796b1940b33ed6469b": {
+      "parents": [
+        "8ed2da601be9c260ea4d567dff9a4693842afb01"
+      ],
+      "sha": "ca1218f792369ed3c8196e796b1940b33ed6469b"
+    },
+    "jeecgboot/JeecgBoot@d36caf8c696a84edc7e4204c7dc9c4d3f91a9534": {
+      "parents": [
+        "e6bd2d5009740a01647902ea4c179dbce5935298"
+      ],
+      "sha": "d36caf8c696a84edc7e4204c7dc9c4d3f91a9534"
+    },
+    "jeecgboot/JeecgBoot@dd7bf104e7ed59142909567ecd004335c3442ec5": {
+      "parents": [
+        "6e85584c433c3803c0fd9e1c03a7c6ae4d93877f"
+      ],
+      "sha": "dd7bf104e7ed59142909567ecd004335c3442ec5"
+    },
+    "jeecgboot/JeecgBoot@f18ced524c9ec13e876bfb74785a1b112cc8b6bb": {
+      "parents": [
+        "d34614c4224ec1af69d0d81329d84fe98e11f694"
+      ],
+      "sha": "f18ced524c9ec13e876bfb74785a1b112cc8b6bb"
+    },
+    "karsany/obridge@52eca4ad05f3c292aed3178b2f58977686ffa376": {
+      "parents": [
+        "b0673c1a9eebf8792c1accab432e76109b91badf"
+      ],
+      "sha": "52eca4ad05f3c292aed3178b2f58977686ffa376"
+    },
+    "pagehelper-org/Mybatis-PageHelper@554a524af2d2b30d09505516adc412468a84d8fa": {
+      "parents": [
+        "e2a67fc8b3e1568e60a01da44a4f551cf0f399b8"
+      ],
+      "sha": "554a524af2d2b30d09505516adc412468a84d8fa"
+    },
+    "pgjdbc/pgjdbc@739e599d52ad80f8dcd6efedc6157859b1a9d637": {
+      "parents": [
+        "736f9598c5b32a19c645ad33f118d2c9c266e90e"
+      ],
+      "sha": "739e599d52ad80f8dcd6efedc6157859b1a9d637"
+    },
+    "spring-projects/spring-data-jpa@b8e7fe": {
+      "parents": [
+        "c227c6753047b262b83ed7623433a1d65d9308b8"
+      ],
+      "sha": "b8e7fecccc7dc8edcabb4704656a7abe6352c08f"
+    },
+    "steve-community/ocpp-jaxb@13667036f7a30c5e7aca796ef6e2a3b0926c679a": {
+      "parents": [
+        "0db21a29498368a58edf81fa02d8966a3eda2637"
+      ],
+      "sha": "13667036f7a30c5e7aca796ef6e2a3b0926c679a"
+    },
+    "thinkgem/jeesite@30750011b49f7c8d45d0f3ab13ed3a1a422655bb": {
+      "parents": [
+        "10742d32cd3ab2ed23b758b27386e95051d3a144"
+      ],
+      "sha": "30750011b49f7c8d45d0f3ab13ed3a1a422655bb"
+    },
+    "xm-online/xm-commons@de96e9c4339e37ab1172e3a4e16ee2b7dfe74a70": {
+      "parents": [
+        "43eb2273adb96f40830d7b905ee3a767b8715caf"
+      ],
+      "sha": "de96e9c4339e37ab1172e3a4e16ee2b7dfe74a70"
+    },
+    "xm-online/xm-uaa@bd235434f119c67090952e08fc28abe41aea2e2c": {
+      "parents": [
+        "de1bb967b81c0cfe9854b13c030512b85200f7e3"
+      ],
+      "sha": "bd235434f119c67090952e08fc28abe41aea2e2c"
+    },
+    "xm-online/xm-uaa@de1bb967b81c0cfe9854b13c030512b85200f7e3": {
+      "parents": [
+        "ffa9609c809c17e7a39ae1d92843c4463e3ca739"
+      ],
+      "sha": "de1bb967b81c0cfe9854b13c030512b85200f7e3"
+    },
+    "xm-online/xm-uaa@ffa9609c809c17e7a39ae1d92843c4463e3ca739": {
+      "parents": [
+        "650592f6f3c90a37f16983f1ede911255f57373c"
+      ],
+      "sha": "ffa9609c809c17e7a39ae1d92843c4463e3ca739"
+    }
+  },
+  "spot_checks": [
+    {
+      "id": "de1b12aa0c9c61ed6b202dc0491d000e57be664ac37c41edea18a364a073ab9c",
+      "repository": "pgjdbc/pgjdbc",
+      "cve": "CVE-2022-31197",
+      "fix_commit": "739e599d52ad80f8dcd6efedc6157859b1a9d637",
+      "before_source_url": "https://raw.githubusercontent.com/pgjdbc/pgjdbc/736f9598c5b32a19c645ad33f118d2c9c266e90e/pgjdbc/src/main/java/org/postgresql/jdbc/PgResultSet.java",
+      "before_contains_dataset_positive": true,
+      "after_source_url": "https://raw.githubusercontent.com/pgjdbc/pgjdbc/739e599d52ad80f8dcd6efedc6157859b1a9d637/pgjdbc/src/main/java/org/postgresql/jdbc/PgResultSet.java",
+      "after_contains_dataset_positive": false
+    },
+    {
+      "id": "78f980e4ae5604494e7aab313ffba41785302ca066fd1e57fd14cce2dd579563",
+      "repository": "spring-projects/spring-data-jpa",
+      "cve": "CVE-2016-6652",
+      "fix_commit": "b8e7fecccc7dc8edcabb4704656a7abe6352c08f",
+      "before_source_url": "https://raw.githubusercontent.com/spring-projects/spring-data-jpa/c227c6753047b262b83ed7623433a1d65d9308b8/src/main/java/org/springframework/data/jpa/repository/query/QueryUtils.java",
+      "before_contains_dataset_positive": true,
+      "after_source_url": "https://raw.githubusercontent.com/spring-projects/spring-data-jpa/b8e7fecccc7dc8edcabb4704656a7abe6352c08f/src/main/java/org/springframework/data/jpa/repository/query/QueryUtils.java",
+      "after_contains_dataset_positive": false
+    },
+    {
+      "id": "0d1c7ba1ae933d61e879633cfbbe512153447fbc20981731a59a75f27104e1d2",
+      "repository": "apache/skywalking",
+      "cve": "CVE-2020-13921",
+      "fix_commit": "ddb6d9a5019a9c1fe31c364485a4e4b5066fefc3",
+      "before_source_url": "https://raw.githubusercontent.com/apache/skywalking/c11ad038cceb0cb550dbec304b8f92db733eb0d0/oap-server/server-storage-plugin/storage-jdbc-hikaricp-plugin/src/main/java/org/apache/skywalking/oap/server/storage/plugin/jdbc/mysql/MySQLAlarmQueryDAO.java",
+      "before_contains_dataset_positive": true,
+      "after_source_url": "https://raw.githubusercontent.com/apache/skywalking/ddb6d9a5019a9c1fe31c364485a4e4b5066fefc3/oap-server/server-storage-plugin/storage-jdbc-hikaricp-plugin/src/main/java/org/apache/skywalking/oap/server/storage/plugin/jdbc/mysql/MySQLAlarmQueryDAO.java",
+      "after_contains_dataset_positive": false
+    }
+  ]
+}

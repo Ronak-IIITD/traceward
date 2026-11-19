@@ -8,6 +8,21 @@ method-local CWE-89 rule, actual source-to-sink evidence, an installable Python 
 and a versioned JSON contract. It never executes scanned code or installs project
 dependencies. Scans need no network connection.
 
+## Open the dashboard
+
+From the repository root, run:
+
+```sh
+./start.sh
+```
+
+Open <http://127.0.0.1:3000>. Load the vulnerable example, select **Scan Java**, then
+select the sink in the evidence trace to highlight its source span. The parameterized
+example demonstrates a result with no supported findings. The dashboard includes
+parse diagnostics, current limitations, and JSON export. Stop both local servers
+with Ctrl+C. The launch script installs the locked API and web dependencies as needed.
+It requires uv and Node.js 22 or later with npm.
+
 ## Run locally
 
 Install [uv](https://docs.astral.sh/uv/), then from this directory:
@@ -40,7 +55,7 @@ print(result.model_dump_json(indent=2))
 
 `scan_snippet(java_source)` analyzes a UTF-8 string in memory with the same contract.
 Only Java is enabled. No model is loaded and no metric is inferred from the source
-research. The dashboard, model training, repository download and SARIF remain on the roadmap.
+research. The browser dashboard and offline research training harness are available. Repository download and SARIF remain on the roadmap.
 
 ## Local snippet API
 
@@ -155,13 +170,11 @@ fixtures are regression tests, not independent accuracy measurements.
 See [implementation status](docs/status.md), [coverage](docs/coverage.md),
 [security policy](SECURITY.md), and [contribution notes](CONTRIBUTING.md).
 
-## Attribution and distribution
+## Ownership and distribution
 
-The product proposal is inspired by Group 38 TCOM's *Efficient Machine Learning
-Models for Automated Source Code Vulnerability Classification*, as attributed in
-the PRD. No original team dataset, research code, trained model or benchmark result
-is bundled. Original research ownership and dataset/model reuse rights still need
-verification. A repository distribution license has not been selected; no license
-grant for this project should be inferred. Audit third-party dependency licenses
-and choose a project license before publication.
-# traceward
+TraceWard is an independent solo-developed project. The earlier benchmark
+description is unverified historical reference material. The implementation and
+experiments here use their own versioned source and recorded corpus provenance.
+External data attribution and upstream license information are recorded in
+docs/evaluation/data-sources.md. A distribution license for TraceWard remains an
+owner decision before publication.
