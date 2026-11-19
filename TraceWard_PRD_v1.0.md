@@ -5,6 +5,7 @@
 | Field | Value |
 |---|---|
 | Product | TraceWard |
+| Ownership | Independent solo project |
 | Version | 1.0 — proposed specification |
 | Document date | 19 November 2026 |
 | Product category | Developer-first, hybrid static analysis and ML-assisted application security testing (SAST) |
@@ -15,7 +16,7 @@
 | Model research track | 8 candidate ML model families; only independently validated models are enabled for production findings |
 | Status | Design proposal; not a description of implemented features |
 
-**Attribution and baseline:** TraceWard is a proposed independent product inspired by the Group 38 TCOM research project *Efficient Machine Learning Models for Automated Source Code Vulnerability Classification*. The research assessed Java SQL-injection detection with Random Forest, Linear SVM, and XGBoost. Retain attribution and verify team ownership and dataset/model reuse rights before publishing shared work. The paper's reported 1.000 macro-F1 on 64 synthetic test examples is **not** a real-world detection guarantee.
+**Ownership and historical baseline:** TraceWard is an **independent, solo-developed project**, not a group assignment or team-owned codebase. A previous classroom benchmark on Java SQL-injection classification provided background context, but its findings are **external historical reference data** until independently reproduced within TraceWard. That benchmark reported 1.000 macro-F1 on 64 synthetic test examples; this is **not** TraceWard's measured performance or evidence of real-world detection accuracy. Respect relevant dataset licenses and give source-specific attribution if third-party code, data, or model artifacts are actually reused.
 
 ---
 
@@ -314,7 +315,7 @@ Findings are grouped by normalized path, rule/CWE, sink span and trace identity.
 | Logistic Regression | Sparse TF-IDF | Interpretable linear baseline; probability calibration study | Lightweight candidate |
 | Multinomial Naive Bayes | Nonnegative token counts / TF-IDF | Very fast lexical baseline | Lightweight research baseline |
 | Random Forest | Sparse/dense engineered code features | Nonlinear ensemble benchmark | Only if value demonstrated |
-| Linear SVM | Sparse TF-IDF | Baseline from TCOM study; fast decision score | Preferred initial classification baseline |
+| Linear SVM | Sparse TF-IDF | Candidate inspired by prior Java/CWE-89 benchmark; fast decision score | Preferred initial classification baseline |
 | XGBoost | Engineered feature matrix | Boosted-tree benchmark | Only if validated against SVM |
 | LightGBM | Engineered feature matrix | Alternate boosting benchmark | Research/optional |
 | CodeBERT | Tokenized code | Contextual encoder, task-specific fine-tuning | Later optional inference model |
@@ -324,7 +325,7 @@ Findings are grouped by normalized path, rule/CWE, sink span and trace identity.
 
 ### Reproduction of the project baseline
 
-The source TCOM presentation reported:
+A prior Java/CWE-89 classroom presentation reported (historical reference only; not TraceWard results):
 
 - NIST SARD Juliet Java 1.3, CWE-89 focus.
 - 240 candidate vulnerable/safe pairs, 48 duplicate pairs removed → 192 pairs / 384 methods.
@@ -883,7 +884,7 @@ For a solo project, ship M1 before chasing all seven languages. An initial share
 10. Implement conservative local source/sink propagation and incomplete-analysis diagnostics.
 11. Implement canonical result model, fingerprints and JSON Schema.
 12. Implement CLI `scan`, `rules list`, `doctor`, `--format text/json`, exit codes.
-13. Reproduce TCOM dataset preparation and split manifest with auditable provenance.
+13. Independently reproduce the Java/CWE-89 benchmark dataset preparation and split manifest with auditable provenance, if original input data is legally available.
 14. Train RF, Linear SVM and XGBoost and compare to rule baseline; write caveats.
 15. Save compatible TF-IDF + SVM artifacts with hashes and metadata.
 16. Add optional classifier adapter; keep signals separate from deterministic findings.
@@ -914,9 +915,9 @@ Replace generic promises with **actual measured** supported languages, CWE cover
 
 ## 28. References and source provenance
 
-### Primary research supplied by project team
+### Historical reference (not TraceWard authorship)
 
-- *Efficient Machine Learning Models for Automated Source Code Vulnerability Classification*, Group 38 TCOM presentation/script (supplied in project conversation). Research results in §12 are based on the script and require independent reproduction before claiming achievement in TraceWard.
+- *Efficient Machine Learning Models for Automated Source Code Vulnerability Classification*, an earlier classroom presentation supplied as background material. Numbers cited in §12 are historical benchmark claims, not TraceWard outputs. Independently reproduce any adopted experiment, verify source/licensing requirements, and cite actual reused materials without suggesting shared ownership of TraceWard.
 
 ### Standards, methodology and implementation references
 

@@ -1,0 +1,15 @@
+{
+  "venvPath": ".",
+  "venv": ".venv",
+  "pythonVersion": "3.12",
+  "executionEnvironments": [
+    {
+      "root": ".",
+      "extraPaths": [
+        "packages/traceward-core/src",
+        "packages/traceward-ml/src",
+        "services/api"
+      ]
+    }
+  ]
+}
