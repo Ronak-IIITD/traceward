@@ -98,7 +98,8 @@ class Coverage(Contract):
         default_factory=lambda: [
             "Experimental Java CWE-89 subset; no external precision/recall evaluation yet.",
             "Only straight-line method-local flow and explicitly typed servlet/JDBC receivers.",
-            "Branches, loops, fields, aliases, interprocedural flow and dispatch are unsupported.",
+            "Try-with-resources follows the normal path only; exception handlers are skipped.",
+            "Branches, loops, fields, receiver aliases and interprocedural flow are unsupported.",
             "No supported findings does not certify that code is secure. ML is disabled.",
         ]
     )

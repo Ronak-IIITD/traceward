@@ -10,10 +10,18 @@ from traceward_api.app import MAX_BODY, MAX_SOURCE, app
 
 client = TestClient(app)
 ENDPOINT = "/api/v1/scans/snippet"
-FIXTURES = Path(__file__).resolve().parents[3] / "fixtures/java"
+FIXTURES = Path(__file__).resolve().parents[3] / "fixtures"
 
 
-@pytest.mark.parametrize(("name", "count"), [("Safe", 0), ("Vulnerable", 1)])
+@pytest.mark.parametrize(
+    ("name", "count"),
+    [
+        ("java/Safe", 0),
+        ("java/Vulnerable", 1),
+        ("jdbc-resources/ResourceQuery", 1),
+        ("jdbc-resources/BoundResourceQuery", 0),
+    ],
+)
 def test_cli_and_api_agree(tmp_path: Path, name: str, count: int) -> None:
     code = (FIXTURES / f"{name}.java").read_text()
     path = tmp_path / "snippet.java"
