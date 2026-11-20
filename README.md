@@ -95,8 +95,15 @@ concatenating untrusted input before `prepareStatement` can still trigger it.
 
 Java types are syntactic hints: imports, inheritance, dispatch, aliases of API
 receivers, fields, framework wrappers, string builders, sanitizers and calls across
-methods are unresolved. Control flow (including `try`, loops and nested scopes)
-causes the rest of that method to be skipped with a diagnostic. Unknown expression
+methods are unresolved. The rule follows nested blocks and the normal path through try-with-resources
+initializers and bodies. It recognizes explicitly declared JDBC resources and
+previously declared resource variables. To try both JDBC cases locally, run
+`.venv/bin/traceward scan fixtures/jdbc-resources`. The query in `ResourceQuery.java`
+produces one candidate at line 10. The bound parameter example produces zero.
+
+Branches, loops, plain `try` statements, and `catch` or `finally` handlers stop
+analysis of the remaining method with a diagnostic. Resource closure and exceptional
+paths are outside the model. Unknown expression
 and call propagation is reported where tainted arguments are observed. No complete
 control-flow or symbol graph is claimed. Dead comments and unused strings are not
 SQL evidence. Methods are analyzed regardless of whole-program reachability.
@@ -109,7 +116,7 @@ Discovery skips `.git`, `.venv`, `node_modules`, `vendor`, `dist`, `build`, and
 `target`; `--exclude 'relative/glob/*'` adds repeatable root-relative exclusions.
 Symlinks are skipped. Inputs are bounded to 2 MiB per file, 20 MiB total, 2,000
 source files, 20,000 discovered entries, a 120-second scan budget, a 500 ms native
-parse budget per file, 100,000 AST nodes and 128 expression levels. Skips and
+parse budget per file, 100,000 AST nodes, 32 nested block levels and 128 expression levels. Skips and
 limits produce diagnostics. These are initial engineering caps, not benchmarked
 service guarantees. Discovery is designed for local trees, not hostile concurrently
 mutating filesystems. ZIP uploads and public hosting are not implemented.

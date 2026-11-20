@@ -134,21 +134,65 @@ class JavaAnalysis:
             if body:
                 self.block(body)
 
-    def block(self, block: Node) -> None:
+    def declare(self, declaration: Node, type_node: Node | None) -> str:
+        name = self.text(declaration.child_by_field_name("name"))
+        value = self.evaluate(declaration.child_by_field_name("value"))
+        self.assign(name, value, declaration)
+        self.types[name] = self.text(type_node).split(".")[-1]
+        return name
+
+    def block(self, block: Node, depth: int = 0, resources: Node | None = None) -> bool:
+        """Return whether the next statement is reachable on a modeled path."""
+        if depth > 32:
+            self.diagnostics.append(
+                Diagnostic(
+                    code="SCOPE_LIMIT",
+                    message="Block nesting exceeds 32 levels; remaining method skipped.",
+                    location=self.location(block),
+                )
+            )
+            return False
+        locals_in_scope: set[str] = set()
+        if resources:
+            for resource in resources.named_children:
+                if resource.type != "resource":
+                    continue
+                type_node = resource.child_by_field_name("type")
+                if type_node:
+                    locals_in_scope.add(self.declare(resource, type_node))
+                else:
+                    # Existing resource references introduce no new binding.
+                    self.evaluate(resource.named_children[-1])
         for statement in block.named_children:
             if statement.type == "local_variable_declaration":
-                typename = self.text(statement.child_by_field_name("type")).split(".")[-1]
+                type_node = statement.child_by_field_name("type")
                 for decl in statement.named_children:
                     if decl.type == "variable_declarator":
-                        name = self.text(decl.child_by_field_name("name"))
-                        value = decl.child_by_field_name("value")
-                        self.assign(name, self.evaluate(value), decl)
-                        self.types[name] = typename
+                        locals_in_scope.add(self.declare(decl, type_node))
+            elif statement.type == "block":
+                if not self.block(statement, depth + 1):
+                    return False
+            elif statement.type == "try_with_resources_statement":
+                body = statement.child_by_field_name("body")
+                assert body is not None  # Required by the grammar after parse-error rejection.
+                continues = self.block(body, depth + 1, statement.child_by_field_name("resources"))
+                for child in statement.named_children:
+                    if child.type in {"catch_clause", "finally_clause"}:
+                        self.diagnostics.append(
+                            Diagnostic(
+                                code="UNSUPPORTED_FLOW",
+                                message="Exception handler and remaining method skipped.",
+                                location=self.location(child),
+                            )
+                        )
+                        return False
+                if not continues:
+                    return False
             elif statement.type in {"expression_statement", "return_statement", "throw_statement"}:
                 for expression in statement.named_children:
                     self.evaluate(expression)
                 if statement.type in {"return_statement", "throw_statement"}:
-                    break
+                    return False
             elif statement.type in {"line_comment", "block_comment", "empty_statement"}:
                 continue
             else:
@@ -159,7 +203,12 @@ class JavaAnalysis:
                         location=self.location(statement),
                     )
                 )
-                break
+                return False
+        # Assignments to enclosing locals survive normal block exit.
+        for name in locals_in_scope:
+            self.types.pop(name, None)
+            self.values.pop(name, None)
+        return True
 
     def assign(self, name: str, value: Value, node: Node) -> Value:
         if value.flow:
@@ -215,7 +264,7 @@ class JavaAnalysis:
             value = self.evaluate(node.child_by_field_name("right"), depth + 1)
             op = self.text(node.child_by_field_name("operator"))
             name = self.text(target)
-            if target and target.type == "identifier":
+            if target and target.type == "identifier" and name in self.types:
                 if op == "+=":
                     previous = self.values.get(name, Value())
                     flow = previous.flow or value.flow

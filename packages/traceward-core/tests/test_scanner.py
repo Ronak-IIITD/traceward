@@ -235,3 +235,83 @@ def test_unrecognized_file_and_empty_directory(tmp_path: Path) -> None:
     result = scan_path(tmp_path)
     assert result.summary.files_analyzed == 0
     assert "NO_SUPPORTED_FILES" in {d.code for d in result.diagnostics}
+
+
+def test_resource_fixture_evidence() -> None:
+    result = scan_path(ROOT / "fixtures/jdbc-resources")
+    assert result.summary.files_analyzed == 2
+    assert result.diagnostics == []
+    (finding,) = result.findings
+    assert finding.location.path == "ResourceQuery.java"
+    assert [(step.kind, step.location.start_line) for step in finding.evidence.flow] == [
+        ("source", 8),
+        ("assignment", 8),
+        ("concatenation", 10),
+        ("concatenation", 10),
+        ("sink", 10),
+    ]
+
+
+def test_multiple_resources_in_declaration_order() -> None:
+    body = (
+        "try (java.sql.Connection c = open(); "
+        'PreparedStatement p = c.prepareStatement("Q"+request.getHeader("id"))) { p.execute(); }'
+    )
+    (finding,) = scan_snippet(snippet(body)).findings
+    assert finding.evidence.flow[-1].symbol == "Connection.prepareStatement"
+
+
+def test_nested_resource_scopes_preserve_only_outer_locals() -> None:
+    result = scan_snippet(
+        snippet(
+            'String outer = ""; try (statement) { { String inner=request.getHeader("id"); '
+            'outer="Q"+inner; } } statement.executeQuery(outer); '
+            'String inner="constant"; statement.executeQuery("Q"+inner);'
+        )
+    )
+    assert result.diagnostics == []
+    assert len(result.findings) == 1
+
+
+def test_resource_receiver_expires_before_field_use() -> None:
+    code = (
+        "class D { Other s; void f(Connection c, HttpServletRequest r) {"
+        'try (Statement s=c.createStatement()) {} s.executeQuery("Q"+r.getHeader("id")); } }'
+    )
+    assert not scan_snippet(code).findings
+
+
+@pytest.mark.parametrize("handler", ["catch(Exception e) {}", "finally {}"])
+def test_resource_handlers_stop_continuation(handler: str) -> None:
+    query = 'statement.executeQuery("Q"+request.getHeader("id"));'
+    code = snippet(f"try (statement) {{ {query} }} {handler} {query}")
+    result = scan_snippet(code)
+    assert len(result.findings) == 1
+    (diagnostic,) = result.diagnostics
+    assert diagnostic.code == "UNSUPPORTED_FLOW"
+    assert diagnostic.location and diagnostic.location.start_column == code.index(handler) + 1
+
+
+@pytest.mark.parametrize("stop", ["return;", "throw new RuntimeException();", "if (flag) return;"])
+def test_nested_early_stop_reaches_method(stop: str) -> None:
+    result = scan_snippet(
+        snippet(
+            f"try (statement) {{ {{ {stop} }} }} "
+            'statement.executeQuery("Q"+request.getHeader("id"));'
+        )
+    )
+    assert not result.findings
+    assert bool(result.diagnostics) == stop.startswith("if")
+
+
+def test_nested_scope_budget() -> None:
+    result = scan_snippet(snippet("{" * 100 + "}" * 100))
+    assert [d.code for d in result.diagnostics] == ["SCOPE_LIMIT"]
+
+
+def test_block_field_assignment_is_outside_local_flow() -> None:
+    code = (
+        "class D {String q; void f(Statement s, HttpServletRequest r) {"
+        '{ q = "Q"+r.getHeader("id"); } s.executeQuery(q); } }'
+    )
+    assert not scan_snippet(code).findings
