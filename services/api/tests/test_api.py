@@ -20,6 +20,8 @@ FIXTURES = Path(__file__).resolve().parents[3] / "fixtures"
         ("java/Vulnerable", 1),
         ("jdbc-resources/ResourceQuery", 1),
         ("jdbc-resources/BoundResourceQuery", 0),
+        ("java-conditionals/ConditionalQuery", 1),
+        ("java-conditionals/SeparateBranches", 0),
     ],
 )
 def test_cli_and_api_agree(tmp_path: Path, name: str, count: int) -> None:

@@ -1,4 +1,4 @@
-"""Bounded Tree-sitter Java parsing and conservative straight-line local flow.
+"""Tree-sitter Java parsing and bounded method-local flow.
 
 This is an experimental syntactic API model, not Java type resolution. The scanner
 never executes input, resolves dependencies, or treats SQL-looking text as evidence.
@@ -6,6 +6,7 @@ never executes input, resolves dependencies, or treats SQL-looking text as evide
 
 import hashlib
 from dataclasses import dataclass
+from enum import Enum, auto
 
 import tree_sitter_java
 from tree_sitter import Language, Node, Parser
@@ -17,6 +18,8 @@ JAVA = Language(tree_sitter_java.language())
 RULE = JAVA_SQL.id
 REQUEST_TYPES = {"HttpServletRequest", "ServletRequest"}
 JDBC_TYPES = {"Statement", "Connection", "PreparedStatement"}
+COMMENTS = {"line_comment", "block_comment"}
+MAX_BRANCHES = 64
 
 
 def walk(node: Node, limit: int = 100_000) -> list[Node]:
@@ -47,6 +50,13 @@ class CallSite:
 class Value:
     flow: tuple[FlowNode, ...] = ()
     concatenated: bool = False
+    boolean: bool | None = None
+
+
+class Continuation(Enum):
+    NEXT = auto()
+    EXIT = auto()
+    INCOMPLETE = auto()
 
 
 class JavaAnalysis:
@@ -60,6 +70,7 @@ class JavaAnalysis:
         self.values: dict[str, Value] = {}
         self.types: dict[str, str] = {}
         self.method = ""
+        self.branches = 0
         self.occurrences: dict[str, int] = {}
 
     def text(self, node: Node | None) -> str:
@@ -122,6 +133,7 @@ class JavaAnalysis:
                 continue
             self.values = {}
             self.types = {}
+            self.branches = 0
             name = self.text(node.child_by_field_name("name"))
             params = node.child_by_field_name("parameters")
             self.method = name + self.text(params)
@@ -141,17 +153,16 @@ class JavaAnalysis:
         self.types[name] = self.text(type_node).split(".")[-1]
         return name
 
-    def block(self, block: Node, depth: int = 0, resources: Node | None = None) -> bool:
-        """Return whether the next statement is reachable on a modeled path."""
+    def block(self, block: Node, depth: int = 0, resources: Node | None = None) -> Continuation:
         if depth > 32:
             self.diagnostics.append(
                 Diagnostic(
                     code="SCOPE_LIMIT",
-                    message="Block nesting exceeds 32 levels; remaining method skipped.",
+                    message="Block nesting exceeds 32 levels; remaining path skipped.",
                     location=self.location(block),
                 )
             )
-            return False
+            return Continuation.INCOMPLETE
         locals_in_scope: set[str] = set()
         if resources:
             for resource in resources.named_children:
@@ -163,52 +174,132 @@ class JavaAnalysis:
                 else:
                     # Existing resource references introduce no new binding.
                     self.evaluate(resource.named_children[-1])
-        for statement in block.named_children:
+        statements = (
+            block.named_children if block.type in {"block", "constructor_body"} else [block]
+        )
+        continuation = Continuation.NEXT
+        for statement in statements:
             if statement.type == "local_variable_declaration":
                 type_node = statement.child_by_field_name("type")
                 for decl in statement.named_children:
                     if decl.type == "variable_declarator":
                         locals_in_scope.add(self.declare(decl, type_node))
-            elif statement.type == "block":
-                if not self.block(statement, depth + 1):
-                    return False
-            elif statement.type == "try_with_resources_statement":
-                body = statement.child_by_field_name("body")
-                assert body is not None  # Required by the grammar after parse-error rejection.
-                continues = self.block(body, depth + 1, statement.child_by_field_name("resources"))
-                for child in statement.named_children:
-                    if child.type in {"catch_clause", "finally_clause"}:
-                        self.diagnostics.append(
-                            Diagnostic(
-                                code="UNSUPPORTED_FLOW",
-                                message="Exception handler and remaining method skipped.",
-                                location=self.location(child),
-                            )
-                        )
-                        return False
-                if not continues:
-                    return False
-            elif statement.type in {"expression_statement", "return_statement", "throw_statement"}:
-                for expression in statement.named_children:
-                    self.evaluate(expression)
-                if statement.type in {"return_statement", "throw_statement"}:
-                    return False
-            elif statement.type in {"line_comment", "block_comment", "empty_statement"}:
-                continue
             else:
-                self.diagnostics.append(
-                    Diagnostic(
-                        code="UNSUPPORTED_FLOW",
-                        message="Unsupported control flow or scope; remaining method skipped.",
-                        location=self.location(statement),
-                    )
-                )
-                return False
-        # Assignments to enclosing locals survive normal block exit.
+                continuation = self.statement(statement, depth)
+                if continuation is not Continuation.NEXT:
+                    break
         for name in locals_in_scope:
             self.types.pop(name, None)
             self.values.pop(name, None)
-        return True
+        return continuation
+
+    def statement(self, node: Node, depth: int) -> Continuation:
+        match node.type:
+            case "block":
+                return self.block(node, depth + 1)
+            case "if_statement":
+                return self.conditional(node, depth)
+            case "try_with_resources_statement":
+                body = node.child_by_field_name("body")
+                assert body is not None  # Required by the grammar after parse-error rejection.
+                continuation = self.block(body, depth + 1, node.child_by_field_name("resources"))
+                for child in node.named_children:
+                    if child.type in {"catch_clause", "finally_clause"}:
+                        return self.unsupported(
+                            child, "Exception handler and remaining path skipped."
+                        )
+                return continuation
+            case "expression_statement" | "return_statement" | "throw_statement":
+                for expression in node.named_children:
+                    self.evaluate(expression)
+                return (
+                    Continuation.NEXT if node.type == "expression_statement" else Continuation.EXIT
+                )
+            case "line_comment" | "block_comment" | "empty_statement" | ";":
+                return Continuation.NEXT
+            case _:
+                return self.unsupported(
+                    node, "Unsupported control flow or scope; remaining path skipped."
+                )
+
+    def unsupported(self, node: Node, message: str) -> Continuation:
+        self.diagnostics.append(
+            Diagnostic(code="UNSUPPORTED_FLOW", message=message, location=self.location(node))
+        )
+        return Continuation.INCOMPLETE
+
+    def conditional(self, node: Node, depth: int) -> Continuation:
+        self.branches += 1
+        if self.branches > MAX_BRANCHES:
+            self.diagnostics.append(
+                Diagnostic(
+                    code="BRANCH_LIMIT",
+                    message=f"Method exceeds {MAX_BRANCHES} conditionals; remaining path skipped.",
+                    location=self.location(node),
+                )
+            )
+            return Continuation.INCOMPLETE
+        condition = node.child_by_field_name("condition")
+        while condition is not None and condition.type == "parenthesized_expression":
+            condition = self.inner_expression(condition)
+        assert condition is not None  # The if condition is required by the grammar.
+        name = self.text(condition)
+        truth: bool | None
+        if condition.type in {"true", "false"}:
+            truth = condition.type == "true"
+        elif condition.type == "identifier" and self.types.get(name) == "boolean":
+            truth = self.values.get(name, Value()).boolean
+        else:
+            return self.unsupported(condition, "Unsupported if condition; remaining path skipped.")
+        then_arm = node.child_by_field_name("consequence")
+        else_arm = node.child_by_field_name("alternative")
+        if truth is not None:
+            arm = then_arm if truth else else_arm
+            return self.block(arm, depth + 1) if arm is not None else Continuation.NEXT
+
+        before = self.values
+        continuing = []
+        incomplete = False
+        for arm, flag in ((then_arm, True), (else_arm, False)):
+            self.values = before.copy()
+            self.values[name] = Value(boolean=flag)
+            result = self.block(arm, depth + 1) if arm is not None else Continuation.NEXT
+            if result is Continuation.NEXT:
+                continuing.append(self.values)
+            incomplete |= result is Continuation.INCOMPLETE
+        if incomplete:
+            return Continuation.INCOMPLETE
+        if not continuing:
+            return Continuation.EXIT
+        if len(continuing) == 1:
+            self.values = continuing[0]
+        else:
+            self.merge_branches(node, *continuing)
+        return Continuation.NEXT
+
+    def merge_branches(self, node: Node, left: dict[str, Value], right: dict[str, Value]) -> None:
+        # Keep only shared evidence. A path-dependent value cannot be reused as a single trace.
+        self.values = {}
+        diverged = False
+        for name, left_value in left.items():
+            right_value = right.get(name)
+            if left_value is right_value or (not left_value.flow and left_value == right_value):
+                self.values[name] = left_value
+            else:
+                diverged |= bool(left_value.flow or (right_value and right_value.flow))
+        diverged |= any(value.flow for name, value in right.items() if name not in left)
+        if diverged:
+            self.diagnostics.append(
+                Diagnostic(
+                    code="BRANCH_VALUE_DIVERGENCE",
+                    message="Path-dependent tainted values were dropped after this conditional.",
+                    location=self.location(node),
+                )
+            )
+
+    @staticmethod
+    def inner_expression(node: Node) -> Node | None:
+        return next((child for child in node.named_children if child.type not in COMMENTS), None)
 
     def assign(self, name: str, value: Value, node: Node) -> Value:
         if value.flow:
@@ -241,7 +332,7 @@ class JavaAnalysis:
         if node.type == "identifier":
             return self.values.get(self.text(node), Value())
         if node.type == "parenthesized_expression":
-            return self.evaluate(node.named_children[0], depth + 1)
+            return self.evaluate(self.inner_expression(node), depth + 1)
         if node.type == "binary_expression":
             left = self.evaluate(node.child_by_field_name("left"), depth + 1)
             right = self.evaluate(node.child_by_field_name("right"), depth + 1)
@@ -315,13 +406,13 @@ class JavaAnalysis:
                         )
                     )
             return Value()
+        if node.type in {"true", "false"}:
+            return Value(boolean=node.type == "true")
         if node.type in {
             "string_literal",
             "character_literal",
             "decimal_integer_literal",
             "null_literal",
-            "true",
-            "false",
         }:
             return Value()
         # Visit calls in unfamiliar expressions, without inventing propagation semantics.
@@ -355,7 +446,7 @@ class JavaAnalysis:
                     flow=flow,
                     uncertainties=[
                         "Receiver types are syntactic; Java imports and dispatch are not resolved.",
-                        "Only straight-line method-local evidence; exploitability requires review.",
+                        "Method-local evidence with limited branch reasoning; review reachability.",
                     ],
                 ),
             )
