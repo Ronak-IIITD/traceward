@@ -16,11 +16,12 @@ From the repository root, run:
 ./start.sh
 ```
 
-Open <http://127.0.0.1:3000>. Load the vulnerable example, select **Scan Java**, then
-select the sink in the evidence trace to highlight its source span. The parameterized
-example demonstrates a result with no supported findings. The dashboard includes
-parse diagnostics, current limitations, and JSON export. Stop both local servers
-with Ctrl+C. The launch script installs the locked API and web dependencies as needed.
+Open <http://127.0.0.1:3000> and select **Try the vulnerable example**. Select
+a finding or trace step to reveal the highlighted code in the editor. Open
+**Suggested fix** for a copyable parameterized query example. Use **Ctrl+Enter**
+(**Cmd+Enter** on macOS) to scan your own Java, or load **Parameterized** to see
+the clean state for the experimental rule. The dashboard includes diagnostics,
+coverage details, and JSON copy and export. Stop both local servers with Ctrl+C. The launch script installs the locked API and web dependencies as needed.
 It requires uv and Node.js 22 or later with npm.
 
 ## Run locally

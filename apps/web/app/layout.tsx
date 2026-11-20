@@ -1,18 +1,40 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import Header from "@/components/Header";
 import "./globals.css";
+import "./navigation.css";
 
 export const metadata: Metadata = {
   title: "TraceWard · Code security workspace",
-  description: "Inspect Java SQL injection candidates and the evidence behind them."
+  description: "Inspect Java SQL injection candidates and the evidence behind them.",
 };
-export default function Layout({children}: {children: React.ReactNode}) {
-  return <html lang="en"><body>
-    <header className="site-header"><Link href="/" className="brand"><span className="brand-icon" aria-hidden="true">T</span>TraceWard</Link>
-      <nav aria-label="Main"><Link href="/">Scan workspace</Link><Link href="/methodology">Coverage & methods</Link></nav>
-      <span className="local-label">LOCAL WORKSPACE</span>
-    </header>
-    {children}
-    <footer>Trace the risk. Secure the code.<span>Source is submitted only when you select Scan Java.</span></footer>
-  </body></html>;
+
+export default function Layout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en">
+      <body>
+        <Header />
+        {children}
+        <footer className="tw-footer">
+          <span>
+            <svg
+              width="14"
+              height="16"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.7"
+            >
+              <path d="m12 2 8 3v6c0 5-3.6 9-8 11-4.4-2-8-6-8-11V5z" />
+              <path d="m8.5 12 2.3 2.3 4.7-5" />
+            </svg>
+            Local processing · Source stays in memory
+          </span>
+          <span>
+            TraceWard <b aria-hidden="true">/</b> Java analysis
+          </span>
+        </footer>
+      </body>
+    </html>
+  );
 }
