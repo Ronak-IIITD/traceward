@@ -5,7 +5,7 @@
 Progress is tracked through working features and release gates. The previous
 60% number counted initial issues equally and did not measure product completion.
 
-- Java CLI and JSON reports with experimental local CWE-89 evidence.
+- Java CLI with JSON and SARIF 2.1.0 reports for experimental local CWE-89 evidence.
 - Bounded FastAPI snippet endpoint and CLI/API parity.
 - Next.js scan workspace with evidence selection, diagnostics and JSON export.
 - Offline SVM, Random Forest and XGBoost research harness, safe JSON SVM inference,
@@ -20,7 +20,7 @@ Progress is tracked through working features and release gates. The previous
 - Production model inference and hybrid prioritization.
 - Public deployment isolation and abuse controls, distribution-license decision
   and release acceptance review.
-- Roadmap work includes additional languages, expanded CWE coverage, SARIF,
+- Roadmap work includes additional languages, expanded CWE coverage,
   bounded repository fetching and interprocedural analysis.
 
 ## Delivered scanner

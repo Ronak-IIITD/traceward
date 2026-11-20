@@ -55,7 +55,8 @@ print(result.model_dump_json(indent=2))
 
 `scan_snippet(java_source)` analyzes a UTF-8 string in memory with the same contract.
 Only Java is enabled. No model is loaded and no metric is inferred from the source
-research. The browser dashboard and offline research training harness are available. Repository download and SARIF remain on the roadmap.
+research. The browser dashboard and offline research training harness are available.
+Repository download remains on the roadmap.
 
 ## Local snippet API
 
@@ -148,6 +149,24 @@ and duplicate occurrence; identical inputs under different roots produce the
 same findings. Scan IDs and timings are intentionally volatile. Editing sink or
 method text can change fingerprints; no semantic baseline matching is promised.
 Evidence stores locations and symbol names, not copied SQL or request values.
+
+## SARIF export
+
+```sh
+uv run --locked traceward scan fixtures/java --format sarif --output traceward.sarif
+```
+
+SARIF 2.1.0 includes rule metadata, stable TraceWard fingerprints, the source-to-sink
+trace, scan diagnostics and coverage. Findings appear as SARIF warnings, with TraceWard
+severity, confidence and evidence level recorded separately. Locations use whole lines.
+JSON retains the exact UTF-8 byte columns. The CLI applies the same exit codes in all
+formats. Use `--fail-on none` for an informational check that still fails on scan errors.
+
+Paths are relative to the scan root. For GitHub code scanning, run from the checkout
+and scan `.` so paths match the repository. The package CI job publishes a sample
+SARIF artifact after validation against the checksum-pinned OASIS schema. Uploading
+alerts requires GitHub code scanning access for the target repository.
+See [GitHub's SARIF support](https://docs.github.com/en/code-security/reference/code-scanning/sarif-files/sarif-support).
 
 ## CI and release delivery
 

@@ -9,6 +9,7 @@ from pathlib import Path
 from traceward import __version__
 from traceward.models import ScanResult
 from traceward.registry import RULES
+from traceward.sarif import sarif_log
 from traceward.scanner import scan_path
 
 
@@ -56,7 +57,7 @@ def main() -> int:
     scan = commands.add_parser("scan")
     scan.add_argument("path", type=Path)
     scan.add_argument("--language", choices=["java"], default="java")
-    scan.add_argument("--format", choices=["text", "json"], default="text")
+    scan.add_argument("--format", choices=["text", "json", "sarif"], default="text")
     scan.add_argument("--output", type=Path)
     scan.add_argument("--exclude", action="append", default=[])
     scan.add_argument(
@@ -81,9 +82,13 @@ def main() -> int:
                 print(json.dumps(rule.model_dump(), indent=2))
         return 0
     result = scan_path(args.path, tuple(args.exclude))
-    output = (
-        result.model_dump_json(indent=2) + "\n" if args.format == "json" else render_text(result)
-    )
+    status = exit_code(result, args.fail_on, args.min_confidence, args.fail_on_partial)
+    if args.format == "json":
+        output = result.model_dump_json(indent=2) + "\n"
+    elif args.format == "sarif":
+        output = json.dumps(sarif_log(result, status), indent=2) + "\n"
+    else:
+        output = render_text(result)
     if args.output:
         try:
             args.output.write_text(output, encoding="utf-8")
@@ -92,7 +97,7 @@ def main() -> int:
             return 2
     else:
         print(output, end="")
-    return exit_code(result, args.fail_on, args.min_confidence, args.fail_on_partial)
+    return status
 
 
 if __name__ == "__main__":
