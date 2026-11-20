@@ -85,7 +85,7 @@ capabilities and model status are available under `/api/v1/`.
 
 The experimental rule recognizes `HttpServletRequest` / `ServletRequest`
 `getParameter` and `getHeader` sources, local declarations, assignments, `+`, `+=`,
-parentheses, and aliases of **values** inside a straight-line method. Sinks are
+parentheses, and aliases of **values** inside a method. Sinks are
 explicitly typed `Statement.executeQuery/executeUpdate/execute/addBatch` and
 `Connection.prepareStatement/prepareCall`. A tainted concatenated query at a
 recognized sink raises a high-severity, medium-confidence `heuristic_candidate`.
@@ -101,9 +101,17 @@ previously declared resource variables. To try both JDBC cases locally, run
 `.venv/bin/traceward scan fixtures/jdbc-resources`. The query in `ResourceQuery.java`
 produces one candidate at line 10. The bound parameter example produces zero.
 
-Branches, loops, plain `try` statements, and `catch` or `finally` handlers stop
-analysis of the remaining method with a diagnostic. Resource closure and exceptional
-paths are outside the model. Unknown expression
+Simple `if` conditions support boolean literals, explicitly typed boolean local variables
+and parameters, and parentheses around them. The scanner visits only the reachable arm for a
+known condition and analyzes unknown conditions with separate local values in each arm.
+When both arms continue, differing tainted values are dropped with a
+`BRANCH_VALUE_DIVERGENCE` diagnostic. If one arm returns or throws, the continuing arm's
+values carry forward. Try `.venv/bin/traceward scan fixtures/java-conditionals` to compare
+a finding inside a branch with an example whose input and JDBC call are in opposite branches.
+
+Complex conditions, loops, plain `try` statements, and exception handlers stop analysis
+on the affected path with a diagnostic. Resource closure and exceptional paths are outside
+the model. Unknown expression
 and call propagation is reported where tainted arguments are observed. No complete
 control-flow or symbol graph is claimed. Dead comments and unused strings are not
 SQL evidence. Methods are analyzed regardless of whole-program reachability.
@@ -116,8 +124,8 @@ Discovery skips `.git`, `.venv`, `node_modules`, `vendor`, `dist`, `build`, and
 `target`; `--exclude 'relative/glob/*'` adds repeatable root-relative exclusions.
 Symlinks are skipped. Inputs are bounded to 2 MiB per file, 20 MiB total, 2,000
 source files, 20,000 discovered entries, a 120-second scan budget, a 500 ms native
-parse budget per file, 100,000 AST nodes, 32 nested block levels and 128 expression levels. Skips and
-limits produce diagnostics. These are initial engineering caps, not benchmarked
+parse budget per file, 100,000 AST nodes, 32 nested scope levels, 64 visited conditionals per method, and
+128 expression levels. Skips and limits produce diagnostics. These are initial engineering caps, not benchmarked
 service guarantees. Discovery is designed for local trees, not hostile concurrently
 mutating filesystems. ZIP uploads and public hosting are not implemented.
 

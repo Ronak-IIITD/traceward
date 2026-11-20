@@ -65,10 +65,10 @@ def test_method_scope_isolation() -> None:
     assert not scan_snippet(code).findings
 
 
-def test_branch_is_explicitly_unsupported() -> None:
+def test_call_condition_is_explicitly_unsupported() -> None:
     result = scan_snippet(
         snippet(
-            'String id=request.getParameter("id"); if(true){id="fixed";} '
+            'String id=request.getParameter("id"); if(check()){id="fixed";} '
             'statement.executeQuery("Q"+id);'
         )
     )
@@ -315,3 +315,66 @@ def test_block_field_assignment_is_outside_local_flow() -> None:
         '{ q = "Q"+r.getHeader("id"); } s.executeQuery(q); } }'
     )
     assert not scan_snippet(code).findings
+
+
+def test_conditional_fixture_evidence() -> None:
+    result = scan_path(ROOT / "fixtures/java-conditionals")
+    assert result.summary.files_analyzed == 2
+    (finding,) = result.findings
+    assert finding.location.path == "ConditionalQuery.java"
+    assert finding.evidence.source.start_line == 9
+    assert finding.evidence.sink.start_line == 10
+    assert finding.evidence_level == "heuristic_candidate"
+    assert [d.code for d in result.diagnostics] == ["BRANCH_VALUE_DIVERGENCE"]
+
+
+QUERY_FROM_INPUT = 'statement.executeQuery("Q"+request.getParameter("id"));'
+QUERY_FROM_LOCAL = 'statement.executeQuery("Q"+id);'
+
+
+@pytest.mark.parametrize(
+    ("body", "count", "diagnostics"),
+    [
+        (f"if (false) {QUERY_FROM_INPUT}", 0, []),
+        (f"if (true) {{}} else {QUERY_FROM_INPUT}", 0, []),
+        (f"if (false) {{}} else {QUERY_FROM_INPUT}", 1, []),
+        (f"boolean off=false; if (/* disabled */ (off)) {QUERY_FROM_INPUT}", 0, []),
+        (f"if (flag) {{ if (flag) {{}} else {QUERY_FROM_INPUT} }}", 0, []),
+        (f"if (flag) {{}} else return; if (flag) {QUERY_FROM_INPUT}", 1, []),
+        (f"if (flag) {{}} else return; if (flag) {{}} else {QUERY_FROM_INPUT}", 0, []),
+        (f"if (flag) return; else throw new RuntimeException(); {QUERY_FROM_INPUT}", 0, []),
+        (f"if (flag) ; else ; {QUERY_FROM_INPUT}", 1, []),
+        (
+            f"if (flag) while (other) {{}} else {QUERY_FROM_INPUT} {QUERY_FROM_INPUT}",
+            1,
+            ["UNSUPPORTED_FLOW"],
+        ),
+        (
+            f'String id=request.getParameter("id"); if (flag) {{}} else {{}} {QUERY_FROM_LOCAL}',
+            1,
+            [],
+        ),
+        (
+            f'String id=request.getParameter("id"); if (flag) id="fixed"; {QUERY_FROM_LOCAL}',
+            0,
+            ["BRANCH_VALUE_DIVERGENCE"],
+        ),
+        (
+            f'String id="fixed"; if (flag) id=request.getParameter("id"); else return; '
+            f"{QUERY_FROM_LOCAL}",
+            1,
+            [],
+        ),
+        (f"if (flag) flag=false; if (flag) {QUERY_FROM_INPUT}", 0, []),
+    ],
+)
+def test_conditional_flow(body: str, count: int, diagnostics: list[str]) -> None:
+    result = scan_snippet(snippet(body, f"{PARAMS}, boolean flag, boolean other"))
+    assert result.summary.errors == 0
+    assert len(result.findings) == count
+    assert [diagnostic.code for diagnostic in result.diagnostics] == diagnostics
+
+
+def test_conditional_budget() -> None:
+    result = scan_snippet(snippet("if (flag) {}" * 65, f"{PARAMS}, boolean flag"))
+    assert [d.code for d in result.diagnostics] == ["BRANCH_LIMIT"]
