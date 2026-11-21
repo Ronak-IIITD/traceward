@@ -9,7 +9,7 @@ export default function Methodology() {
       <section className="tw-methods-hero">
         <span className="tw-methods-kicker">Coverage &amp; methods</span>
         <h1>Know what was analyzed.</h1>
-        <p>Review the Java and Python rules, the evidence they follow, and the limits of each scan.</p>
+        <p>Review the supported SQL injection rules, the evidence they follow, and the limits of each scan.</p>
         <span className="tw-maturity">Experimental coverage</span>
       </section>
 
@@ -37,6 +37,16 @@ export default function Methodology() {
                     <td>Python</td>
                     <td>CWE-89</td>
                     <td>Console input to SQLite</td>
+                  </tr>
+                  <tr>
+                    <td>JavaScript</td>
+                    <td>CWE-89</td>
+                    <td>Node.js arguments to SQLite</td>
+                  </tr>
+                  <tr>
+                    <td>TypeScript</td>
+                    <td>CWE-89</td>
+                    <td>Node.js arguments to SQLite</td>
                   </tr>
                 </tbody>
               </table>
@@ -70,6 +80,21 @@ export default function Methodology() {
                 <code>db.cursor()</code>. Bind values separately using placeholders.
               </dd>
             </dl>
+            <h3>JavaScript and TypeScript query concatenation</h3>
+            <code className="tw-rule-id">javascript.sqlite.concatenated-argv</code>{" "}
+            <code className="tw-rule-id">typescript.sqlite.concatenated-argv</code>
+            <dl className="tw-method-steps">
+              <dt>Source</dt>
+              <dd>Command-line arguments from <code>process.argv[2]</code> and higher indexes.</dd>
+              <dt>Propagation</dt>
+              <dd>Top-level declarations and string concatenation with <code>+</code>.</dd>
+              <dt>Sink</dt>
+              <dd>
+                <code>prepare()</code> or <code>exec()</code> on a local connection created from{" "}
+                <code>DatabaseSync</code> imported from <code>node:sqlite</code>. Use a fixed query
+                with placeholders and bind values when calling the prepared statement.
+              </dd>
+            </dl>
           </section>
           <section className="tw-method-card">
             <h2>Known limitations</h2>
@@ -92,6 +117,11 @@ export default function Methodology() {
               <li>
                 The Python rule skips branches, f-strings, web request inputs, and flows across functions.
               </li>
+              <li>
+                The JavaScript and TypeScript rules cover straight-line Node.js scripts. Template
+                interpolation, web request inputs, other database drivers, and cross-function
+                flows are outside their scope.
+              </li>
             </ul>
           </section>
         </div>
@@ -112,7 +142,7 @@ export default function Methodology() {
             <ol className="tw-roadmap">
               <li>
                 <small>Available</small>
-                <strong>Java and Python CWE-89</strong>
+                <strong>Experimental CWE-89 rules</strong>
                 <p>The CLI and dashboard share the same experimental static rules.</p>
               </li>
               <li>

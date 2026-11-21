@@ -25,12 +25,21 @@ FIXTURES = Path(__file__).resolve().parents[3] / "fixtures"
         ("python/concatenated.py", 1),
         ("python/cursor_concatenated.py", 1),
         ("python/parameterized.py", 0),
+        ("javascript/concatenated.js", 1),
+        ("javascript/parameterized.js", 0),
+        ("typescript/concatenated.ts", 1),
+        ("typescript/parameterized.ts", 0),
     ],
 )
 def test_cli_and_api_agree(tmp_path: Path, name: str, count: int) -> None:
     source = FIXTURES / name
     code = source.read_text()
-    language = {".java": "java", ".py": "python"}[source.suffix]
+    language = {
+        ".java": "java",
+        ".js": "javascript",
+        ".py": "python",
+        ".ts": "typescript",
+    }[source.suffix]
     path = tmp_path / f"snippet{source.suffix}"
     path.write_text(code)
     cli = subprocess.run(["traceward", "scan", str(path), "--format", "json"], capture_output=True)
@@ -47,23 +56,38 @@ def test_cli_and_api_agree(tmp_path: Path, name: str, count: int) -> None:
 
 
 @pytest.mark.parametrize(
-    ("language", "code"), [("java", "class A { int a }"), ("python", "def broken(:\n")]
+    ("language", "code"),
+    [
+        ("java", "class A { int a }"),
+        ("javascript", "const value ="),
+        ("python", "def broken(:\n"),
+        ("typescript", "const value: string ="),
+    ],
 )
 def test_parse_failure_with_location(language: str, code: str) -> None:
     response = client.post(ENDPOINT, json={"language": language, "code": code})
     assert response.status_code == 200
     result = response.json()
     assert result["summary"]["errors"] and result["diagnostics"][0]["location"]
+    assert result["summary"]["files_analyzed"] == 0
+    assert result["findings"] == []
 
 
-def test_python_source_is_analyzed_without_running_it(tmp_path: Path) -> None:
+@pytest.mark.parametrize("language", ["python", "javascript"])
+def test_source_is_analyzed_without_running_it(tmp_path: Path, language: str) -> None:
     marker = tmp_path / "executed"
-    code = f"from pathlib import Path\nPath({str(marker)!r}).touch()\n"
-    response = client.post(ENDPOINT, json={"language": "python", "code": code})
+    if language == "python":
+        code = f"from pathlib import Path\nPath({str(marker)!r}).touch()\n"
+    else:
+        code = (
+            'import { writeFileSync } from "node:fs";\n'
+            f'writeFileSync({json.dumps(str(marker))}, "");\n'
+        )
+    response = client.post(ENDPOINT, json={"language": language, "code": code})
     assert response.status_code == 200
     result = ScanResult.model_validate(response.json())
     assert result.summary.files_analyzed == 1
-    assert result.coverage.languages_detected == ["python"]
+    assert result.coverage.languages_detected == [language]
     assert not marker.exists()
 
 
@@ -72,7 +96,7 @@ def test_python_source_is_analyzed_without_running_it(tmp_path: Path) -> None:
     [
         ({"language": "java", "code": "🍵" * (MAX_SOURCE // 4 + 1)}, 413, "INPUT_TOO_LARGE"),
         ({"language": "python", "code": "🍵" * (MAX_SOURCE // 4 + 1)}, 413, "INPUT_TOO_LARGE"),
-        ({"language": "javascript", "code": "private"}, 422, "UNSUPPORTED_LANGUAGE"),
+        ({"language": "go", "code": "private"}, 422, "UNSUPPORTED_LANGUAGE"),
         ({"language": "java", "code": "private", "filename": "x"}, 422, "INVALID_INPUT"),
         ({"language": "java", "code": 42}, 422, "INVALID_INPUT"),
         ({"language": "java", "code": "   "}, 422, "INVALID_INPUT"),
@@ -106,7 +130,8 @@ def test_documented_routes_and_capabilities() -> None:
     assert client.get("/api/v1/version").json()["schema_version"] == "1.0.0"
     assert client.get("/api/v1/models").json()["models"] == []
     rules = client.get("/api/v1/capabilities").json()["rules"]
-    assert {rule["language"] for rule in rules} == {"java", "python"}
+    languages = ["java", "javascript", "python", "typescript"]
+    assert {rule["language"] for rule in rules} == set(languages)
     for rule in rules:
         cli = subprocess.check_output(
             ["traceward", "rules", "list", "--language", rule["language"]]
@@ -114,7 +139,7 @@ def test_documented_routes_and_capabilities() -> None:
         assert rule == json.loads(cli)
     spec = client.get("/openapi.json").json()["paths"][ENDPOINT]["post"]
     schema = spec["requestBody"]["content"]["application/json"]["schema"]
-    assert schema["properties"]["language"]["enum"] == ["java", "python"]
+    assert schema["properties"]["language"]["enum"] == languages
     assert "413" in spec["responses"]
 
 

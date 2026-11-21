@@ -4,11 +4,15 @@ import os
 import stat
 import time
 import uuid
+from collections.abc import Callable
 from fnmatch import fnmatch
+from functools import partial
 from pathlib import Path
+from typing import Protocol
 
 from traceward.java import JavaAnalysis
-from traceward.models import Diagnostic, ScanResult, Source
+from traceward.models import Diagnostic, Finding, ScanResult, Source
+from traceward.node_sql import NodeSqlAnalysis
 from traceward.python_sql import PythonAnalysis
 from traceward.registry import RULES, SUPPORTED_LANGUAGES
 
@@ -18,6 +22,7 @@ MAX_FILES = 2000
 MAX_ENTRIES = 20_000
 EXCLUDED = {
     ".git",
+    ".next",
     ".venv",
     "venv",
     "__pycache__",
@@ -32,8 +37,10 @@ LANGUAGES = {
     ".py": "python",
     ".js": "javascript",
     ".jsx": "javascript",
+    ".mjs": "javascript",
     ".ts": "typescript",
     ".tsx": "typescript",
+    ".mts": "typescript",
     ".go": "go",
     ".c": "c",
     ".h": "c",
@@ -42,11 +49,31 @@ LANGUAGES = {
     ".hpp": "cpp",
 }
 
-SNIPPET_PATHS = {"java": "snippet.java", "python": "snippet.py"}
-ADAPTERS: dict[str, type[JavaAnalysis] | type[PythonAnalysis]] = {
+SNIPPET_PATHS = {
+    "java": "snippet.java",
+    "python": "snippet.py",
+    "javascript": "snippet.js",
+    "typescript": "snippet.ts",
+}
+
+
+class SourceAnalysis(Protocol):
+    findings: list[Finding]
+    diagnostics: list[Diagnostic]
+
+    def analyze(self) -> None: ...
+
+
+ADAPTERS: dict[str, Callable[[bytes, str], SourceAnalysis]] = {
     "java": JavaAnalysis,
     "python": PythonAnalysis,
+    "javascript": partial(NodeSqlAnalysis, language="javascript"),
+    "typescript": partial(NodeSqlAnalysis, language="typescript"),
 }
+NODE_LIMITATIONS = (
+    "Tracks process.argv through string + to prepare() or exec() on a local SQLite DatabaseSync.",
+    "Limited to top-level const flow. Branches and template interpolation are unsupported.",
+)
 LIMITATIONS = {
     "java": (
         "Experimental Java CWE-89 subset; no external precision/recall evaluation yet.",
@@ -58,6 +85,14 @@ LIMITATIONS = {
         "Experimental Python CWE-89 subset; no external precision/recall evaluation yet.",
         "Tracks input() through string + to execute() on a local sqlite3 connection or cursor.",
         "Web inputs, f-strings, branches and interprocedural flow are outside this rule.",
+    ),
+    "javascript": (
+        "Experimental JavaScript CWE-89 subset; no external precision/recall evaluation yet.",
+        *NODE_LIMITATIONS,
+    ),
+    "typescript": (
+        "Experimental TypeScript CWE-89 subset; no external precision/recall evaluation yet.",
+        *NODE_LIMITATIONS,
     ),
 }
 
@@ -109,7 +144,9 @@ def finish(result: ScanResult, start: float) -> ScanResult:
     )
     if not result.coverage.supported_checks:
         result.coverage.unsupported_checks.insert(0, "CWE-89")
-    result.coverage.limitations = [note for lang in languages for note in LIMITATIONS.get(lang, ())]
+    result.coverage.limitations = list(
+        dict.fromkeys(note for lang in languages for note in LIMITATIONS.get(lang, ()))
+    )
     result.coverage.limitations.append(
         "No supported findings does not certify that code is secure. ML is disabled."
     )
@@ -125,7 +162,9 @@ def scan_snippet(code: str, language: str = "java") -> ScanResult:
         result.diagnostics.append(
             Diagnostic(
                 code="UNSUPPORTED_LANGUAGE",
-                message="Choose a supported snippet language: Java or Python.",
+                message="Supported snippet languages: "
+                + ", ".join(sorted(SUPPORTED_LANGUAGES))
+                + ".",
                 level="error",
             )
         )

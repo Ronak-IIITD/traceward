@@ -2,8 +2,8 @@
 
 **Trace the risk. Secure the code.**
 
-TraceWard scans Java and Python source locally for selected SQL injection paths
-(CWE-89). Each finding links input, query construction and a database call to
+TraceWard scans Java, Python, JavaScript and TypeScript locally for selected SQL
+injection paths (CWE-89). Each finding links input, query construction and a database call to
 locations in the source. The CLI and snippet API share a versioned JSON contract.
 Scans run offline and submitted code is never executed.
 
@@ -15,7 +15,7 @@ From the repository root, run:
 ./start.sh
 ```
 
-Open <http://127.0.0.1:3000>, choose Java or Python, and select **Try the vulnerable
+Open <http://127.0.0.1:3000>, choose a language, and select **Try the vulnerable
 example**. Select a finding or trace step to highlight its source in the editor.
 Open **Suggested fix** for a copyable parameterized query. Use **Ctrl+Enter**
 (**Cmd+Enter** on macOS) to scan your own code. Load **Parameterized** to see the
@@ -32,6 +32,10 @@ Install [uv](https://docs.astral.sh/uv/), then from this directory:
 uv sync --locked --python 3.12
 uv run traceward --version
 uv run traceward doctor
+uv run traceward scan fixtures/javascript/concatenated.js
+# Expected exit 1: a candidate at the SQLite prepare call.
+uv run traceward scan fixtures/typescript/parameterized.ts
+# Expected exit 0: the prepared statement binds the argument separately.
 uv run traceward rules list --language python
 uv run traceward scan fixtures/python/concatenated.py
 # Expected exit 1: one candidate at the SQLite execute call on line 8.
@@ -59,11 +63,12 @@ result = scan_path(Path("fixtures/java"))
 print(result.model_dump_json(indent=2))
 ```
 
-`scan_snippet(java_source)` analyzes a UTF-8 string in memory with the same contract.
-For Python, use `scan_snippet(source, language="python")`. Directory scans
-inspect both `.java` and `.py` files by default. Use `--language python` or
-`--language java` to restrict discovery. Production ML inference is disabled. The browser dashboard and offline research training harness are available.
-Repository download remains on the roadmap.
+`scan_snippet(source, language="typescript")` analyzes source in memory. The
+default language is Java. Directory scans identify language by extension.
+Use `--language java`, `python`, `javascript` or `typescript` to narrow the scan.
+JavaScript extensions are `.js`, `.jsx` and `.mjs`. TypeScript extensions are
+`.ts`, `.tsx` and `.mts`. Production ML inference is disabled. Repository
+download remains on the roadmap.
 
 ## Local snippet API
 
@@ -136,11 +141,20 @@ outside this rule. Consult the diagnostics for paths the scanner skipped. An uns
 the next function definition.
 See the [SQLite parameter binding guide](https://docs.python.org/3/library/sqlite3.html#how-to-use-placeholders-to-bind-values-in-sql-queries).
 
+The experimental **JavaScript and TypeScript** rules share a Node.js SQLite
+model. They follow `process.argv[2]` and later literal indexes through top-level
+`const` bindings and string `+` into `prepare()` or `exec()` on a directly
+constructed `DatabaseSync` from a named `node:sqlite` import. Constant prepared
+queries can bind positional values separately. Check the diagnostics when an
+unsupported statement ends the modeled path. Coverage is limited to straight-line
+module code, with web request sources, CommonJS, receiver aliases, functions, and
+template interpolation outside this slice. [Node.js SQLite reference](https://nodejs.org/download/release/v24.11.1/docs/api/sqlite.html)
+
 All results declare **partial coverage**. No supported findings does not certify
-security. Coverage outside these Java and Python CWE-89 cases remains on the roadmap.
+security. Coverage outside the documented CWE-89 cases remains on the roadmap.
 No rule is externally validated or ready for production assurance.
 
-Discovery skips `.git`, `.venv`, `venv`, `__pycache__`, `node_modules`, `vendor`, `dist`, `build`, and
+Discovery skips `.git`, `.next`, `.venv`, `venv`, `__pycache__`, `node_modules`, `vendor`, `dist`, `build`, and
 `target`; `--exclude 'relative/glob/*'` adds repeatable root-relative exclusions.
 Symlinks are skipped. Inputs are bounded to 2 MiB per file, 20 MiB total, 2,000
 source files, 20,000 discovered entries, a 120-second scan budget, a 500 ms native

@@ -5,7 +5,7 @@
 Progress is tracked through working features and release gates. The previous
 60% number counted initial issues equally and did not measure product completion.
 
-- Java and Python CLI scans with JSON and SARIF 2.1.0 reports for experimental local CWE-89 evidence.
+- Java, Python, JavaScript and TypeScript CLI scans with JSON and SARIF 2.1.0 reports.
 - Bounded FastAPI snippet endpoint and CLI/API parity.
 - Next.js scan workspace with evidence selection, diagnostics and JSON export.
 - Offline SVM, Random Forest and XGBoost research harness, safe JSON SVM inference,
@@ -26,15 +26,15 @@ Progress is tracked through working features and release gates. The previous
 ## Delivered scanner
 
 - Installable `traceward-core`, pinned uv environment, CLI and typed result model.
-- Tree-sitter Java and Python parsers with UTF-8 byte spans.
-- Experimental CWE-89 rules for Java servlet/JDBC and Python console/SQLite flows.
+- Tree-sitter Java, Python, JavaScript and TypeScript parsers with UTF-8 byte spans.
+- Experimental CWE-89 rules for Java servlet/JDBC, Python console/SQLite, and Node.js command-line SQLite flows.
 - Bounded file discovery, JSON/text reports, deterministic finding fingerprints.
 - Regression suite, lint, strict type check, schema and CI workflow.
 
 ## Initial architecture decisions
 
 - Python 3.11–3.14, uv packaging at repository root, incremental package layout.
-- Tree-sitter and both grammars pinned independently in `uv.lock`.
+- Tree-sitter and grammar packages pinned independently in `uv.lock`.
 - Pydantic result contract; core imports no web framework.
 - Models run through the offline research CLI; production promotion is pending evaluation.
 - Always partial; syntactic API matching yields heuristic candidates, not

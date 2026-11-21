@@ -5,7 +5,7 @@ import SourceEditor from "@/components/SourceEditor";
 import ScanResults from "@/components/ScanResults";
 import SignalArt from "@/components/SignalArt";
 import type { Location, ScanResult } from "@/lib/contracts";
-import { examples, languageNames, type Language } from "@/lib/examples";
+import { examples, languageNames, languages, snippetNames, type Language } from "@/lib/examples";
 
 const MAX_SOURCE = 65536;
 const paths = {
@@ -38,14 +38,12 @@ function Icon({ name, size = 16 }: { name: keyof typeof paths; size?: number }) 
 
 export default function Workspace() {
   const [language, setLanguage] = useState<Language>("java");
-  const [drafts, setDrafts] = useState({
-    java: examples.java.vulnerable,
-    python: examples.python.vulnerable,
-  });
+  const [drafts, setDrafts] = useState(
+    () => Object.fromEntries(languages.map((item) => [item, examples[item].vulnerable])),
+  );
   const code = drafts[language];
   const languageName = languageNames[language];
   const example = examples[language];
-  const snippetName = language === "java" ? "snippet.java" : "snippet.py";
   const [result, setResult] = useState<ScanResult | null>(null);
   const [scannedCode, setScannedCode] = useState("");
   const [selected, setSelected] = useState(0);
@@ -129,13 +127,13 @@ export default function Workspace() {
       <section className="scan-hero" aria-labelledby="workspace-title">
         <SignalArt />
         <h1 id="workspace-title">Scan workspace</h1>
-        <p>Trace untrusted input into SQL queries in Java and Python.</p>
+        <p>Trace untrusted input into SQL queries in Java, Python, JavaScript, and TypeScript.</p>
         <div className="scope-pills">
           <span className="experimental">
             <Icon name="unsafe" size={12} />
             Experimental coverage
           </span>
-          <span>Java &amp; Python</span>
+          <span>{languageName}</span>
           <span>CWE-89</span>
           <span>Local static analysis</span>
         </div>
@@ -155,8 +153,9 @@ export default function Workspace() {
                 resetResults();
               }}
             >
-              <option value="java">Java</option>
-              <option value="python">Python</option>
+              {languages.map((item) => (
+                <option key={item} value={item}>{languageNames[item]}</option>
+              ))}
             </select>
           </div>
           <div className="editor-tools">
@@ -186,7 +185,7 @@ export default function Workspace() {
           </div>
           <div className="file-row">
             <Icon name="file" size={14} />
-            {snippetName}
+            {snippetNames[language]}
             <button
               className="wrap"
               aria-label="Soft wrap"
