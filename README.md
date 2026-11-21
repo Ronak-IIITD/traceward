@@ -15,11 +15,13 @@ From the repository root, run:
 ./start.sh
 ```
 
-Open <http://127.0.0.1:3000>. Choose Java or Python, load the vulnerable example, run the scan, then
-select the sink in the evidence trace to highlight its source span. The parameterized
-example demonstrates a result with no supported findings. The dashboard includes
-parse diagnostics, current limitations, and JSON export. Stop both local servers
-with Ctrl+C. The launch script installs the locked API and web dependencies as needed.
+Open <http://127.0.0.1:3000>, choose Java or Python, and select **Try the vulnerable
+example**. Select a finding or trace step to highlight its source in the editor.
+Open **Suggested fix** for a copyable parameterized query. Use **Ctrl+Enter**
+(**Cmd+Enter** on macOS) to scan your own code. Load **Parameterized** to see the
+clean result for the selected rule. The dashboard includes diagnostics, coverage
+details, and JSON copy and export. Stop both local servers with Ctrl+C.
+The launch script installs the locked API and web dependencies as needed.
 It requires uv and Node.js 22 or later with npm.
 
 ## Run locally

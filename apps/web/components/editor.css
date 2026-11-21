@@ -1,0 +1,39 @@
+@font-face {
+  font-family: "Geist Mono";
+  src: url("../node_modules/next/dist/next-devtools/server/font/geist-mono-latin.woff2") format("woff2");
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+.source-editor {
+  flex: 1 1 auto;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  position: relative;
+  overflow: hidden;
+  background: var(--editor-bg, #0e1519);
+}
+.source-editor .cm-editor { height: 100%; position: absolute; inset: 0; color: #dae5ed; }
+.source-editor .cm-editor.cm-focused { outline: 2px solid var(--accent, #71dfc1); outline-offset: -2px; }
+.source-editor .cm-scroller {
+  overflow: auto;
+  font: 400 13px/1.8 "Geist Mono", "JetBrains Mono", ui-monospace, monospace;
+  scrollbar-color: #445560 transparent;
+}
+.source-editor .cm-content { padding: 16px 0; caret-color: #81efcf; }
+.source-editor .cm-line { padding: 0 16px 0 12px; }
+.source-editor .cm-gutters { background: var(--editor-bg, #0e1519); border-right: 1px solid #293439; color: #94a3ac; }
+.source-editor .cm-lineNumbers .cm-gutterElement { min-width: 40px; padding: 0 10px 0 8px; }
+.source-editor .cm-activeLine, .source-editor .cm-activeLineGutter { background: #1b282d; }
+.source-editor .cm-activeLineGutter { color: #dceae8; }
+.source-editor .cm-content ::selection, .source-editor .cm-content::selection { background: #315d69; }
+.source-editor .cm-matchingBracket { background: #38514b; outline: 1px solid #6c9c8c; }
+.source-editor .cm-evidence-flow { text-decoration: underline dotted #c8a66b; text-underline-offset: 4px; }
+.source-editor .cm-evidence-source, .source-editor .cm-evidence-sink { text-decoration: underline solid; text-underline-offset: 3px; }
+.source-editor .cm-evidence-source { background: #443a214d; text-decoration-color: #efbb68; }
+.source-editor .cm-evidence-sink { background: #792e3640; text-decoration-color: #ff898b; }
+.source-editor .cm-source-marker { box-shadow: inset 3px 0 #efbb68; color: #efc784; }
+.source-editor .cm-sink-marker { box-shadow: inset 3px 0 #f98585; color: #ff9999; }
+.source-editor .cm-revealed { background: #436a62; }
