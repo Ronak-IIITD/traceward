@@ -1,4 +1,4 @@
-export const examples = {
+const javaExamples = {
   vulnerable: `import jakarta.servlet.http.HttpServletRequest;
 import java.sql.Statement;
 
@@ -23,3 +23,24 @@ class UserRepository {
     }
 }`
 };
+
+const pythonExamples = {
+  vulnerable: `import sqlite3
+
+def find_table():
+    db = sqlite3.connect(":memory:")
+    name = input()
+    query = "SELECT name FROM sqlite_schema WHERE name = '" + name + "'"
+    db.execute(query)`,
+  safe: `import sqlite3
+
+def find_table():
+    db = sqlite3.connect(":memory:")
+    name = input()
+    query = "SELECT name FROM sqlite_schema WHERE name = ?"
+    db.execute(query, (name,))`
+};
+
+export const examples = {java: javaExamples, python: pythonExamples};
+export type Language = keyof typeof examples;
+export const languageNames = {java: "Java", python: "Python"};

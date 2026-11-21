@@ -4,7 +4,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "TraceWard · Code security workspace",
-  description: "Inspect Java SQL injection candidates and the evidence behind them."
+  description: "Inspect Java and Python SQL injection candidates and the evidence behind them."
 };
 export default function Layout({children}: {children: React.ReactNode}) {
   return <html lang="en"><body>
@@ -13,6 +13,6 @@ export default function Layout({children}: {children: React.ReactNode}) {
       <span className="local-label">LOCAL WORKSPACE</span>
     </header>
     {children}
-    <footer>Trace the risk. Secure the code.<span>Source is submitted only when you select Scan Java.</span></footer>
+    <footer>Trace the risk. Secure the code.<span>Source is submitted only when you run a scan.</span></footer>
   </body></html>;
 }

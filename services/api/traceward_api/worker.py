@@ -13,7 +13,7 @@ def main() -> int:
     source = sys.stdin.buffer.read(65537)
     if len(source) > 65536:
         return 1
-    result = scan_snippet(source.decode("utf-8")).model_dump_json().encode()
+    result = scan_snippet(source.decode("utf-8"), language=sys.argv[1]).model_dump_json().encode()
     if len(result) > 2 << 20:
         return 1
     sys.stdout.buffer.write(result)

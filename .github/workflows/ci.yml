@@ -100,6 +100,7 @@ jobs:
         run: |
           mkdir -p ci-reports
           uv run --locked traceward scan fixtures/java --format sarif --fail-on none --output ci-reports/java.sarif
+          uv run --locked traceward scan fixtures/python/concatenated.py --format sarif --fail-on none --output ci-reports/python.sarif
           schema_path="$RUNNER_TEMP/sarif-schema-2.1.0.json"
           curl --proto '=https' --fail --silent --show-error --retry 3 --max-time 30 \
             https://docs.oasis-open.org/sarif/sarif/v2.1.0/os/schemas/sarif-schema-2.1.0.json \
@@ -113,18 +114,23 @@ jobs:
           from jsonschema import Draft7Validator
 
           schema = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
-          report = json.loads(Path("ci-reports/java.sarif").read_text(encoding="utf-8"))
-          Draft7Validator(schema).validate(report)
-          (run,) = report["runs"]
-          (finding,) = run["results"]
-          assert finding["ruleId"] == "java.sql.concatenated-untrusted-input"
-          assert run["properties"]["summary"]["files_analyzed"] == 2
+          validator = Draft7Validator(schema)
+          for language, rule_id, files in [
+              ("java", "java.sql.concatenated-untrusted-input", 2),
+              ("python", "python.sqlite.concatenated-input", 1),
+          ]:
+              report = json.loads(Path(f"ci-reports/{language}.sarif").read_text(encoding="utf-8"))
+              validator.validate(report)
+              (run,) = report["runs"]
+              (finding,) = run["results"]
+              assert finding["ruleId"] == rule_id
+              assert run["properties"]["summary"]["files_analyzed"] == files
           PY
       - name: Retain validated fixture SARIF
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: fixture-sarif-${{ github.run_attempt }}
-          path: ci-reports/java.sarif
+          path: ci-reports/*.sarif
           if-no-files-found: error
           retention-days: 14
       - run: cd dist && sha256sum -- *.whl *.tar.gz > SHA256SUMS

@@ -77,7 +77,7 @@ class Diagnostic(Contract):
 
 class Coverage(Contract):
     languages_detected: list[str] = Field(default_factory=list)
-    supported_checks: list[str] = Field(default_factory=lambda: [JAVA_SQL.cwe])
+    supported_checks: list[str] = Field(default_factory=list)
     unsupported_checks: list[str] = Field(
         default_factory=lambda: [
             "CWE-79",
@@ -94,15 +94,7 @@ class Coverage(Contract):
         ]
     )
     partial: bool = True
-    limitations: list[str] = Field(
-        default_factory=lambda: [
-            "Experimental Java CWE-89 subset; no external precision/recall evaluation yet.",
-            "Method-local flow with simple if/else conditions and explicitly typed receivers.",
-            "Try-with-resources follows the normal path only; exception handlers are skipped.",
-            "Complex guards, loops, fields, aliases and interprocedural flow are unsupported.",
-            "No supported findings does not certify that code is secure. ML is disabled.",
-        ]
-    )
+    limitations: list[str] = Field(default_factory=list)
 
 
 class Summary(Contract):
