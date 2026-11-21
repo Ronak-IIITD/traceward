@@ -64,7 +64,14 @@ def finding_result(finding: Finding, rule_index: int) -> dict[str, object]:
 
 
 def sarif_log(result: ScanResult, status: int) -> dict[str, object]:
-    rule_indexes = {rule_id: index for index, rule_id in enumerate(RULES)}
+    applicable = [
+        rule for rule in RULES.values() if rule.language in result.coverage.languages_detected
+    ]
+    # Preserve the category used by existing Java-only SARIF uploads.
+    category = "local-cwe89/"
+    if len(applicable) == 1:
+        category = f"{applicable[0].language}-cwe89/"
+    rule_indexes = {rule.id: index for index, rule in enumerate(applicable)}
     rules = [
         {
             "id": rule.id,
@@ -78,14 +85,14 @@ def sarif_log(result: ScanResult, status: int) -> dict[str, object]:
                 "ruleVersion": rule.version,
             },
         }
-        for rule in RULES.values()
+        for rule in applicable
     ]
     return {
         "$schema": SCHEMA_URL,
         "version": "2.1.0",
         "runs": [
             {
-                "automationDetails": {"id": "java-cwe89/"},
+                "automationDetails": {"id": category},
                 "tool": {
                     "driver": {
                         "name": result.scanner.name,

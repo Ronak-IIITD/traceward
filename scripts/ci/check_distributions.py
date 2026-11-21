@@ -15,7 +15,7 @@ from urllib.request import Request, urlopen
 ROOT = Path(__file__).resolve().parents[2]
 
 
-def check_http(bin_dir: Path, work: Path, code: str, findings: list[dict]) -> None:
+def check_http(bin_dir: Path, work: Path, language: str, code: str, findings: list[dict]) -> None:
     with socket.socket() as listener:
         listener.bind(("127.0.0.1", 0))
         base = f"http://127.0.0.1:{listener.getsockname()[1]}/api/v1"
@@ -44,7 +44,7 @@ def check_http(bin_dir: Path, work: Path, code: str, findings: list[dict]) -> No
                 raise TimeoutError("Installed API did not become ready")
             request = Request(
                 base + "/scans/snippet",
-                json.dumps({"language": "java", "code": code}).encode(),
+                json.dumps({"language": language, "code": code}).encode(),
                 {"Content-Type": "application/json"},
             )
             with urlopen(request, timeout=10) as response:
@@ -68,12 +68,19 @@ def check(package: Path, version: str) -> None:
             ).strip()
             == f"TraceWard {version}"
         )
-        findings = []
-        for fixture, expected in [("Safe", 0), ("Vulnerable", 1)]:
-            code = (ROOT / f"fixtures/java/{fixture}.java").read_text()
-            (work / "snippet.java").write_text(code)
+        api_cases = []
+        for language, name, expected in [
+            ("java", "Safe.java", 0),
+            ("java", "Vulnerable.java", 1),
+            ("python", "parameterized.py", 0),
+            ("python", "concatenated.py", 1),
+        ]:
+            fixture = ROOT / "fixtures" / language / name
+            code = fixture.read_text(encoding="utf-8")
+            source = work / f"snippet{fixture.suffix}"
+            source.write_text(code, encoding="utf-8")
             cli = subprocess.run(
-                [bin_dir / "traceward", "scan", "snippet.java", "--format", "json"],
+                [bin_dir / "traceward", "scan", source.name, "--format", "json"],
                 cwd=work,
                 capture_output=True,
             )
@@ -81,10 +88,13 @@ def check(package: Path, version: str) -> None:
             result = json.loads(cli.stdout)
             findings = result["findings"]
             assert len(findings) == expected and result["summary"]["errors"] == 0
+            if findings:
+                api_cases.append((language, code, findings))
         subprocess.run(
             [*install, f"traceward-core[api] @ {package.as_uri()}"], cwd=work, check=True
         )
-        check_http(bin_dir, work, code, findings)
+        for language, code, findings in api_cases:
+            check_http(bin_dir, work, language, code, findings)
 
 
 if __name__ == "__main__":

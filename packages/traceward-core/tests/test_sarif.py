@@ -121,3 +121,18 @@ def test_missing_path_is_an_error_without_a_source_location(tmp_path: Path) -> N
     ][0]
     assert "INVALID_PATH" in notification["message"]["text"]
     assert "locations" not in notification
+
+
+def test_mixed_rules_resolve_to_correct_sarif_descriptors(tmp_path: Path) -> None:
+    shutil.copy(FIXTURES / "Vulnerable.java", tmp_path)
+    shutil.copy(FIXTURES.parent / "python/concatenated.py", tmp_path)
+    run = scan_sarif(tmp_path)
+    assert run.returncode == 1
+    (analysis,) = json.loads(run.stdout)["runs"]
+    rules = analysis["tool"]["driver"]["rules"]
+    assert {r["ruleId"] for r in analysis["results"]} == {
+        "java.sql.concatenated-untrusted-input",
+        "python.sqlite.concatenated-input",
+    }
+    for item in analysis["results"]:
+        assert rules[item["ruleIndex"]]["id"] == item["ruleId"]

@@ -53,7 +53,10 @@ test("methodology and mobile workspace remain usable", async ({page}) => {
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.getByRole("link", {name: "Coverage & methods"}).click();
   await expect(page.getByRole("heading", {name: "Know what was analyzed."})).toBeVisible();
-  await expect(page.getByRole("cell", {name: "CWE-89", exact: true})).toBeVisible();
+  for (const language of ["Java", "Python"]) {
+    const capability = page.getByRole("row").filter({has: page.getByRole("cell", {name: language, exact: true})});
+    await expect(capability.getByRole("cell", {name: "CWE-89", exact: true})).toBeVisible();
+  }
   await page.getByRole("link", {name: "Return to scan workspace"}).click();
   await expect(page.getByRole("textbox", {name: "Java source code"})).toBeVisible();
 });
@@ -64,4 +67,31 @@ test("proxy rejects oversized requests", async ({request}) => {
   });
   expect(response.status()).toBe(413);
   expect((await response.json()).error.code).toBe("INPUT_TOO_LARGE");
+});
+
+test("switching languages preserves drafts and scans Python with SQLite bindings", async ({page}) => {
+  await page.goto("/");
+  const selector = page.getByRole("combobox", {name: "Language"});
+  const java = page.getByRole("textbox", {name: "Java source code"});
+  await java.fill("class KeepMyDraft {}");
+  await selector.selectOption("python");
+  const python = page.getByRole("textbox", {name: "Python source code"});
+  const code = (await python.inputValue()) + "\n# local draft";
+  await python.fill(code);
+  await page.getByRole("button", {name: "Scan Python"}).click();
+  const sink = page.getByRole("button", {name: /^sink .*execute.*Line 7/i});
+  await expect(sink).toBeVisible();
+  await sink.click();
+  const selected = await python.evaluate((area: HTMLTextAreaElement) =>
+    area.value.slice(area.selectionStart, area.selectionEnd));
+  expect(selected).toContain("db.execute");
+  await selector.selectOption("java");
+  await expect(java).toHaveValue("class KeepMyDraft {}");
+  await expect(page.getByRole("button", {name: "Export JSON"})).toHaveCount(0);
+  await selector.selectOption("python");
+  await expect(python).toHaveValue(code);
+  await page.getByRole("button", {name: "Parameterized"}).click();
+  await page.getByRole("button", {name: "Scan Python"}).click();
+  await expect(page.getByRole("heading", {name: "No supported findings"})).toBeVisible();
+  await expect(page.getByText("Partial coverage · The experimental Python rule", {exact: false})).toBeVisible();
 });
