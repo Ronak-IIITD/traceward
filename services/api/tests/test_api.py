@@ -16,39 +16,63 @@ FIXTURES = Path(__file__).resolve().parents[3] / "fixtures"
 @pytest.mark.parametrize(
     ("name", "count"),
     [
-        ("java/Safe", 0),
-        ("java/Vulnerable", 1),
-        ("jdbc-resources/ResourceQuery", 1),
-        ("jdbc-resources/BoundResourceQuery", 0),
-        ("java-conditionals/ConditionalQuery", 1),
-        ("java-conditionals/SeparateBranches", 0),
+        ("java/Safe.java", 0),
+        ("java/Vulnerable.java", 1),
+        ("jdbc-resources/ResourceQuery.java", 1),
+        ("jdbc-resources/BoundResourceQuery.java", 0),
+        ("java-conditionals/ConditionalQuery.java", 1),
+        ("java-conditionals/SeparateBranches.java", 0),
+        ("python/concatenated.py", 1),
+        ("python/cursor_concatenated.py", 1),
+        ("python/parameterized.py", 0),
     ],
 )
 def test_cli_and_api_agree(tmp_path: Path, name: str, count: int) -> None:
-    code = (FIXTURES / f"{name}.java").read_text()
-    path = tmp_path / "snippet.java"
+    source = FIXTURES / name
+    code = source.read_text()
+    language = {".java": "java", ".py": "python"}[source.suffix]
+    path = tmp_path / f"snippet{source.suffix}"
     path.write_text(code)
     cli = subprocess.run(["traceward", "scan", str(path), "--format", "json"], capture_output=True)
     assert cli.returncode == count
-    response = client.post(ENDPOINT, json={"language": "java", "code": code})
+    response = client.post(ENDPOINT, json={"language": language, "code": code})
     assert response.status_code == 200
     result = ScanResult.model_validate(response.json())
     assert result.summary.findings == count
-    assert result.findings == ScanResult.model_validate_json(cli.stdout).findings
+    cli_result = ScanResult.model_validate_json(cli.stdout)
+    assert result.findings == cli_result.findings
+    assert result.coverage == cli_result.coverage
+    assert result.diagnostics == cli_result.diagnostics
+    assert result.summary == cli_result.summary
 
 
-def test_parse_failure_with_location() -> None:
-    response = client.post(ENDPOINT, json={"language": "java", "code": "class A { int a }"})
+@pytest.mark.parametrize(
+    ("language", "code"), [("java", "class A { int a }"), ("python", "def broken(:\n")]
+)
+def test_parse_failure_with_location(language: str, code: str) -> None:
+    response = client.post(ENDPOINT, json={"language": language, "code": code})
     assert response.status_code == 200
     result = response.json()
     assert result["summary"]["errors"] and result["diagnostics"][0]["location"]
+
+
+def test_python_source_is_analyzed_without_running_it(tmp_path: Path) -> None:
+    marker = tmp_path / "executed"
+    code = f"from pathlib import Path\nPath({str(marker)!r}).touch()\n"
+    response = client.post(ENDPOINT, json={"language": "python", "code": code})
+    assert response.status_code == 200
+    result = ScanResult.model_validate(response.json())
+    assert result.summary.files_analyzed == 1
+    assert result.coverage.languages_detected == ["python"]
+    assert not marker.exists()
 
 
 @pytest.mark.parametrize(
     ("data", "status", "error"),
     [
         ({"language": "java", "code": "🍵" * (MAX_SOURCE // 4 + 1)}, 413, "INPUT_TOO_LARGE"),
-        ({"language": "python", "code": "private"}, 422, "UNSUPPORTED_LANGUAGE"),
+        ({"language": "python", "code": "🍵" * (MAX_SOURCE // 4 + 1)}, 413, "INPUT_TOO_LARGE"),
+        ({"language": "javascript", "code": "private"}, 422, "UNSUPPORTED_LANGUAGE"),
         ({"language": "java", "code": "private", "filename": "x"}, 422, "INVALID_INPUT"),
         ({"language": "java", "code": 42}, 422, "INVALID_INPUT"),
         ({"language": "java", "code": "   "}, 422, "INVALID_INPUT"),
@@ -81,10 +105,17 @@ def test_documented_routes_and_capabilities() -> None:
     assert client.get("/api/v1/health").json()["status"] == "ok"
     assert client.get("/api/v1/version").json()["schema_version"] == "1.0.0"
     assert client.get("/api/v1/models").json()["models"] == []
-    rule = client.get("/api/v1/capabilities").json()["rules"][0]
-    assert rule == json.loads(subprocess.check_output(["traceward", "rules", "list"]))
+    rules = client.get("/api/v1/capabilities").json()["rules"]
+    assert {rule["language"] for rule in rules} == {"java", "python"}
+    for rule in rules:
+        cli = subprocess.check_output(
+            ["traceward", "rules", "list", "--language", rule["language"]]
+        )
+        assert rule == json.loads(cli)
     spec = client.get("/openapi.json").json()["paths"][ENDPOINT]["post"]
-    assert "requestBody" in spec and "413" in spec["responses"]
+    schema = spec["requestBody"]["content"]["application/json"]["schema"]
+    assert schema["properties"]["language"]["enum"] == ["java", "python"]
+    assert "413" in spec["responses"]
 
 
 def test_failed_worker_returns_transient_error_and_recovers(

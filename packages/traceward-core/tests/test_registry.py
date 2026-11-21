@@ -14,6 +14,7 @@ def test_invalid_manifests() -> None:
         [rule, rule],
         [dict(rule, version="latest")],
         [dict(rule, maturity="validated")],
+        [dict(rule, language="python")],
     ):
         with pytest.raises(ValueError):
             load_rules(json.dumps(entries).encode())

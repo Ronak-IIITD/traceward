@@ -95,6 +95,44 @@ jobs:
           args=(dist)
           if [[ "$GITHUB_REF_TYPE" == tag ]]; then args+=(--tag "$GITHUB_REF_NAME"); fi
           uv run --locked python scripts/ci/check_distributions.py "${args[@]}"
+      - name: Generate and validate fixture SARIF
+        shell: bash
+        run: |
+          mkdir -p ci-reports
+          uv run --locked traceward scan fixtures/java --format sarif --fail-on none --output ci-reports/java.sarif
+          uv run --locked traceward scan fixtures/python/concatenated.py --format sarif --fail-on none --output ci-reports/python.sarif
+          schema_path="$RUNNER_TEMP/sarif-schema-2.1.0.json"
+          curl --proto '=https' --fail --silent --show-error --retry 3 --max-time 30 \
+            https://docs.oasis-open.org/sarif/sarif/v2.1.0/os/schemas/sarif-schema-2.1.0.json \
+            --output "$schema_path"
+          printf '%s  %s\n' ad6db49878699b091f3eeb765b6e29e92a34bad4da88664d000c923b549c3a25 "$schema_path" \
+            | sha256sum --check --strict
+          uv run --locked python - "$schema_path" <<'PY'
+          import json
+          import sys
+          from pathlib import Path
+          from jsonschema import Draft7Validator
+
+          schema = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
+          validator = Draft7Validator(schema)
+          for language, rule_id, files in [
+              ("java", "java.sql.concatenated-untrusted-input", 2),
+              ("python", "python.sqlite.concatenated-input", 1),
+          ]:
+              report = json.loads(Path(f"ci-reports/{language}.sarif").read_text(encoding="utf-8"))
+              validator.validate(report)
+              (run,) = report["runs"]
+              (finding,) = run["results"]
+              assert finding["ruleId"] == rule_id
+              assert run["properties"]["summary"]["files_analyzed"] == files
+          PY
+      - name: Retain validated fixture SARIF
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: fixture-sarif-${{ github.run_attempt }}
+          path: ci-reports/*.sarif
+          if-no-files-found: error
+          retention-days: 14
       - run: cd dist && sha256sum -- *.whl *.tar.gz > SHA256SUMS
       - id: upload
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2

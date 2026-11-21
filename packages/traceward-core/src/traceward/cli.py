@@ -8,7 +8,8 @@ from pathlib import Path
 
 from traceward import __version__
 from traceward.models import ScanResult
-from traceward.registry import RULES
+from traceward.registry import RULES, SUPPORTED_LANGUAGES
+from traceward.sarif import sarif_log
 from traceward.scanner import scan_path
 
 
@@ -25,7 +26,7 @@ def exit_code(result: ScanResult, fail_on: str, confidence: str, strict: bool) -
 
 def render_text(result: ScanResult) -> str:
     lines = [
-        f"TraceWard {__version__} · experimental Java CWE-89",
+        f"TraceWard {__version__} · experimental CWE-89",
         "PARTIAL COVERAGE — no supported findings does not certify security.",
     ]
     for finding in result.findings:
@@ -50,13 +51,19 @@ def render_text(result: ScanResult) -> str:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="TraceWard experimental static Java scanner")
+    parser = argparse.ArgumentParser(
+        description="TraceWard experimental Java and Python static scanner"
+    )
     parser.add_argument("--version", action="version", version=f"TraceWard {__version__}")
     commands = parser.add_subparsers(dest="command", required=True)
     scan = commands.add_parser("scan")
     scan.add_argument("path", type=Path)
-    scan.add_argument("--language", choices=["java"], default="java")
-    scan.add_argument("--format", choices=["text", "json"], default="text")
+    scan.add_argument(
+        "--language",
+        choices=sorted(SUPPORTED_LANGUAGES),
+        help="Scan only this language (default: detect by file extension)",
+    )
+    scan.add_argument("--format", choices=["text", "json", "sarif"], default="text")
     scan.add_argument("--output", type=Path)
     scan.add_argument("--exclude", action="append", default=[])
     scan.add_argument(
@@ -66,24 +73,35 @@ def main() -> int:
     scan.add_argument("--fail-on-partial", action="store_true")
     rules = commands.add_parser("rules")
     rules.add_argument("action", nargs="?", choices=["list"], default="list")
-    rules.add_argument("--language", choices=["java"], default="java")
+    rules.add_argument(
+        "--language",
+        choices=sorted(SUPPORTED_LANGUAGES),
+        default="java",
+        help="Rule language (default: java)",
+    )
     commands.add_parser("doctor")
     args = parser.parse_args()
     if args.command == "doctor":
         print(f"TraceWard {__version__}; Python {sys.version.split()[0]}")
-        for package in ["tree-sitter", "tree-sitter-java", "pydantic"]:
+        for package in ["tree-sitter", "tree-sitter-java", "tree-sitter-python", "pydantic"]:
             print(f"{package}: {version(package)}")
-        print("Java parser available. ML disabled: no validated model artifact installed.")
+        print(
+            "Java and Python parsers available. ML disabled: no validated model artifact installed."
+        )
         return 0
     if args.command == "rules":
         for rule in RULES.values():
             if rule.language == args.language:
                 print(json.dumps(rule.model_dump(), indent=2))
         return 0
-    result = scan_path(args.path, tuple(args.exclude))
-    output = (
-        result.model_dump_json(indent=2) + "\n" if args.format == "json" else render_text(result)
-    )
+    result = scan_path(args.path, tuple(args.exclude), language_filter=args.language)
+    status = exit_code(result, args.fail_on, args.min_confidence, args.fail_on_partial)
+    if args.format == "json":
+        output = result.model_dump_json(indent=2) + "\n"
+    elif args.format == "sarif":
+        output = json.dumps(sarif_log(result, status), indent=2) + "\n"
+    else:
+        output = render_text(result)
     if args.output:
         try:
             args.output.write_text(output, encoding="utf-8")
@@ -92,7 +110,7 @@ def main() -> int:
             return 2
     else:
         print(output, end="")
-    return exit_code(result, args.fail_on, args.min_confidence, args.fail_on_partial)
+    return status
 
 
 if __name__ == "__main__":

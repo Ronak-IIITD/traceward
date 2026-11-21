@@ -10,10 +10,10 @@ from pydantic import BaseModel, ConfigDict, Field, TypeAdapter
 class Rule(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True, strict=True)
 
-    id: str = Field(pattern=r"^java\.[a-z0-9-]+\.[a-z0-9-]+$")
+    id: str = Field(pattern=r"^[a-z]+\.[a-z0-9-]+\.[a-z0-9-]+$")
     version: str = Field(pattern=r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$")
     type: Literal["taint_rule"]
-    language: Literal["java"]
+    language: Literal["java", "python"]
     cwe: str = Field(pattern=r"^CWE-[1-9]\d*$")
     maturity: Literal["experimental"]
     title: str = Field(min_length=1)
@@ -26,8 +26,12 @@ def load_rules(manifest: bytes) -> MappingProxyType[str, Rule]:
     indexed = {rule.id: rule for rule in rules}
     if not rules or len(indexed) != len(rules):
         raise ValueError("Expected a nonempty rule registry with unique IDs")
+    if any(rule.id.split(".", 1)[0] != rule.language for rule in rules):
+        raise ValueError("Rule ID must start with its language")
     return MappingProxyType(indexed)
 
 
 RULES = load_rules(files("traceward").joinpath("rules.json").read_bytes())
 JAVA_SQL = RULES["java.sql.concatenated-untrusted-input"]
+PYTHON_SQL = RULES["python.sqlite.concatenated-input"]
+SUPPORTED_LANGUAGES = frozenset(rule.language for rule in RULES.values())

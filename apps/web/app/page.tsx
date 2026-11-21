@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import type { Location, ScanResult } from "@/lib/contracts";
-import { examples } from "@/lib/examples";
+import { examples, languageNames, type Language } from "@/lib/examples";
 
 const MAX_SOURCE = 65536;
 function byteColumn(text: string, column: number) {
@@ -11,7 +11,13 @@ function byteColumn(text: string, column: number) {
   return new TextDecoder().decode(bytes.slice(0, column - 1)).length;
 }
 export default function Workspace() {
-  const [code, setCode] = useState(examples.vulnerable);
+  const [language, setLanguage] = useState<Language>("java");
+  const [drafts, setDrafts] = useState({
+    java: examples.java.vulnerable,
+    python: examples.python.vulnerable
+  });
+  const code = drafts[language];
+  const languageName = languageNames[language];
   const [result, setResult] = useState<ScanResult | null>(null);
   const [scannedCode, setScannedCode] = useState("");
   const [selected, setSelected] = useState(0);
@@ -22,8 +28,17 @@ export default function Workspace() {
   const finding = result?.findings[selected];
   const stale = result !== null && scannedCode !== code;
 
+  function setCode(value: string) {
+    setDrafts(previous => ({...previous, [language]: value}));
+  }
+  function resetResults() {
+    setResult(null); setError(""); setSelected(0);
+  }
   function replace(value: string) {
-    setCode(value); setResult(null); setError(""); setSelected(0);
+    setCode(value); resetResults();
+  }
+  function changeLanguage(value: Language) {
+    setLanguage(value); resetResults();
   }
   function reveal(location: Location) {
     if (!editor.current || stale) return;
@@ -40,7 +55,7 @@ export default function Workspace() {
     try {
       const response = await fetch("/api/v1/scans/snippet", {
         method: "POST", headers: {"content-type": "application/json"},
-        body: JSON.stringify({language: "java", code}), signal: AbortSignal.timeout(15000)
+        body: JSON.stringify({language, code}), signal: AbortSignal.timeout(15000)
       });
       const body = await response.json();
       if (!response.ok) throw new Error(body.error?.message ?? "The scan failed. Try again.");
@@ -57,31 +72,35 @@ export default function Workspace() {
     URL.revokeObjectURL(url);
   }
   return <main>
-    <section className="intro"><div><p className="eyebrow">JAVA APPLICATION SECURITY</p>
-      <h1>Follow the evidence.</h1><p>Scan your Java code and inspect potential SQL injection paths.</p></div>
-      <div className="coverage-note"><span className="status-dot"/>Experimental coverage<br/><small>Java · CWE-89 · Local static analysis</small></div>
+    <section className="intro"><div><p className="eyebrow">APPLICATION SECURITY</p>
+      <h1>Follow the evidence.</h1><p>Scan Java or Python code and inspect potential SQL injection paths.</p></div>
+      <div className="coverage-note"><span className="status-dot"/>Experimental coverage<br/><small>Java &amp; Python · CWE-89 · Local static analysis</small></div>
     </section>
     <div className="workspace">
       <section className="panel editor-panel" aria-labelledby="editor-title">
-        <div className="panel-heading"><h2 id="editor-title">Source code</h2><span className="language">Java</span></div>
-        <div className="toolbar"><span>Load an example</span><button disabled={busy} onClick={() => replace(examples.vulnerable)}>Vulnerable</button>
-          <button disabled={busy} onClick={() => replace(examples.safe)}>Parameterized</button><button className="clear" disabled={busy} onClick={() => replace("")}>Clear</button></div>
+        <div className="panel-heading"><h2 id="editor-title">Source code</h2><label className="language-control">Language
+          <select value={language} onChange={event => changeLanguage(event.target.value as Language)} disabled={busy}>
+            <option value="java">Java</option><option value="python">Python</option>
+          </select>
+        </label></div>
+        <div className="toolbar"><span>Load an example</span><button disabled={busy} onClick={() => replace(examples[language].vulnerable)}>Vulnerable</button>
+          <button disabled={busy} onClick={() => replace(examples[language].safe)}>Parameterized</button><button className="clear" disabled={busy} onClick={() => replace("")}>Clear</button></div>
         <div className="editor-wrap"><div className="line-numbers" aria-hidden="true">{code.split("\n").map((_, n) => <div key={n}>{n + 1}</div>)}</div>
-          <textarea ref={editor} aria-label="Java source code" value={code} onChange={event => setCode(event.target.value)}
+          <textarea ref={editor} aria-label={`${languageName} source code`} value={code} onChange={event => setCode(event.target.value)}
             disabled={busy} spellCheck={false} wrap="off"/></div>
         <div className="editor-bottom"><span className={size > MAX_SOURCE ? "danger" : ""}>{size.toLocaleString()} / 65,536 bytes</span>
-          <button className="primary" onClick={scan} disabled={busy || !code.trim() || size > MAX_SOURCE}>{busy ? "Scanning…" : "Scan Java"}</button></div>
+          <button className="primary" onClick={scan} disabled={busy || !code.trim() || size > MAX_SOURCE}>{busy ? "Scanning…" : `Scan ${languageName}`}</button></div>
         <p className="privacy">Your source is processed in memory by the local scanner. Submitted code is never executed.</p>
       </section>
       <section className="panel result-panel" aria-labelledby="result-title">
         <div className="panel-heading"><h2 id="result-title">Scan results</h2>{result && <button onClick={download}>Export JSON</button>}</div>
         <div className="result-content" aria-live="polite" aria-busy={busy}>
           {error && <p role="alert" className="error-box">{error}</p>}
-          {busy && <div className="empty"><span className="loader"/><h3>Tracing supported flows</h3><p>Parsing Java and checking request input at JDBC sinks.</p></div>}
-          {!result && !busy && !error && <div className="empty"><span className="empty-mark" aria-hidden="true">⌕</span><h3>Your evidence starts here</h3><p>Paste a Java class or use an example, then run a scan.</p><p className="muted">One experimental rule. Every finding includes its actual source locations.</p></div>}
+          {busy && <div className="empty"><span className="loader"/><h3>Tracing supported flows</h3><p>Checking {languageName} source for supported SQL injection paths.</p></div>}
+          {!result && !busy && !error && <div className="empty"><span className="empty-mark" aria-hidden="true">⌕</span><h3>Your evidence starts here</h3><p>Paste {languageName} code or load an example, then run a scan.</p><p className="muted">Each finding links the input to a database call and shows the lines involved.</p></div>}
           {result && <>
             <div className="summary"><div><strong>{result.summary.findings}</strong><span>Potential findings</span></div><div><strong>{result.summary.errors}</strong><span>Analysis errors</span></div><div><strong>{result.duration_ms}<small>ms</small></strong><span>Analysis time</span></div></div>
-            <p className="coverage-warning">Partial coverage · Supported checks cover a limited Java CWE-89 subset.</p>
+            <p className="coverage-warning">Partial coverage · The experimental {languageName} rule covers a limited set of SQL injection paths.</p>
             {stale && <p role="status" className="coverage-warning">Source changed. Run the scan again to refresh locations.</p>}
             {!finding && <div className="no-findings"><h3>{result.summary.errors ? "Analysis needs attention" : "No supported findings"}</h3><p>{result.summary.errors ? "Review the diagnostics below before interpreting this scan." : "This result covers the enabled rule. Continue reviewing unsupported code paths."}</p></div>}
             {result.findings.length > 0 && <div className="finding-list">{result.findings.map((item, index) =>
