@@ -5,7 +5,7 @@ import "./navigation.css";
 
 export const metadata: Metadata = {
   title: "TraceWard · Code security workspace",
-  description: "Inspect Java SQL injection candidates and the evidence behind them.",
+  description: "Inspect Java and Python SQL injection candidates and the evidence behind them.",
 };
 
 export default function Layout({ children }: { children: React.ReactNode }) {
@@ -31,7 +31,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             Local processing · Source stays in memory
           </span>
           <span>
-            TraceWard <b aria-hidden="true">/</b> Java analysis
+            TraceWard <b aria-hidden="true">/</b> Java and Python analysis
           </span>
         </footer>
       </body>

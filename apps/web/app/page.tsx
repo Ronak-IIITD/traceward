@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import JavaEditor from "@/components/JavaEditor";
+import SourceEditor from "@/components/SourceEditor";
 import ScanResults from "@/components/ScanResults";
 import SignalArt from "@/components/SignalArt";
 import type { Location, ScanResult } from "@/lib/contracts";
-import { examples } from "@/lib/examples";
+import { examples, languageNames, type Language } from "@/lib/examples";
 
 const MAX_SOURCE = 65536;
 const paths = {
@@ -37,7 +37,15 @@ function Icon({ name, size = 16 }: { name: keyof typeof paths; size?: number }) 
 }
 
 export default function Workspace() {
-  const [code, setCode] = useState(examples.vulnerable);
+  const [language, setLanguage] = useState<Language>("java");
+  const [drafts, setDrafts] = useState({
+    java: examples.java.vulnerable,
+    python: examples.python.vulnerable,
+  });
+  const code = drafts[language];
+  const languageName = languageNames[language];
+  const example = examples[language];
+  const snippetName = language === "java" ? "snippet.java" : "snippet.py";
   const [result, setResult] = useState<ScanResult | null>(null);
   const [scannedCode, setScannedCode] = useState("");
   const [selected, setSelected] = useState(0);
@@ -54,15 +62,23 @@ export default function Workspace() {
     if (/Mac|iPad|iPhone/.test(navigator.platform)) setShortcut("⌘ ↵");
   }, []);
 
-  function replace(value: string) {
-    setCode(value);
+  function setCode(value: string) {
+    setDrafts((previous) => ({ ...previous, [language]: value }));
+  }
+
+  function resetResults() {
     setResult(null);
     setError("");
     setSelected(0);
     setReveal(null);
   }
 
-  async function scan(source: string) {
+  function replace(value: string) {
+    setCode(value);
+    resetResults();
+  }
+
+  async function scan(source: string, sourceLanguage: Language) {
     if (inFlight.current || !source.trim() || new TextEncoder().encode(source).length > MAX_SOURCE)
       return;
     inFlight.current = true;
@@ -74,7 +90,7 @@ export default function Workspace() {
       const response = await fetch("/api/v1/scans/snippet", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ language: "java", code: source }),
+        body: JSON.stringify({ language: sourceLanguage, code: source }),
         signal: AbortSignal.timeout(15000),
       });
       const body = await response.json();
@@ -97,12 +113,12 @@ export default function Workspace() {
     function shortcut(event: KeyboardEvent) {
       if (event.key === "Enter" && (event.metaKey || event.ctrlKey) && !event.isComposing) {
         event.preventDefault();
-        if (!event.repeat) void scan(code);
+        if (!event.repeat) void scan(code, language);
       }
     }
     document.addEventListener("keydown", shortcut);
     return () => document.removeEventListener("keydown", shortcut);
-  }, [code]);
+  }, [code, language]);
 
   function showLocation(location: Location) {
     if (!stale) setReveal((previous) => ({ location, nonce: (previous?.nonce ?? 0) + 1 }));
@@ -113,13 +129,13 @@ export default function Workspace() {
       <section className="scan-hero" aria-labelledby="workspace-title">
         <SignalArt />
         <h1 id="workspace-title">Scan workspace</h1>
-        <p>Trace untrusted Java input from request to SQL query.</p>
+        <p>Trace untrusted input into SQL queries in Java and Python.</p>
         <div className="scope-pills">
           <span className="experimental">
             <Icon name="unsafe" size={12} />
             Experimental coverage
           </span>
-          <span>Java</span>
+          <span>Java &amp; Python</span>
           <span>CWE-89</span>
           <span>Local static analysis</span>
         </div>
@@ -129,23 +145,35 @@ export default function Workspace() {
           <div className="source-heading">
             <Icon name="code" size={20} />
             <h2 id="source-title">Source code</h2>
-            <span className="file-type">Java</span>
+            <select
+              className="file-type"
+              aria-label="Language"
+              disabled={busy}
+              value={language}
+              onChange={(event) => {
+                setLanguage(event.target.value as Language);
+                resetResults();
+              }}
+            >
+              <option value="java">Java</option>
+              <option value="python">Python</option>
+            </select>
           </div>
           <div className="editor-tools">
             <span className="label">Load an example</span>
             <div role="group" aria-label="Source controls" className="segments">
               <button
                 disabled={busy}
-                aria-pressed={code === examples.vulnerable}
-                onClick={() => replace(examples.vulnerable)}
+                aria-pressed={code === example.vulnerable}
+                onClick={() => replace(example.vulnerable)}
               >
                 <Icon name="unsafe" />
                 Vulnerable
               </button>
               <button
                 disabled={busy}
-                aria-pressed={code === examples.safe}
-                onClick={() => replace(examples.safe)}
+                aria-pressed={code === example.safe}
+                onClick={() => replace(example.safe)}
               >
                 <Icon name="safe" />
                 Parameterized
@@ -158,7 +186,7 @@ export default function Workspace() {
           </div>
           <div className="file-row">
             <Icon name="file" size={14} />
-            snippet.java
+            {snippetName}
             <button
               className="wrap"
               aria-label="Soft wrap"
@@ -170,7 +198,9 @@ export default function Workspace() {
             </button>
           </div>
           <div className="editor-host">
-            <JavaEditor
+            <SourceEditor
+              key={language}
+              language={language}
               code={code}
               onChange={setCode}
               wrap={wrap}
@@ -190,18 +220,19 @@ export default function Workspace() {
             </label>
             <button
               className={"scan-submit " + (busy ? "scanning" : "")}
-              aria-label={busy ? "Scanning" : "Scan Java"}
+              aria-label={busy ? "Scanning" : `Scan ${languageName}`}
               aria-keyshortcuts="Control+Enter Meta+Enter"
               disabled={busy || !code.trim() || size > MAX_SOURCE}
-              onClick={() => void scan(code)}
+              onClick={() => void scan(code, language)}
             >
               <Icon name="play" size={14} />
-              {busy ? "Scanning…" : "Scan Java"}
+              {busy ? "Scanning…" : `Scan ${languageName}`}
               <kbd aria-hidden="true">{shortcut}</kbd>
             </button>
           </div>
         </section>
         <ScanResults
+          language={language}
           result={result}
           busy={busy}
           error={error}
@@ -210,10 +241,10 @@ export default function Workspace() {
           lines={result?.summary.files_analyzed ? scannedCode.split("\n").length : 0}
           onSelect={setSelected}
           onReveal={showLocation}
-          onRetry={() => void scan(code)}
+          onRetry={() => void scan(code, language)}
           onExample={() => {
-            replace(examples.vulnerable);
-            void scan(examples.vulnerable);
+            replace(example.vulnerable);
+            void scan(example.vulnerable, language);
           }}
         />
       </div>

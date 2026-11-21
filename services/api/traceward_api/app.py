@@ -1,4 +1,4 @@
-"""Local, stateless HTTP interface to the Java snippet scanner."""
+"""Local, stateless HTTP interface to the snippet scanner."""
 
 import asyncio
 import sys
@@ -10,7 +10,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from traceward import __version__
 from traceward.models import ScanResult
-from traceward.registry import RULES
+from traceward.registry import RULES, SUPPORTED_LANGUAGES
 
 MAX_BODY = 256 * 1024
 MAX_SOURCE = 64 * 1024
@@ -20,7 +20,7 @@ slots = asyncio.Semaphore(2)
 
 class Snippet(BaseModel):
     model_config = ConfigDict(strict=True, extra="forbid")
-    language: str
+    language: str = Field(json_schema_extra={"enum": [*sorted(SUPPORTED_LANGUAGES)]})
     code: Annotated[str, Field(min_length=1)]
 
 
@@ -59,12 +59,13 @@ def models() -> dict[str, Any]:
     return {"models": [], "status": "No validated model installed", "inference_enabled": False}
 
 
-async def run_worker(source: bytes) -> ScanResult | JSONResponse:
+async def run_worker(source: bytes, language: str) -> ScanResult | JSONResponse:
     process = await asyncio.create_subprocess_exec(
         sys.executable,
         "-I",
         "-m",
         "traceward_api.worker",
+        language,
         stdin=asyncio.subprocess.PIPE,
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.DEVNULL,
@@ -120,13 +121,14 @@ async def scan(request: Request) -> ScanResult | JSONResponse:
             )
         except TimeoutError:
             return reject(408, "INVALID_INPUT", "Request body timed out.")
-        if payload.language != "java":
-            return reject(422, "UNSUPPORTED_LANGUAGE", "Only Java is supported.")
+        if payload.language not in SUPPORTED_LANGUAGES:
+            supported = ", ".join(sorted(SUPPORTED_LANGUAGES))
+            return reject(422, "UNSUPPORTED_LANGUAGE", f"Supported languages are {supported}.")
         if len(source) > MAX_SOURCE:
-            return reject(413, "INPUT_TOO_LARGE", "Java source exceeds 64 KiB.")
+            return reject(413, "INPUT_TOO_LARGE", "Source exceeds 64 KiB.")
         if not source.strip() or b"\0" in source:
-            return reject(422, "INVALID_INPUT", "Expected nonempty Java text.")
+            return reject(422, "INVALID_INPUT", "Expected nonempty source text without NUL bytes.")
         try:
-            return await run_worker(source)
+            return await run_worker(source, payload.language)
         except (OSError, ValidationError):
             return reject(503, "SCAN_FAILED", "The scanner is temporarily unavailable.")

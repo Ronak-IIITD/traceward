@@ -9,6 +9,7 @@ import {
   temporarilySetTabFocusMode,
 } from "@codemirror/commands";
 import { java } from "@codemirror/lang-java";
+import { python } from "@codemirror/lang-python";
 import { bracketMatching, HighlightStyle, indentUnit, syntaxHighlighting } from "@codemirror/language";
 import {
   Compartment,
@@ -31,10 +32,12 @@ import {
 } from "@codemirror/view";
 import { tags } from "@lezer/highlight";
 import type { Finding, Location } from "@/lib/contracts";
+import { languageNames, type Language } from "@/lib/examples";
 import "./editor.css";
 
 type Props = {
   code: string;
+  language: Language;
   onChange: (code: string) => void;
   wrap: boolean;
   findings?: Finding[];
@@ -139,10 +142,10 @@ const flashField = StateField.define<DecorationSet>({
   provide: (field) => EditorView.decorations.from(field),
 });
 
-export default function JavaEditor({ code, onChange, wrap, findings, selected, reveal }: Props) {
+export default function SourceEditor({ code, language, onChange, wrap, findings, selected, reveal }: Props) {
   const host = useRef<HTMLDivElement>(null);
   const editor = useRef<EditorView | null>(null);
-  const initialCode = useRef(code);
+  const initialDocument = useRef({ code, language });
   const onEdit = useRef(onChange);
 
   useEffect(() => {
@@ -150,15 +153,16 @@ export default function JavaEditor({ code, onChange, wrap, findings, selected, r
   }, [onChange]);
   useEffect(() => {
     if (!host.current) return;
+    const initial = initialDocument.current;
     const view = new EditorView({
       parent: host.current,
       state: EditorState.create({
-        doc: initialCode.current,
+        doc: initial.code,
         extensions: [
           lineNumbers(),
           highlightActiveLineGutter(),
           highlightActiveLine(),
-          java(),
+          initial.language === "java" ? java() : python(),
           bracketMatching(),
           syntaxHighlighting(syntax),
           history(),
@@ -171,7 +175,7 @@ export default function JavaEditor({ code, onChange, wrap, findings, selected, r
             ...defaultKeymap.filter((binding) => binding.key !== "Mod-Enter"),
           ]),
           EditorView.contentAttributes.of({
-            "aria-label": "Java source code",
+            "aria-label": `${languageNames[initial.language]} source code`,
             "aria-description": "Tab indents. Press Escape then Tab to leave the editor.",
             "aria-multiline": "true",
             spellcheck: "false",
@@ -230,5 +234,5 @@ export default function JavaEditor({ code, onChange, wrap, findings, selected, r
     };
   }, [reveal]);
 
-  return <div className="java-editor" ref={host} />;
+  return <div className="source-editor" ref={host} />;
 }

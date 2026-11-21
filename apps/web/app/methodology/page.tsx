@@ -9,17 +9,17 @@ export default function Methodology() {
       <section className="tw-methods-hero">
         <span className="tw-methods-kicker">Coverage &amp; methods</span>
         <h1>Know what was analyzed.</h1>
-        <p>Review the rule, the evidence it follows, and the limits of each scan.</p>
+        <p>Review the Java and Python rules, the evidence they follow, and the limits of each scan.</p>
         <span className="tw-maturity">Experimental coverage</span>
       </section>
 
       <div className="tw-methods-grid">
         <div className="tw-methods-column">
           <section className="tw-method-card">
-            <h2>Supported rule</h2>
+            <h2>Supported rules</h2>
             <div className="tw-table-scroll">
               <table>
-                <caption className="tw-visually-hidden">Live Java scanner capabilities</caption>
+                <caption className="tw-visually-hidden">Current scanner capabilities</caption>
                 <thead>
                   <tr>
                     <th>Language</th>
@@ -31,12 +31,17 @@ export default function Methodology() {
                   <tr>
                     <td>Java</td>
                     <td>CWE-89</td>
-                    <td>Method-local flow</td>
+                    <td>Servlet input to JDBC</td>
+                  </tr>
+                  <tr>
+                    <td>Python</td>
+                    <td>CWE-89</td>
+                    <td>Console input to SQLite</td>
                   </tr>
                 </tbody>
               </table>
             </div>
-            <h3>SQL injection via query concatenation</h3>
+            <h3>Java query concatenation</h3>
             <code className="tw-rule-id">java.sql.concatenated-untrusted-input</code>
             <dl className="tw-method-steps">
               <dt>Source</dt>
@@ -52,12 +57,25 @@ export default function Methodology() {
                 receivers.
               </dd>
             </dl>
+            <h3>Python query concatenation</h3>
+            <code className="tw-rule-id">python.sqlite.concatenated-input</code>
+            <dl className="tw-method-steps">
+              <dt>Source</dt>
+              <dd>Interactive input from the built-in <code>input()</code>.</dd>
+              <dt>Propagation</dt>
+              <dd>Straight-line assignments and string concatenation with <code>+</code>.</dd>
+              <dt>Sink</dt>
+              <dd>
+                <code>execute()</code> on a local SQLite connection or a cursor created with{" "}
+                <code>db.cursor()</code>. Bind values separately using placeholders.
+              </dd>
+            </dl>
           </section>
           <section className="tw-method-card">
             <h2>Known limitations</h2>
             <p>
               A finding is a medium-confidence candidate for review. A scan with zero findings covers
-              only the paths this rule can follow.
+              only the paths the selected rule can follow.
             </p>
             <ul>
               <li>
@@ -68,8 +86,11 @@ export default function Methodology() {
                 outside the current model.
               </li>
               <li>
-                Different tainted values after a branch can leave the continuation unresolved. Check the
+                In Java, different tainted values after a branch can leave the continuation unresolved. Check the
                 scan diagnostics.
+              </li>
+              <li>
+                The Python rule skips branches, f-strings, web request inputs, and flows across functions.
               </li>
             </ul>
           </section>
@@ -91,8 +112,8 @@ export default function Methodology() {
             <ol className="tw-roadmap">
               <li>
                 <small>Available</small>
-                <strong>Java servlet to JDBC</strong>
-                <p>The CLI and dashboard share the same experimental static rule.</p>
+                <strong>Java and Python CWE-89</strong>
+                <p>The CLI and dashboard share the same experimental static rules.</p>
               </li>
               <li>
                 <small>Research</small>

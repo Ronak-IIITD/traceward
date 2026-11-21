@@ -2,11 +2,10 @@
 
 **Trace the risk. Secure the code.**
 
-An experimental, local-first Java source scanner. This repository implements the
-first scanner milestone (M1A), with a narrow
-method-local CWE-89 rule, actual source-to-sink evidence, an installable Python CLI,
-and a versioned JSON contract. It never executes scanned code or installs project
-dependencies. Scans need no network connection.
+TraceWard scans Java and Python source locally for selected SQL injection paths
+(CWE-89). Each finding links input, query construction and a database call to
+locations in the source. The CLI and snippet API share a versioned JSON contract.
+Scans run offline and submitted code is never executed.
 
 ## Open the dashboard
 
@@ -16,12 +15,13 @@ From the repository root, run:
 ./start.sh
 ```
 
-Open <http://127.0.0.1:3000> and select **Try the vulnerable example**. Select
-a finding or trace step to reveal the highlighted code in the editor. Open
-**Suggested fix** for a copyable parameterized query example. Use **Ctrl+Enter**
-(**Cmd+Enter** on macOS) to scan your own Java, or load **Parameterized** to see
-the clean state for the experimental rule. The dashboard includes diagnostics,
-coverage details, and JSON copy and export. Stop both local servers with Ctrl+C. The launch script installs the locked API and web dependencies as needed.
+Open <http://127.0.0.1:3000>, choose Java or Python, and select **Try the vulnerable
+example**. Select a finding or trace step to highlight its source in the editor.
+Open **Suggested fix** for a copyable parameterized query. Use **Ctrl+Enter**
+(**Cmd+Enter** on macOS) to scan your own code. Load **Parameterized** to see the
+clean result for the selected rule. The dashboard includes diagnostics, coverage
+details, and JSON copy and export. Stop both local servers with Ctrl+C.
+The launch script installs the locked API and web dependencies as needed.
 It requires uv and Node.js 22 or later with npm.
 
 ## Run locally
@@ -32,6 +32,11 @@ Install [uv](https://docs.astral.sh/uv/), then from this directory:
 uv sync --locked --python 3.12
 uv run traceward --version
 uv run traceward doctor
+uv run traceward rules list --language python
+uv run traceward scan fixtures/python/concatenated.py
+# Expected exit 1: one candidate at the SQLite execute call on line 8.
+uv run traceward scan fixtures/python/parameterized.py
+# Expected exit 0: the constant query binds the value separately.
 uv run traceward rules list --language java
 uv run traceward scan fixtures/java/Vulnerable.java
 # Expected exit 1: one experimental CWE-89 candidate at line 8.
@@ -55,8 +60,10 @@ print(result.model_dump_json(indent=2))
 ```
 
 `scan_snippet(java_source)` analyzes a UTF-8 string in memory with the same contract.
-Only Java is enabled. No model is loaded and no metric is inferred from the source
-research. The browser dashboard and offline research training harness are available. Repository download and SARIF remain on the roadmap.
+For Python, use `scan_snippet(source, language="python")`. Directory scans
+inspect both `.java` and `.py` files by default. Use `--language python` or
+`--language java` to restrict discovery. Production ML inference is disabled. The browser dashboard and offline research training harness are available.
+Repository download remains on the roadmap.
 
 ## Local snippet API
 
@@ -84,7 +91,7 @@ capabilities and model status are available under `/api/v1/`.
 
 ## Detection and limits
 
-The experimental rule recognizes `HttpServletRequest` / `ServletRequest`
+The experimental **Java** rule recognizes `HttpServletRequest` / `ServletRequest`
 `getParameter` and `getHeader` sources, local declarations, assignments, `+`, `+=`,
 parentheses, and aliases of **values** inside a method. Sinks are
 explicitly typed `Statement.executeQuery/executeUpdate/execute/addBatch` and
@@ -117,16 +124,28 @@ and call propagation is reported where tainted arguments are observed. No comple
 control-flow or symbol graph is claimed. Dead comments and unused strings are not
 SQL evidence. Methods are analyzed regardless of whole-program reachability.
 
+The experimental **Python** rule tracks the built-in `input()` through simple
+assignments and string `+` into `db.execute(query)`. It recognizes an unaliased
+module-level `import sqlite3` and a connection assigned from
+`sqlite3.connect("literal database name")` in the same straight-line scope as
+the sink. It also recognizes a local cursor created with `cur = db.cursor()`
+and a later `cur.execute(query)` in that scope. The Python fixtures demonstrate matching input concatenated into
+query text and the same input passed separately to a constant template.
+F-strings, web request sources, branches and cross-function calls are
+outside this rule. Consult the diagnostics for paths the scanner skipped. An unsupported module-level statement can end analysis before
+the next function definition.
+See the [SQLite parameter binding guide](https://docs.python.org/3/library/sqlite3.html#how-to-use-placeholders-to-bind-values-in-sql-queries).
+
 All results declare **partial coverage**. No supported findings does not certify
-security. Other languages and the other 11 planned CWEs have no detectors.
+security. Coverage outside these Java and Python CWE-89 cases remains on the roadmap.
 No rule is externally validated or ready for production assurance.
 
-Discovery skips `.git`, `.venv`, `node_modules`, `vendor`, `dist`, `build`, and
+Discovery skips `.git`, `.venv`, `venv`, `__pycache__`, `node_modules`, `vendor`, `dist`, `build`, and
 `target`; `--exclude 'relative/glob/*'` adds repeatable root-relative exclusions.
 Symlinks are skipped. Inputs are bounded to 2 MiB per file, 20 MiB total, 2,000
 source files, 20,000 discovered entries, a 120-second scan budget, a 500 ms native
-parse budget per file, 100,000 AST nodes, 32 nested scope levels, 64 visited conditionals per method, and
-128 expression levels. Skips and limits produce diagnostics. These are initial engineering caps, not benchmarked
+parse budget per file and 100,000 AST nodes. The Java adapter also caps analysis at
+32 nested scope levels, 64 visited conditionals per method and 128 expression levels. Skips and limits produce diagnostics. These are initial engineering caps, not benchmarked
 service guarantees. Discovery is designed for local trees, not hostile concurrently
 mutating filesystems. ZIP uploads and public hosting are not implemented.
 
@@ -144,11 +163,29 @@ is not loaded yet; supported options are listed by `traceward scan --help`.
 Paths are relative to the scanned directory (a file scan uses its basename).
 Lines and columns are one-based; columns count **UTF-8 bytes** and end positions
 are exclusive, matching Tree-sitter. Consumers must convert byte columns for
-UTF-16 editors. Fingerprints hash rule, relative path, method signature, sink text
+UTF-16 editors. Java fingerprints hash rule, relative path, method signature, sink text
 and duplicate occurrence; identical inputs under different roots produce the
 same findings. Scan IDs and timings are intentionally volatile. Editing sink or
 method text can change fingerprints; no semantic baseline matching is promised.
 Evidence stores locations and symbol names, not copied SQL or request values.
+
+## SARIF export
+
+```sh
+uv run --locked traceward scan fixtures/java --format sarif --output traceward.sarif
+```
+
+SARIF 2.1.0 includes rule metadata, stable TraceWard fingerprints, the source-to-sink
+trace, scan diagnostics and coverage. Findings appear as SARIF warnings, with TraceWard
+severity, confidence and evidence level recorded separately. Locations use whole lines.
+JSON retains the exact UTF-8 byte columns. The CLI applies the same exit codes in all
+formats. Use `--fail-on none` for an informational check that still fails on scan errors.
+
+Paths are relative to the scan root. For GitHub code scanning, run from the checkout
+and scan `.` so paths match the repository. The package CI job publishes a sample
+SARIF artifact after validation against the checksum-pinned OASIS schema. Uploading
+alerts requires GitHub code scanning access for the target repository.
+See [GitHub's SARIF support](https://docs.github.com/en/code-security/reference/code-scanning/sarif-files/sarif-support).
 
 ## CI and release delivery
 

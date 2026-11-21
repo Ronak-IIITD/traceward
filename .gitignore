@@ -19,6 +19,7 @@ __pycache__/
 dist/
 *.egg-info/
 traceward-results.json
+/traceward.sarif
 
 .coverage
 .coverage.*

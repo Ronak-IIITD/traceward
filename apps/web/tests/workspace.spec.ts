@@ -53,7 +53,12 @@ test("methodology and mobile workspace remain usable", async ({page}) => {
   await page.screenshot({path:"test-results/workspace-mobile.png",fullPage:true});
   await page.getByRole("link", {name: "Coverage & methods"}).click();
   await expect(page.getByRole("heading", {name: "Know what was analyzed."})).toBeVisible();
-  await expect(page.getByRole("cell", {name: "CWE-89", exact: true})).toBeVisible();
+  for (const language of ["Java", "Python"]) {
+    const capability = page.getByRole("row").filter({
+      has: page.getByRole("cell", { name: language, exact: true }),
+    });
+    await expect(capability.getByRole("cell", { name: "CWE-89", exact: true })).toBeVisible();
+  }
   await page.getByRole("link", {name: "Return to scan workspace"}).click();
   await expect(page.getByRole("textbox", {name: "Java source code"})).toBeVisible();
 });
@@ -136,4 +141,38 @@ test("UTF-8 trace locations select the right source for multiple findings", asyn
   await editor.fill("class Edited {}");
   await expect(page.locator(".cm-evidence-source")).toHaveCount(0);
   await expect(page.getByRole("button",{name:"source HttpServletRequest.getHeader Line 2"})).toBeDisabled();
+});
+
+test("switching languages preserves drafts and provides SQLite evidence and remediation", async ({
+  page,
+  context,
+}) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.goto("/");
+  const selector = page.getByRole("combobox", { name: "Language" });
+  const java = page.getByRole("textbox", { name: "Java source code" });
+  await java.fill("class KeepMyDraft {}");
+  await selector.selectOption("python");
+  const python = page.getByRole("textbox", { name: "Python source code" });
+  await python.press("Control+End");
+  await python.press("Enter");
+  await page.keyboard.insertText("# local draft");
+  await python.press("Control+Enter");
+  const sink = page.getByRole("button", { name: "sink sqlite3.Connection.execute Line 7" });
+  await sink.click();
+  expect(await page.evaluate(() => window.getSelection()?.toString())).toBe("db.execute(query)");
+  await expect(page.locator(".cm-sink-marker").first()).toBeVisible();
+  await page.getByText("Suggested fix", { exact: true }).click();
+  await page.getByRole("button", { name: "Copy example" }).click();
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toContain("db.execute(sql, (name,))");
+
+  await selector.selectOption("java");
+  await expect(java).toHaveText("class KeepMyDraft {}");
+  await expect(page.getByRole("button", { name: "Export JSON" })).toHaveCount(0);
+  await selector.selectOption("python");
+  await expect(python.locator(".cm-line").last()).toHaveText("# local draft");
+  await page.getByRole("button", { name: "Parameterized" }).click();
+  await page.getByRole("button", { name: "Scan Python" }).click();
+  await expect(page.getByRole("heading", { name: "No SQL injection paths found" })).toBeVisible();
+  await expect(page.getByText(/experimental rule checks a limited set of Python flows/)).toBeVisible();
 });

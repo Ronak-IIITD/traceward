@@ -2,9 +2,11 @@
 
 import { useState } from "react";
 import type { Finding, Location, ScanResult } from "@/lib/contracts";
+import { languageNames, type Language } from "@/lib/examples";
 import "./results.css";
 
 type Props = {
+  language: Language;
   result: ScanResult | null;
   busy: boolean;
   error: string;
@@ -17,15 +19,27 @@ type Props = {
   onRetry: () => void;
 };
 
-const safeExample = [
-  'String sql = "SELECT name FROM users WHERE id = ?";',
-  "try (PreparedStatement ps = connection.prepareStatement(sql)) {",
-  "    ps.setString(1, id);",
-  "    try (ResultSet rows = ps.executeQuery()) {",
-  "        // Read rows here.",
-  "    }",
-  "}",
-];
+const fixes = {
+  java: {
+    before: 'statement.executeQuery("SELECT name FROM users WHERE id=" + id);',
+    after: [
+      'String sql = "SELECT name FROM users WHERE id = ?";',
+      "try (PreparedStatement ps = connection.prepareStatement(sql)) {",
+      "    ps.setString(1, id);",
+      "    try (ResultSet rows = ps.executeQuery()) {",
+      "        // Read rows here.",
+      "    }",
+      "}",
+    ],
+  },
+  python: {
+    before: 'db.execute("SELECT name FROM sqlite_schema WHERE name = " + name)',
+    after: [
+      'sql = "SELECT name FROM sqlite_schema WHERE name = ?"',
+      "db.execute(sql, (name,))",
+    ],
+  },
+};
 
 function Glyph({ type }: { type: "activity" | "arrow" | "check" | "alert" | "copy" | "export" }) {
   const paths = {
@@ -131,6 +145,7 @@ function rangeText(location: Location) {
 
 function FindingCard({
   finding,
+  language,
   active,
   stale,
   select,
@@ -138,6 +153,7 @@ function FindingCard({
   index,
 }: {
   finding: Finding;
+  language: Language;
   active: boolean;
   stale: boolean;
   select: () => void;
@@ -145,6 +161,7 @@ function FindingCard({
   index: number;
 }) {
   const location = finding.location;
+  const fix = fixes[language];
   return (
     <article
       className="rs-card"
@@ -174,7 +191,11 @@ function FindingCard({
         {location.path}:{rangeText(location)}
       </code>
       <div id={`trace-${finding.id}`} hidden={!active} className="rs-evidence">
-        <p>Request data reaches a JDBC call through a concatenated SQL query.</p>
+        <p>
+          {language === "java"
+            ? "Request data reaches a JDBC call through a concatenated SQL query."
+            : "Interactive input reaches a SQLite call through a concatenated SQL query."}
+        </p>
         <h4>Source to sink</h4>
         <ol className="rs-trace">
           {finding.evidence.flow.map((step, i) => (
@@ -196,17 +217,15 @@ function FindingCard({
           <summary>Suggested fix</summary>
           <p>{finding.guidance}</p>
           <p className="rs-code-label">Example parameterized query</p>
-          <pre className="rs-diff" tabIndex={0} aria-label="Example PreparedStatement diff">
+          <pre className="rs-diff" tabIndex={0} aria-label={`Example ${languageNames[language]} parameterization diff`}>
             <code>
-              <span className="rs-del">
-                {'- statement.executeQuery("SELECT name FROM users WHERE id=\'" + id + "\'");\n'}
-              </span>
-              {safeExample.map((line, i) => (
+              <span className="rs-del">{`- ${fix.before}\n`}</span>
+              {fix.after.map((line, i) => (
                 <span className="rs-add" key={i}>{`+ ${line}\n`}</span>
               ))}
             </code>
           </pre>
-          <CopyButton text={safeExample.join("\n")} label="Copy example" />
+          <CopyButton text={fix.after.join("\n")} label="Copy example" />
         </details>
         <details className="rs-details">
           <summary>Review context</summary>
@@ -227,6 +246,7 @@ function FindingCard({
 }
 
 export default function ScanResults({
+  language,
   result,
   busy,
   error,
@@ -238,6 +258,7 @@ export default function ScanResults({
   onExample,
   onRetry,
 }: Props) {
+  const languageName = languageNames[language];
   const errors = result?.summary.errors ?? 0;
   const count = result?.summary.findings ?? 0;
   const status = busy
@@ -297,7 +318,7 @@ export default function ScanResults({
         {busy ? (
           <div className="rs-pending">
             <h3>Tracing supported flows</h3>
-            <p>Parsing Java and checking JDBC calls.</p>
+            <p>Checking {languageName} source for supported SQL injection paths.</p>
             <div className="rs-skeleton" aria-hidden="true">
               {[0, 1, 2].map((n) => (
                 <div key={n}>
@@ -322,9 +343,9 @@ export default function ScanResults({
             <TraceSchematic />
             <h3>Ready to trace</h3>
             <ol>
-              <li>Add a Java class or choose an example.</li>
+              <li>Add {languageName} source or choose an example.</li>
               <li>
-                Run <b>Scan Java</b> to inspect the evidence.
+                Run <b>Scan {languageName}</b> to inspect the evidence.
               </li>
             </ol>
             <button type="button" className="rs-action" onClick={onExample}>
@@ -353,7 +374,7 @@ export default function ScanResults({
                 <Glyph type="check" />
                 <h3>No SQL injection paths found</h3>
                 <p>
-                  This experimental rule checks a limited set of Java flows. Unsupported paths still need
+                  This experimental rule checks a limited set of {languageName} flows. Unsupported paths still need
                   review.
                 </p>
               </div>
@@ -362,6 +383,7 @@ export default function ScanResults({
               <FindingCard
                 key={finding.id}
                 finding={finding}
+                language={language}
                 index={index}
                 active={selected === index}
                 stale={stale}

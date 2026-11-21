@@ -9,12 +9,24 @@ from pathlib import Path
 
 from traceward.java import JavaAnalysis
 from traceward.models import Diagnostic, ScanResult, Source
+from traceward.python_sql import PythonAnalysis
+from traceward.registry import RULES, SUPPORTED_LANGUAGES
 
 MAX_FILE_BYTES = 2 * 1024 * 1024
 MAX_TOTAL_BYTES = 20 * 1024 * 1024
 MAX_FILES = 2000
 MAX_ENTRIES = 20_000
-EXCLUDED = {".git", ".venv", "node_modules", "vendor", "dist", "build", "target"}
+EXCLUDED = {
+    ".git",
+    ".venv",
+    "venv",
+    "__pycache__",
+    "node_modules",
+    "vendor",
+    "dist",
+    "build",
+    "target",
+}
 LANGUAGES = {
     ".java": "java",
     ".py": "python",
@@ -30,6 +42,25 @@ LANGUAGES = {
     ".hpp": "cpp",
 }
 
+SNIPPET_PATHS = {"java": "snippet.java", "python": "snippet.py"}
+ADAPTERS: dict[str, type[JavaAnalysis] | type[PythonAnalysis]] = {
+    "java": JavaAnalysis,
+    "python": PythonAnalysis,
+}
+LIMITATIONS = {
+    "java": (
+        "Experimental Java CWE-89 subset; no external precision/recall evaluation yet.",
+        "Method-local flow with simple if/else conditions and explicitly typed receivers.",
+        "Try-with-resources follows the normal path only; exception handlers are skipped.",
+        "Complex guards, loops, fields, receiver aliases and interprocedural flow are unsupported.",
+    ),
+    "python": (
+        "Experimental Python CWE-89 subset; no external precision/recall evaluation yet.",
+        "Tracks input() through string + to execute() on a local sqlite3 connection or cursor.",
+        "Web inputs, f-strings, branches and interprocedural flow are outside this rule.",
+    ),
+}
+
 
 def new_result(kind: str) -> ScanResult:
     return ScanResult(
@@ -37,16 +68,16 @@ def new_result(kind: str) -> ScanResult:
     )
 
 
-def analyze_bytes(result: ScanResult, data: bytes, path: str) -> None:
-    if "java" not in result.coverage.languages_detected:
-        result.coverage.languages_detected.append("java")
+def analyze_bytes(result: ScanResult, data: bytes, path: str, language: str = "java") -> None:
+    if language not in result.coverage.languages_detected:
+        result.coverage.languages_detected.append(language)
     try:
         data.decode("utf-8")
     except UnicodeDecodeError:
         result.diagnostics.append(
             Diagnostic(
                 code="INVALID_ENCODING",
-                message=f"{path}: expected UTF-8 Java source.",
+                message=f"{path}: expected UTF-8 {language} source.",
                 level="error",
             )
         )
@@ -60,7 +91,7 @@ def analyze_bytes(result: ScanResult, data: bytes, path: str) -> None:
             )
         )
         return
-    analysis = JavaAnalysis(data, path)
+    analysis = ADAPTERS[language](data, path)
     analysis.analyze()
     result.findings.extend(analysis.findings)
     result.diagnostics.extend(analysis.diagnostics)
@@ -72,6 +103,16 @@ def finish(result: ScanResult, start: float) -> ScanResult:
     result.summary.findings = len(result.findings)
     result.summary.errors = sum(d.level == "error" for d in result.diagnostics)
     result.coverage.languages_detected.sort()
+    languages = result.coverage.languages_detected
+    result.coverage.supported_checks = sorted(
+        {rule.cwe for rule in RULES.values() if rule.language in languages}
+    )
+    if not result.coverage.supported_checks:
+        result.coverage.unsupported_checks.insert(0, "CWE-89")
+    result.coverage.limitations = [note for lang in languages for note in LIMITATIONS.get(lang, ())]
+    result.coverage.limitations.append(
+        "No supported findings does not certify that code is secure. ML is disabled."
+    )
     result.duration_ms = int((time.monotonic() - start) * 1000)
     return result
 
@@ -80,11 +121,11 @@ def scan_snippet(code: str, language: str = "java") -> ScanResult:
     start = time.monotonic()
     result = new_result("snippet")
     result.summary.files_discovered = 1
-    if language != "java":
+    if language not in SUPPORTED_LANGUAGES:
         result.diagnostics.append(
             Diagnostic(
                 code="UNSUPPORTED_LANGUAGE",
-                message="Only the experimental Java adapter is enabled.",
+                message="Choose a supported snippet language: Java or Python.",
                 level="error",
             )
         )
@@ -97,11 +138,13 @@ def scan_snippet(code: str, language: str = "java") -> ScanResult:
             )
         )
     else:
-        analyze_bytes(result, code.encode("utf-8"), "snippet.java")
+        analyze_bytes(result, code.encode("utf-8"), SNIPPET_PATHS[language], language)
     return finish(result, start)
 
 
-def scan_path(path: Path, excludes: tuple[str, ...] = ()) -> ScanResult:
+def scan_path(
+    path: Path, excludes: tuple[str, ...] = (), *, language_filter: str | None = None
+) -> ScanResult:
     start = time.monotonic()
     result = new_result("directory" if path.is_dir() else "file")
     if path.is_symlink() or not path.exists():
@@ -174,6 +217,16 @@ def scan_path(path: Path, excludes: tuple[str, ...] = ()) -> ScanResult:
                         )
                     )
                 continue
+            if language_filter is not None and language != language_filter:
+                if current == path:
+                    result.diagnostics.append(
+                        Diagnostic(
+                            code="LANGUAGE_MISMATCH",
+                            message=f"Expected {language_filter} input, received {language}.",
+                            level="error",
+                        )
+                    )
+                continue
             result.summary.files_discovered += 1
             if result.summary.files_discovered > MAX_FILES:
                 result.diagnostics.append(
@@ -182,7 +235,7 @@ def scan_path(path: Path, excludes: tuple[str, ...] = ()) -> ScanResult:
                 break
             if language not in result.coverage.languages_detected:
                 result.coverage.languages_detected.append(language)
-            if language != "java":
+            if language not in SUPPORTED_LANGUAGES:
                 result.diagnostics.append(
                     Diagnostic(
                         code="UNSUPPORTED_LANGUAGE",
@@ -207,7 +260,7 @@ def scan_path(path: Path, excludes: tuple[str, ...] = ()) -> ScanResult:
                 result.diagnostics.append(
                     Diagnostic(
                         code="INPUT_TOO_LARGE",
-                        message="Java file exceeds 2 MiB; skipped.",
+                        message="Source file exceeds 2 MiB; skipped.",
                     )
                 )
                 continue
@@ -220,7 +273,7 @@ def scan_path(path: Path, excludes: tuple[str, ...] = ()) -> ScanResult:
                     )
                 )
                 break
-            analyze_bytes(result, data, current.resolve().relative_to(root).as_posix())
+            analyze_bytes(result, data, current.resolve().relative_to(root).as_posix(), language)
         except OSError:
             result.diagnostics.append(
                 Diagnostic(
