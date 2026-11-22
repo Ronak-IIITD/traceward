@@ -36,7 +36,7 @@ export default function Methodology() {
                   <tr>
                     <td>Python</td>
                     <td>CWE-89</td>
-                    <td>Console input to SQLite</td>
+                    <td>Console and Flask query input to SQLite</td>
                   </tr>
                   <tr>
                     <td>JavaScript</td>
@@ -71,7 +71,12 @@ export default function Methodology() {
             <code className="tw-rule-id">python.sqlite.concatenated-input</code>
             <dl className="tw-method-steps">
               <dt>Source</dt>
-              <dd>Interactive input from the built-in <code>input()</code>.</dd>
+              <dd>
+                Interactive input from <code>input()</code> and Flask query parameters from{" "}
+                <code>request.args[&quot;key&quot;]</code> or <code>request.args.get(&quot;key&quot;)</code>.
+                Inside a function, Flask coverage requires a literal key and an explicit{" "}
+                <code>request</code> import from <code>flask</code>.
+              </dd>
               <dt>Propagation</dt>
               <dd>Straight-line assignments and string concatenation with <code>+</code>.</dd>
               <dt>Sink</dt>
@@ -115,7 +120,9 @@ export default function Methodology() {
                 scan diagnostics.
               </li>
               <li>
-                The Python rule skips branches, f-strings, web request inputs, and flows across functions.
+                Flask route coverage requires a direct Flask app and one <code>@app.get()</code> or{" "}
+                <code>@app.route()</code> decorator with a literal path. Request bodies, f-strings,
+                branches, and flows across functions fall outside the Python rule’s scope.
               </li>
               <li>
                 The JavaScript and TypeScript rules cover straight-line Node.js scripts. Template

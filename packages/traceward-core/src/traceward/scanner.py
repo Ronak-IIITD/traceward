@@ -83,8 +83,8 @@ LIMITATIONS = {
     ),
     "python": (
         "Experimental Python CWE-89 subset; no external precision/recall evaluation yet.",
-        "Tracks input() through string + to execute() on a local sqlite3 connection or cursor.",
-        "Web inputs, f-strings, branches and interprocedural flow are outside this rule.",
+        "Tracks input() and Flask request.args through string + into sqlite3 execute().",
+        "Other web inputs, f-strings, branches and interprocedural flow are outside this rule.",
     ),
     "javascript": (
         "Experimental JavaScript CWE-89 subset; no external precision/recall evaluation yet.",

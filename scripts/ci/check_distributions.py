@@ -15,7 +15,9 @@ from urllib.request import Request, urlopen
 ROOT = Path(__file__).resolve().parents[2]
 
 
-def check_http(bin_dir: Path, work: Path, language: str, code: str, findings: list[dict]) -> None:
+def check_http(
+    bin_dir: Path, work: Path, cases: list[tuple[str, str, list[dict[str, object]]]]
+) -> None:
     with socket.socket() as listener:
         listener.bind(("127.0.0.1", 0))
         base = f"http://127.0.0.1:{listener.getsockname()[1]}/api/v1"
@@ -42,14 +44,16 @@ def check_http(bin_dir: Path, work: Path, language: str, code: str, findings: li
                     time.sleep(0.1)
             else:
                 raise TimeoutError("Installed API did not become ready")
-            request = Request(
-                base + "/scans/snippet",
-                json.dumps({"language": language, "code": code}).encode(),
-                {"Content-Type": "application/json"},
-            )
-            with urlopen(request, timeout=10) as response:
-                report = json.load(response)
-            assert report["summary"]["errors"] == 0 and report["findings"] == findings
+            for language, code, findings in cases:
+                request = Request(
+                    base + "/scans/snippet",
+                    json.dumps({"language": language, "code": code}).encode(),
+                    {"Content-Type": "application/json"},
+                )
+                with urlopen(request, timeout=10) as response:
+                    report = json.load(response)
+                assert report["summary"]["files_analyzed"] == 1
+                assert not report["diagnostics"] and report["findings"] == findings
         finally:
             server.terminate()
             server.wait(timeout=10)
@@ -69,17 +73,19 @@ def check(package: Path, version: str) -> None:
             == f"TraceWard {version}"
         )
         api_cases = []
-        for language, name, expected in [
-            ("java", "Safe.java", 0),
-            ("java", "Vulnerable.java", 1),
-            ("python", "parameterized.py", 0),
-            ("python", "concatenated.py", 1),
-            ("javascript", "parameterized.js", 0),
-            ("javascript", "concatenated.js", 1),
-            ("typescript", "parameterized.ts", 0),
-            ("typescript", "concatenated.ts", 1),
+        for language, path, expected in [
+            ("java", "java/Safe.java", 0),
+            ("java", "java/Vulnerable.java", 1),
+            ("python", "python/parameterized.py", 0),
+            ("python", "python/concatenated.py", 1),
+            ("python", "flask-sqlite/parameterized.py", 0),
+            ("python", "flask-sqlite/concatenated.py", 1),
+            ("javascript", "javascript/parameterized.js", 0),
+            ("javascript", "javascript/concatenated.js", 1),
+            ("typescript", "typescript/parameterized.ts", 0),
+            ("typescript", "typescript/concatenated.ts", 1),
         ]:
-            fixture = ROOT / "fixtures" / language / name
+            fixture = ROOT / "fixtures" / path
             code = fixture.read_text(encoding="utf-8")
             source = work / f"snippet{fixture.suffix}"
             source.write_text(code, encoding="utf-8")
@@ -91,14 +97,13 @@ def check(package: Path, version: str) -> None:
             assert cli.returncode == expected, cli.stderr
             result = json.loads(cli.stdout)
             findings = result["findings"]
-            assert len(findings) == expected and result["summary"]["errors"] == 0
-            if findings:
-                api_cases.append((language, code, findings))
+            assert result["summary"]["files_analyzed"] == 1
+            assert not result["diagnostics"] and len(findings) == expected
+            api_cases.append((language, code, findings))
         subprocess.run(
             [*install, f"traceward-core[api] @ {package.as_uri()}"], cwd=work, check=True
         )
-        for language, code, findings in api_cases:
-            check_http(bin_dir, work, language, code, findings)
+        check_http(bin_dir, work, api_cases)
 
 
 if __name__ == "__main__":

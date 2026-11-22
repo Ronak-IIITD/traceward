@@ -129,17 +129,25 @@ and call propagation is reported where tainted arguments are observed. No comple
 control-flow or symbol graph is claimed. Dead comments and unused strings are not
 SQL evidence. Methods are analyzed regardless of whole-program reachability.
 
-The experimental **Python** rule tracks the built-in `input()` through simple
-assignments and string `+` into `db.execute(query)`. It recognizes an unaliased
-module-level `import sqlite3` and a connection assigned from
-`sqlite3.connect("literal database name")` in the same straight-line scope as
-the sink. It also recognizes a local cursor created with `cur = db.cursor()`
-and a later `cur.execute(query)` in that scope. The Python fixtures demonstrate matching input concatenated into
-query text and the same input passed separately to a constant template.
-F-strings, web request sources, branches and cross-function calls are
-outside this rule. Consult the diagnostics for paths the scanner skipped. An unsupported module-level statement can end analysis before
-the next function definition.
-See the [SQLite parameter binding guide](https://docs.python.org/3/library/sqlite3.html#how-to-use-placeholders-to-bind-values-in-sql-queries).
+The experimental **Python** rule follows built-in `input()` and selected Flask
+query parameters through local assignments and string `+` into `execute()`
+on a local SQLite connection or cursor. The adapter models an unaliased
+`import sqlite3` and a connection created with `sqlite3.connect("literal database name")`
+in the same straight-line scope as the sink. Cursors created with `db.cursor()`
+in that scope also work.
+
+For Flask, the scanner resolves a module-level `from flask import request` and
+tracks `request.args["key"]` and `request.args.get("key")` inside a top-level
+function, including a positional string default. It recognizes a single `@app.get("/path")` or
+`@app.route("/path")` on a function when the module constructs that app with
+`Flask(__name__)` or a literal string. Other request attributes, typed conversion,
+f-strings, branches and cross-function flow remain outside the rule. Consult the
+diagnostics when an unsupported statement ends the modeled path. Flask itself
+is unnecessary for scanning. [Flask request data](https://flask.palletsprojects.com/en/stable/quickstart/#accessing-request-data)
+
+Scan `fixtures/flask-sqlite` for a comparison between a concatenated query
+and a constant query that binds the same value separately.
+[SQLite parameter binding guide](https://docs.python.org/3/library/sqlite3.html#how-to-use-placeholders-to-bind-values-in-sql-queries).
 
 The experimental **JavaScript and TypeScript** rules share a Node.js SQLite
 model. They follow `process.argv[2]` and later literal indexes through top-level

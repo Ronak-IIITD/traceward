@@ -217,3 +217,33 @@ test("switching languages preserves drafts and provides SQLite evidence and reme
   await expect(page.getByRole("heading", { name: "No SQL injection paths found" })).toBeVisible();
   await expect(page.getByText(/experimental rule checks a limited set of Python flows/)).toBeVisible();
 });
+
+test("Python traces Flask query parameters and accepts SQLite parameter binding", async ({ page }) => {
+  const handler = `import sqlite3
+from flask import Flask, request
+app = Flask(__name__)
+@app.get('/items')
+def lookup():
+    db = sqlite3.connect(':memory:')
+    name = request.args.get('name', '')`;
+
+  await page.goto("/");
+  await page.getByRole("combobox", { name: "Language" }).selectOption("python");
+  const editor = page.getByRole("textbox", { name: "Python source code" });
+  const scan = page.getByRole("button", { name: "Scan Python", exact: true });
+  await editor.fill(`${handler}
+    query = 'SELECT name FROM sqlite_schema WHERE name = ' + name
+    db.execute(query)`);
+  await scan.click();
+
+  await page.getByRole("button", { name: "source flask.request.args.get Line 7" }).click();
+  expect(await page.evaluate(() => window.getSelection()?.toString())).toBe("request.args.get('name', '')");
+  await page.getByRole("button", { name: "sink sqlite3.Connection.execute Line 9" }).click();
+  expect(await page.evaluate(() => window.getSelection()?.toString())).toBe("db.execute(query)");
+
+  await editor.fill(`${handler}
+    db.execute('SELECT name FROM sqlite_schema WHERE name = ?', (name,))`);
+  await scan.click();
+  await expect(page.getByRole("heading", { name: "No SQL injection paths found" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Diagnostics" })).toHaveCount(0);
+});

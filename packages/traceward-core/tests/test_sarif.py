@@ -140,3 +140,20 @@ def test_mixed_rules_resolve_to_correct_sarif_descriptors(tmp_path: Path) -> Non
     }
     for item in analysis["results"]:
         assert rules[item["ruleIndex"]]["id"] == item["ruleId"]
+
+
+def test_flask_query_parameter_trace_in_sarif() -> None:
+    run = scan_sarif(FIXTURES.parent / "flask-sqlite")
+    assert run.returncode == 1
+    (analysis,) = json.loads(run.stdout)["runs"]
+    (rule,) = analysis["tool"]["driver"]["rules"]
+    (finding,) = analysis["results"]
+    assert rule["id"] == finding["ruleId"] == "python.sqlite.concatenated-input"
+    assert rule["properties"]["ruleVersion"] == "0.2.0"
+    (code_flow,) = finding["codeFlows"]
+    (thread,) = code_flow["threadFlows"]
+    source, *_, sink = thread["locations"]
+    assert source["kinds"] == ["source"]
+    assert source["location"]["message"]["text"].startswith("flask.request.args")
+    assert sink["kinds"] == ["sink"]
+    assert sink["location"]["message"]["text"] == "sqlite3.Connection.execute"

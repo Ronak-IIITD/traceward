@@ -1,4 +1,4 @@
-"""Bounded syntactic model for interactive input reaching a SQLite query in Python."""
+"""Bounded syntactic model for untrusted input reaching a SQLite query in Python."""
 
 import hashlib
 import unicodedata
@@ -27,8 +27,30 @@ def sqlite_import(node: Node) -> bool:
     return len(names) == 1 and names[0].type == "dotted_name" and text(names[0]) == b"sqlite3"
 
 
-def ambiguous_binding(root: Node, *, module: bool) -> Node | None:
+def flask_import(node: Node) -> frozenset[bytes]:
+    if (
+        node.type != "import_from_statement"
+        or text(node.child_by_field_name("module_name")) != b"flask"
+    ):
+        return frozenset()
+    names = [text(name) for name in node.children_by_field_name("name")]
+    if not names or len(names) != len(set(names)) or set(names) - {b"Flask", b"request"}:
+        return frozenset()
+    return frozenset(names)
+
+
+def function_definition(node: Node) -> Node | None:
+    definition = (
+        node.child_by_field_name("definition") if node.type == "decorated_definition" else node
+    )
+    return (
+        definition if definition is not None and definition.type == "function_definition" else None
+    )
+
+
+def ambiguous_binding(root: Node, *, module: bool, flask_names: frozenset[bytes]) -> Node | None:
     """Check lexical shadowing, including bindings that occur after a use in a function."""
+    protected = {b"input", b"sqlite3"} | flask_names
     pending = [root]
     while pending:
         node = pending.pop()
@@ -40,17 +62,22 @@ def ambiguous_binding(root: Node, *, module: bool) -> Node | None:
                 return node
         if node.type == "wildcard_import":
             return node
-        if module and node.type == "function_definition":
-            name = node.child_by_field_name("name")
-            if unicodedata.normalize("NFKC", text(name).decode()) in {"input", "sqlite3"}:
-                return node
-            continue
-        if module and sqlite_import(node):
-            continue
-        if node.type == "identifier" and text(node) in {b"input", b"sqlite3"}:
+        if module:
+            if (function := function_definition(node)) is not None:
+                name = function.child_by_field_name("name")
+                spelling = unicodedata.normalize("NFKC", text(name).decode()).encode()
+                if spelling in protected:
+                    return node
+                pending.extend(child for child in children(node) if child.type == "decorator")
+                continue
+            if sqlite_import(node) or flask_import(node):
+                continue
+        if node.type == "identifier" and text(node) in protected:
             reference = node
             parent = node.parent
             assert parent is not None
+            if text(node) == b"request" and parent.type == "attribute":
+                continue
             if text(node) == b"sqlite3" and parent.type == "attribute":
                 if parent.child_by_field_name("object") == node:
                     reference, parent = parent, parent.parent
@@ -71,19 +98,33 @@ def plain_string(node: Node) -> bool:
     return prefix in {b"", b"u", b"r"}
 
 
+def request_args(node: Node) -> bool:
+    return (
+        node.type == "attribute"
+        and text(node.child_by_field_name("object")) == b"request"
+        and text(node.child_by_field_name("attribute")) == b"args"
+    )
+
+
 @dataclass(frozen=True)
 class Value:
     is_string: bool = False
     flow: tuple[FlowNode, ...] = ()
     concatenated: bool = False
     receiver: Literal["Connection", "Cursor"] | None = None
+    flask_app: bool = False
 
 
 @dataclass
 class Scope:
     name: str
     sqlite_imported: bool = False
+    flask_names: frozenset[bytes] = frozenset()
     values: dict[bytes, Value] = field(default_factory=dict)
+
+    @property
+    def flask_request_available(self) -> bool:
+        return self.name != "<module>" and b"request" in self.flask_names
 
 
 class Unsupported(Exception):
@@ -144,12 +185,15 @@ class PythonAnalysis:
                 )
             )
             return
-        if self.unresolved_scope(root, module=True):
+        flask_names = frozenset(
+            name for statement in children(root) for name in flask_import(statement)
+        )
+        if self.unresolved_scope(root, module=True, flask_names=flask_names):
             return
         self.block(root, Scope("<module>"), module=True)
 
-    def unresolved_scope(self, node: Node, *, module: bool) -> bool:
-        ambiguous = ambiguous_binding(node, module=module)
+    def unresolved_scope(self, node: Node, *, module: bool, flask_names: frozenset[bytes]) -> bool:
+        ambiguous = ambiguous_binding(node, module=module, flask_names=flask_names)
         if ambiguous is None:
             return False
         self.diagnostics.append(
@@ -176,6 +220,8 @@ class PythonAnalysis:
             try:
                 if module and sqlite_import(node):
                     scope.sqlite_imported = True
+                elif module and (flask_names := flask_import(node)):
+                    scope.flask_names |= flask_names
                 elif module and node.type == "import_statement":
                     names = children(node)
                     if (
@@ -185,13 +231,8 @@ class PythonAnalysis:
                     ):
                         raise Unsupported(node, "Expected a single unaliased module import.")
                     scope.values.pop(text(names[0]), None)
-                elif module and node.type == "function_definition":
-                    symbol = text(node.child_by_field_name("name"))
-                    scope.values.pop(symbol, None)
-                    if not self.unresolved_scope(node, module=False):
-                        inner = node.child_by_field_name("body")
-                        assert inner is not None
-                        self.block(inner, Scope(symbol.decode(), scope.sqlite_imported))
+                elif module and (function := function_definition(node)) is not None:
+                    self.function(node, function, scope)
                 elif node.type == "expression_statement":
                     expressions = children(node)
                     if len(expressions) != 1:
@@ -216,6 +257,38 @@ class PythonAnalysis:
                     )
                 )
                 return
+
+    def function(self, statement: Node, definition: Node, scope: Scope) -> None:
+        if statement != definition:
+            decorators = [child for child in children(statement) if child.type == "decorator"]
+            if len(decorators) != 1 or not self.flask_route(decorators[0], scope):
+                raise Unsupported(
+                    statement, "Expected one literal route on a local Flask application."
+                )
+        symbol = text(definition.child_by_field_name("name"))
+        scope.values.pop(symbol, None)
+        if not self.unresolved_scope(definition, module=False, flask_names=scope.flask_names):
+            inner = definition.child_by_field_name("body")
+            assert inner is not None
+            self.block(inner, Scope(symbol.decode(), scope.sqlite_imported, scope.flask_names))
+
+    def flask_route(self, decorator: Node, scope: Scope) -> bool:
+        (expression,) = children(decorator)
+        if expression.type != "call":
+            return False
+        target = expression.child_by_field_name("function")
+        arguments = expression.child_by_field_name("arguments")
+        if target is None or target.type != "attribute" or arguments is None:
+            return False
+        owner = text(target.child_by_field_name("object"))
+        method = text(target.child_by_field_name("attribute"))
+        args = children(arguments)
+        return (
+            scope.values.get(owner, Value()).flask_app
+            and method in {b"get", b"route"}
+            and len(args) == 1
+            and plain_string(args[0])
+        )
 
     def assign(self, node: Node, scope: Scope) -> None:
         left = node.child_by_field_name("left")
@@ -247,8 +320,8 @@ class PythonAnalysis:
             raise Unsupported(node, "Python expression nesting exceeds 48 levels.")
         if node.type == "identifier":
             value = scope.values.get(text(node), Value())
-            # Only a constructor call establishes a receiver. Drop receiver aliases.
-            return Value() if value.receiver else value
+            # Only a constructor call establishes its receiver.
+            return Value() if value.receiver or value.flask_app else value
         if plain_string(node):
             return Value(is_string=True)
         if node.type in {"integer", "none", "true", "false"}:
@@ -271,7 +344,22 @@ class PythonAnalysis:
             return value
         if node.type == "call":
             return self.call(node, scope, depth)
+        if node.type == "subscript" and scope.flask_request_available:
+            receiver = node.child_by_field_name("value")
+            keys = node.children_by_field_name("subscript")
+            if (
+                receiver is not None
+                and request_args(receiver)
+                and len(keys) == 1
+                and not any(child.type == "," for child in node.children)
+                and plain_string(keys[0])
+            ):
+                return self.source(node, "flask.request.args")
         raise Unsupported(node, "Unsupported Python expression; remaining path skipped.")
+
+    def source(self, node: Node, symbol: str) -> Value:
+        step = FlowNode(kind="source", symbol=symbol, location=self.location(node))
+        return Value(True, (step,))
 
     def call(self, node: Node, scope: Scope, depth: int) -> Value:
         target = node.child_by_field_name("function")
@@ -280,13 +368,27 @@ class PythonAnalysis:
         arguments = children(args)
         if target.type == "identifier" and text(target) == b"input":
             if not arguments or (len(arguments) == 1 and plain_string(arguments[0])):
-                return Value(
-                    True, (FlowNode(kind="source", symbol="input", location=self.location(node)),)
-                )
+                return self.source(node, "input")
+        if (
+            target.type == "identifier"
+            and text(target) == b"Flask"
+            and b"Flask" in scope.flask_names
+            and len(arguments) == 1
+            and (plain_string(arguments[0]) or text(arguments[0]) == b"__name__")
+        ):
+            return Value(flask_app=True)
         if target.type != "attribute":
             raise Unsupported(node, "Unresolved Python call; remaining path skipped.")
         owner = target.child_by_field_name("object")
         method = text(target.child_by_field_name("attribute"))
+        if owner is not None and request_args(owner) and method == b"get":
+            if (
+                scope.flask_request_available
+                and 1 <= len(arguments) <= 2
+                and all(plain_string(argument) for argument in arguments)
+            ):
+                return self.source(node, "flask.request.args.get")
+            raise Unsupported(node, "Expected imported Flask query arguments with literal strings.")
         if owner is None or owner.type != "identifier":
             raise Unsupported(node, "Expected a local SQLite receiver.")
         name = text(owner)
@@ -333,6 +435,17 @@ class PythonAnalysis:
         self.occurrences[identity] = ordinal + 1
         digest = hashlib.sha256(identity + ordinal.to_bytes(4, "big")).hexdigest()
         location = self.location(sink)
+        flask_source = query.flow[0].symbol.startswith("flask.")
+        api_scope = (
+            "Syntactic API model assumes standard Flask and sqlite3 at runtime."
+            if flask_source
+            else "Syntactic API model assumes standard builtins and sqlite3 at runtime."
+        )
+        boundary = (
+            "Review the active Flask request context and whether the query argument is present."
+            if flask_source
+            else "Review reachability and the trust boundary of interactive input."
+        )
         flow = [
             *query.flow,
             FlowNode(kind="sink", symbol=symbol, location=location),
@@ -352,10 +465,7 @@ class PythonAnalysis:
                     source=flow[0].location,
                     sink=location,
                     flow=flow,
-                    uncertainties=[
-                        "Syntactic API model assumes standard builtins and sqlite3 at runtime.",
-                        "Review reachability and the trust boundary of interactive input.",
-                    ],
+                    uncertainties=[api_scope, boundary],
                 ),
             )
         )
