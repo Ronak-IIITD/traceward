@@ -414,6 +414,7 @@ def test_mixed_directory_and_explicit_language(
     }
     assert sum("process.argv" in text for text in result.coverage.limitations) == 1
     assert any("sqlite3" in text for text in result.coverage.limitations)
+    assert any("Flask request.args" in text for text in result.coverage.limitations)
     assert any("JDBC" in text or "Java" in text for text in result.coverage.limitations)
     cli = subprocess.run(
         ["traceward", "scan", str(tmp_path), "--language", language_filter, "--format", "json"],

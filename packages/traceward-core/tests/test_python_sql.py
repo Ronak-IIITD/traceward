@@ -218,3 +218,169 @@ def test_ordinary_imports_and_cursor_rebinding_to_connection() -> None:
         "sqlite3.Cursor.execute",
         "sqlite3.Connection.execute",
     ]
+
+
+FLASK_FIXTURES = FIXTURES.with_name("flask-sqlite")
+
+
+def test_flask_route_fixture_evidence_and_parameterized_query() -> None:
+    code = (FLASK_FIXTURES / "concatenated.py").read_text()
+    analysis = analyze(code)
+    assert analysis.diagnostics == []
+    (finding,) = analysis.findings
+    assert finding == analyze(code).findings[0]
+    assert finding.detectors[0].version == PYTHON_SQL.version
+    assert [
+        (step.kind, step.symbol, step.location.start_line) for step in finding.evidence.flow
+    ] == [
+        ("source", "flask.request.args.get", 10),
+        ("assignment", "name", 10),
+        ("concatenation", "+", 12),
+        ("concatenation", "+", 12),
+        ("assignment", "query", 12),
+        ("sink", "sqlite3.Connection.execute", 13),
+    ]
+    assert finding.evidence.source.start_column == 12
+    assert finding.evidence.source.end_column == 40
+    assert finding.evidence.sink.start_column == 5
+    assert any("Flask request context" in note for note in finding.evidence.uncertainties)
+    bound = analyze((FLASK_FIXTURES / "parameterized.py").read_text())
+    assert bound.findings == bound.diagnostics == []
+
+
+def test_flask_subscription_uses_exact_utf8_byte_span_with_separate_imports() -> None:
+    code = (FLASK_FIXTURES / "concatenated.py").read_text()
+    code = (
+        code.replace(
+            "from flask import Flask, request", "from flask import Flask\nfrom flask import request"
+        )
+        .replace("Flask(__name__)", 'Flask("example")')
+        .replace("@app.get", "@app.route")
+        .replace('name = request.args.get("name", "")', 'café = request.args["é"]')
+        .replace("+ name +", "+ café +")
+    )
+    (finding,) = analyze(code).findings
+    source = finding.evidence.flow[0]
+    assert source.symbol == "flask.request.args"
+    where = source.location
+    line = code.splitlines()[where.start_line - 1].encode()
+    assert line[where.start_column - 1 : where.end_column - 1].decode() == 'request.args["é"]'
+
+
+def test_exact_request_import_with_one_get_argument_in_undecorated_function() -> None:
+    analysis = analyze(
+        dedent("""\
+        from flask import request
+        import sqlite3
+
+        def lookup():
+            db = sqlite3.connect(":memory:")
+            value = request.args.get("table")
+            db.execute("SELECT " + value)
+        """)
+    )
+    assert not analysis.diagnostics
+    assert len(analysis.findings) == 1
+
+
+@pytest.mark.parametrize("lookup", ['request.args.get("table")', 'request.args["table"]'])
+def test_direct_module_lookup_has_no_modeled_flask_request_context(lookup: str) -> None:
+    code = "from flask import request\n" + SETUP + f'db.execute("SELECT " + {lookup})'
+    analysis = analyze(code)
+    assert analysis.findings == []
+    assert [item.code for item in analysis.diagnostics] == ["UNSUPPORTED_FLOW"]
+
+
+@pytest.mark.parametrize(
+    "modify",
+    [
+        'request.args.get("name", type=int)',
+        'request.args.get("name", 42)',
+        'request.args.get("name", default="")',
+        "request.args.get(key)",
+        'request.args.get("name", "", "")',
+        "request.args.get()",
+        'request.args["name",]',
+        'request.args["name", "other"]',
+        "request.args[key]",
+        'request.form.get("name", "")',
+        'other.request.args.get("name", "")',
+        'flask.request.args.get("name", "")',
+    ],
+)
+def test_unmodeled_request_lookups_do_not_create_evidence(modify: str) -> None:
+    code = (FLASK_FIXTURES / "concatenated.py").read_text()
+    code = code.replace('request.args.get("name", "")', modify)
+    analysis = analyze(code)
+    assert analysis.findings == []
+    assert [item.code for item in analysis.diagnostics] == ["UNSUPPORTED_FLOW"]
+
+
+@pytest.mark.parametrize(
+    ("old", "replacement"),
+    [
+        ("def lookup():", "def lookup(request):"),
+        ("def lookup():", "def lookup(*, request):"),
+        ('    return "done"', '    request = "replacement"'),
+        ('    return "done"', '    ｒｅｑｕｅｓｔ = "replacement"'),
+        ('    return "done"', "    from example import request"),
+        ("app = Flask(__name__)", 'request = "replacement"\napp = Flask(__name__)'),
+        ("app = Flask(__name__)", "Flask = custom\napp = Flask(__name__)"),
+        ("app = Flask(__name__)", "def Flask(): pass\napp = Flask(__name__)"),
+        ("def lookup():", "def request():"),
+    ],
+)
+def test_flask_import_bindings_cannot_be_shadowed(old: str, replacement: str) -> None:
+    code = (FLASK_FIXTURES / "concatenated.py").read_text()
+    analysis = analyze(code.replace(old, replacement))
+    assert analysis.findings == []
+    assert [item.code for item in analysis.diagnostics] == ["UNRESOLVED_BINDING"]
+
+
+@pytest.mark.parametrize(
+    ("old", "replacement"),
+    [
+        ("from flask import Flask, request", "from helper import Flask, request"),
+        ("from flask import Flask, request", "from .flask import Flask, request"),
+        ("from flask import Flask, request", "from flask import Flask, request as req"),
+        ("from flask import Flask, request", "from flask import Flask, request, session"),
+        ("from flask import Flask, request", "from flask import Flask, Flask, request"),
+        ("app = Flask(__name__)", "app = Flask()"),
+        ("app = Flask(__name__)", "app = Flask(__name__, option=True)"),
+        ("app = Flask(__name__)", 'app = Flask(__name__)\napp = "replacement"'),
+        ("app = Flask(__name__)", "app = Flask(__name__)\nother = app"),
+        ('@app.get("/tables")', '@app.post("/tables")'),
+        ('@app.get("/tables")', "@app.route(variable)"),
+        ('@app.get("/tables")', '@app.route("/tables", methods=["GET"])'),
+        ('@app.get("/tables")', '@app.get("/tables")\n@other'),
+        ('@app.get("/tables")', "@app"),
+        ('@app.get("/tables")', '@"literal"'),
+        ('@app.get("/tables")', '@other("/tables")'),
+        ('@app.get("/tables")', '@app.get("/tables")\ndef unrelated(): pass\n@app.get()'),
+    ],
+)
+def test_only_direct_flask_initialization_and_routes_are_analyzed(
+    old: str, replacement: str
+) -> None:
+    code = (FLASK_FIXTURES / "concatenated.py").read_text()
+    code = code.replace(old, replacement)
+    if "other = app" in code:
+        code = code.replace("@app.get", "@other.get")
+    analysis = analyze(code)
+    assert analysis.findings == []
+    assert [item.code for item in analysis.diagnostics] == ["UNSUPPORTED_FLOW"]
+
+
+def test_assignment_to_request_args_stops_analysis() -> None:
+    code = (FLASK_FIXTURES / "concatenated.py").read_text()
+    code = code.replace("def lookup():", 'def lookup():\n    request.args = "replacement"')
+    analysis = analyze(code)
+    assert analysis.findings == []
+    assert [item.code for item in analysis.diagnostics] == ["UNSUPPORTED_FLOW"]
+
+
+def test_request_name_is_not_reserved_without_flask_import() -> None:
+    code = (FIXTURES / "concatenated.py").read_text()
+    analysis = analyze(code.replace("lookup()", "lookup(request, Flask)"))
+    assert len(analysis.findings) == 1
+    assert not analysis.diagnostics

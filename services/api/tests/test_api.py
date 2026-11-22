@@ -25,6 +25,8 @@ FIXTURES = Path(__file__).resolve().parents[3] / "fixtures"
         ("python/concatenated.py", 1),
         ("python/cursor_concatenated.py", 1),
         ("python/parameterized.py", 0),
+        ("flask-sqlite/concatenated.py", 1),
+        ("flask-sqlite/parameterized.py", 0),
         ("javascript/concatenated.js", 1),
         ("javascript/parameterized.js", 0),
         ("typescript/concatenated.ts", 1),
@@ -53,6 +55,9 @@ def test_cli_and_api_agree(tmp_path: Path, name: str, count: int) -> None:
     assert result.coverage == cli_result.coverage
     assert result.diagnostics == cli_result.diagnostics
     assert result.summary == cli_result.summary
+    assert result.summary.files_analyzed == 1 and result.summary.errors == 0
+    if source.parent.name == "flask-sqlite":
+        assert not result.diagnostics
 
 
 @pytest.mark.parametrize(
