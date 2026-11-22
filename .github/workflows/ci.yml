@@ -101,6 +101,10 @@ jobs:
           mkdir -p ci-reports
           uv run --locked traceward scan fixtures/java --format sarif --fail-on none --output ci-reports/java.sarif
           uv run --locked traceward scan fixtures/python/concatenated.py --format sarif --fail-on none --output ci-reports/python.sarif
+          for language in javascript typescript; do
+            uv run --locked traceward scan "fixtures/$language" \
+              --format sarif --fail-on none --output "ci-reports/$language.sarif"
+          done
           schema_path="$RUNNER_TEMP/sarif-schema-2.1.0.json"
           curl --proto '=https' --fail --silent --show-error --retry 3 --max-time 30 \
             https://docs.oasis-open.org/sarif/sarif/v2.1.0/os/schemas/sarif-schema-2.1.0.json \
@@ -118,12 +122,15 @@ jobs:
           for language, rule_id, files in [
               ("java", "java.sql.concatenated-untrusted-input", 2),
               ("python", "python.sqlite.concatenated-input", 1),
+              ("javascript", "javascript.sqlite.concatenated-argv", 2),
+              ("typescript", "typescript.sqlite.concatenated-argv", 2),
           ]:
               report = json.loads(Path(f"ci-reports/{language}.sarif").read_text(encoding="utf-8"))
               validator.validate(report)
               (run,) = report["runs"]
               (finding,) = run["results"]
               assert finding["ruleId"] == rule_id
+              assert run["tool"]["driver"]["rules"][finding["ruleIndex"]]["id"] == rule_id
               assert run["properties"]["summary"]["files_analyzed"] == files
           PY
       - name: Retain validated fixture SARIF

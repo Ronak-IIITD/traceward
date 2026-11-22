@@ -52,7 +52,7 @@ def render_text(result: ScanResult) -> str:
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="TraceWard experimental Java and Python static scanner"
+        description="TraceWard experimental static SQL injection scanner"
     )
     parser.add_argument("--version", action="version", version=f"TraceWard {__version__}")
     commands = parser.add_subparsers(dest="command", required=True)
@@ -83,11 +83,13 @@ def main() -> int:
     args = parser.parse_args()
     if args.command == "doctor":
         print(f"TraceWard {__version__}; Python {sys.version.split()[0]}")
-        for package in ["tree-sitter", "tree-sitter-java", "tree-sitter-python", "pydantic"]:
+        for package in [
+            "tree-sitter",
+            *(f"tree-sitter-{lang}" for lang in sorted(SUPPORTED_LANGUAGES)),
+            "pydantic",
+        ]:
             print(f"{package}: {version(package)}")
-        print(
-            "Java and Python parsers available. ML disabled: no validated model artifact installed."
-        )
+        print("Parser bindings installed. ML disabled: no validated model artifact installed.")
         return 0
     if args.command == "rules":
         for rule in RULES.values():

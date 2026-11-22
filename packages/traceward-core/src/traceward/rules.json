@@ -20,5 +20,27 @@
     "title": "Potential SQL injection in a SQLite query",
     "guidance": "Use a constant SQL template with ? placeholders and pass the values separately to execute().",
     "reference": "https://cwe.mitre.org/data/definitions/89.html"
+  },
+  {
+    "id": "javascript.sqlite.concatenated-argv",
+    "version": "0.1.0",
+    "type": "taint_rule",
+    "language": "javascript",
+    "cwe": "CWE-89",
+    "maturity": "experimental",
+    "title": "Potential SQL injection in a Node.js SQLite query",
+    "guidance": "Prepare a constant SQL template with ? placeholders and bind values separately to the statement.",
+    "reference": "https://cwe.mitre.org/data/definitions/89.html"
+  },
+  {
+    "id": "typescript.sqlite.concatenated-argv",
+    "version": "0.1.0",
+    "type": "taint_rule",
+    "language": "typescript",
+    "cwe": "CWE-89",
+    "maturity": "experimental",
+    "title": "Potential SQL injection in a Node.js SQLite query",
+    "guidance": "Prepare a constant SQL template with ? placeholders and bind values separately to the statement.",
+    "reference": "https://cwe.mitre.org/data/definitions/89.html"
   }
 ]

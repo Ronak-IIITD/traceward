@@ -74,6 +74,10 @@ def check(package: Path, version: str) -> None:
             ("java", "Vulnerable.java", 1),
             ("python", "parameterized.py", 0),
             ("python", "concatenated.py", 1),
+            ("javascript", "parameterized.js", 0),
+            ("javascript", "concatenated.js", 1),
+            ("typescript", "parameterized.ts", 0),
+            ("typescript", "concatenated.ts", 1),
         ]:
             fixture = ROOT / "fixtures" / language / name
             code = fixture.read_text(encoding="utf-8")

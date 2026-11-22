@@ -126,6 +126,8 @@ def test_missing_path_is_an_error_without_a_source_location(tmp_path: Path) -> N
 def test_mixed_rules_resolve_to_correct_sarif_descriptors(tmp_path: Path) -> None:
     shutil.copy(FIXTURES / "Vulnerable.java", tmp_path)
     shutil.copy(FIXTURES.parent / "python/concatenated.py", tmp_path)
+    shutil.copy(FIXTURES.parent / "javascript/concatenated.js", tmp_path)
+    shutil.copy(FIXTURES.parent / "typescript/concatenated.ts", tmp_path)
     run = scan_sarif(tmp_path)
     assert run.returncode == 1
     (analysis,) = json.loads(run.stdout)["runs"]
@@ -133,6 +135,8 @@ def test_mixed_rules_resolve_to_correct_sarif_descriptors(tmp_path: Path) -> Non
     assert {r["ruleId"] for r in analysis["results"]} == {
         "java.sql.concatenated-untrusted-input",
         "python.sqlite.concatenated-input",
+        "javascript.sqlite.concatenated-argv",
+        "typescript.sqlite.concatenated-argv",
     }
     for item in analysis["results"]:
         assert rules[item["ruleIndex"]]["id"] == item["ruleId"]

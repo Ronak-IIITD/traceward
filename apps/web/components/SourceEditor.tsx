@@ -9,6 +9,7 @@ import {
   temporarilySetTabFocusMode,
 } from "@codemirror/commands";
 import { java } from "@codemirror/lang-java";
+import { javascript } from "@codemirror/lang-javascript";
 import { python } from "@codemirror/lang-python";
 import { bracketMatching, HighlightStyle, indentUnit, syntaxHighlighting } from "@codemirror/language";
 import {
@@ -34,6 +35,13 @@ import { tags } from "@lezer/highlight";
 import type { Finding, Location } from "@/lib/contracts";
 import { languageNames, type Language } from "@/lib/examples";
 import "./editor.css";
+
+const languageExtensions = {
+  java,
+  python,
+  javascript,
+  typescript: () => javascript({ typescript: true }),
+};
 
 type Props = {
   code: string;
@@ -162,7 +170,7 @@ export default function SourceEditor({ code, language, onChange, wrap, findings,
           lineNumbers(),
           highlightActiveLineGutter(),
           highlightActiveLine(),
-          initial.language === "java" ? java() : python(),
+          languageExtensions[initial.language](),
           bracketMatching(),
           syntaxHighlighting(syntax),
           history(),

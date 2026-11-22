@@ -19,8 +19,18 @@ type Props = {
   onRetry: () => void;
 };
 
+const nodeFix = {
+  description: "A command-line argument contributes to SQL passed to the Node.js SQLite API.",
+  before: 'db.prepare("SELECT name FROM sqlite_schema WHERE name = " + name);',
+  after: [
+    'const statement = db.prepare("SELECT name FROM sqlite_schema WHERE name = ?");',
+    "statement.get(name);",
+  ],
+};
+
 const fixes = {
   java: {
+    description: "Request data reaches a JDBC call through a concatenated SQL query.",
     before: 'statement.executeQuery("SELECT name FROM users WHERE id=" + id);',
     after: [
       'String sql = "SELECT name FROM users WHERE id = ?";',
@@ -33,12 +43,15 @@ const fixes = {
     ],
   },
   python: {
+    description: "Interactive input reaches a SQLite call through a concatenated SQL query.",
     before: 'db.execute("SELECT name FROM sqlite_schema WHERE name = " + name)',
     after: [
       'sql = "SELECT name FROM sqlite_schema WHERE name = ?"',
       "db.execute(sql, (name,))",
     ],
   },
+  javascript: nodeFix,
+  typescript: nodeFix,
 };
 
 function Glyph({ type }: { type: "activity" | "arrow" | "check" | "alert" | "copy" | "export" }) {
@@ -191,11 +204,7 @@ function FindingCard({
         {location.path}:{rangeText(location)}
       </code>
       <div id={`trace-${finding.id}`} hidden={!active} className="rs-evidence">
-        <p>
-          {language === "java"
-            ? "Request data reaches a JDBC call through a concatenated SQL query."
-            : "Interactive input reaches a SQLite call through a concatenated SQL query."}
-        </p>
+        <p>{fix.description}</p>
         <h4>Source to sink</h4>
         <ol className="rs-trace">
           {finding.evidence.flow.map((step, i) => (

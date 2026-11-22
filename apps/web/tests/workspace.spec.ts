@@ -53,7 +53,7 @@ test("methodology and mobile workspace remain usable", async ({page}) => {
   await page.screenshot({path:"test-results/workspace-mobile.png",fullPage:true});
   await page.getByRole("link", {name: "Coverage & methods"}).click();
   await expect(page.getByRole("heading", {name: "Know what was analyzed."})).toBeVisible();
-  for (const language of ["Java", "Python"]) {
+  for (const language of ["Java", "Python", "JavaScript", "TypeScript"]) {
     const capability = page.getByRole("row").filter({
       has: page.getByRole("cell", { name: language, exact: true }),
     });
@@ -62,6 +62,47 @@ test("methodology and mobile workspace remain usable", async ({page}) => {
   await page.getByRole("link", {name: "Return to scan workspace"}).click();
   await expect(page.getByRole("textbox", {name: "Java source code"})).toBeVisible();
 });
+
+for (const { label, other, path } of [
+  { label: "JavaScript", other: "TypeScript", path: "snippet.js" },
+  { label: "TypeScript", other: "JavaScript", path: "snippet.ts" },
+]) {
+  test(`${label} traces Node.js arguments and keeps a separate draft`, async ({ page, context }) => {
+    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+    await page.goto("/");
+    const selector = page.getByRole("combobox", { name: "Language" });
+    await selector.selectOption({ label });
+    const editor = page.getByRole("textbox", { name: `${label} source code` });
+    await expect(editor.locator(".cm-line").nth(3)).toHaveText(
+      label === "TypeScript"
+        ? "const name: string = process.argv[2];"
+        : "const name = process.argv[2];",
+    );
+    await editor.press("Control+End");
+    await editor.press("Enter");
+    await page.keyboard.insertText("// local draft");
+    await editor.press("Control+Enter");
+
+    await expect(page.getByText(`${path}:6`)).toBeVisible();
+    await page.getByRole("button", { name: "sink node:sqlite.DatabaseSync.prepare Line 6" }).click();
+    expect(await page.evaluate(() => window.getSelection()?.toString())).toBe("db.prepare(query)");
+    await expect(page.locator(".cm-sink-marker").first()).toBeVisible();
+    await page.getByText("Suggested fix", { exact: true }).click();
+    await page.getByRole("button", { name: "Copy example" }).click();
+    expect(await page.evaluate(() => navigator.clipboard.readText())).toContain("statement.get(name);");
+
+    await selector.selectOption({ label: other });
+    await expect(page.getByRole("button", { name: "Export JSON" })).toHaveCount(0);
+    const otherEditor = page.getByRole("textbox", { name: `${other} source code` });
+    await expect(otherEditor.locator(".cm-line").last()).toHaveText("db.prepare(query);");
+    await selector.selectOption({ label });
+    await expect(editor.locator(".cm-line").last()).toHaveText("// local draft");
+    await page.getByRole("button", { name: "Parameterized" }).click();
+    await page.getByRole("button", { name: `Scan ${label}`, exact: true }).click();
+    await expect(page.getByRole("heading", { name: "No SQL injection paths found" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Diagnostics" })).toHaveCount(0);
+  });
+}
 
 test("proxy rejects oversized requests", async ({request}) => {
   const response = await request.post("/api/v1/scans/snippet", {

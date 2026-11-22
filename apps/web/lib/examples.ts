@@ -41,6 +41,38 @@ def find_table():
     db.execute(query, (name,))`
 };
 
-export const examples = {java: javaExamples, python: pythonExamples};
+function nodeExamples(nameDeclaration: string) {
+  const setup = `import { DatabaseSync } from "node:sqlite";
+
+const db = new DatabaseSync(":memory:");
+${nameDeclaration}`;
+  return {
+    vulnerable: `${setup}
+const query = "SELECT name FROM sqlite_schema WHERE name = '" + name + "'";
+db.prepare(query);`,
+    safe: `${setup}
+const statement = db.prepare("SELECT name FROM sqlite_schema WHERE name = ?");
+statement.get(name);`,
+  };
+}
+
+export const examples = {
+  java: javaExamples,
+  python: pythonExamples,
+  javascript: nodeExamples("const name = process.argv[2];"),
+  typescript: nodeExamples("const name: string = process.argv[2];"),
+};
 export type Language = keyof typeof examples;
-export const languageNames = {java: "Java", python: "Python"};
+export const languages = Object.keys(examples) as Language[];
+export const languageNames = {
+  java: "Java",
+  python: "Python",
+  javascript: "JavaScript",
+  typescript: "TypeScript",
+};
+export const snippetNames = {
+  java: "snippet.java",
+  python: "snippet.py",
+  javascript: "snippet.js",
+  typescript: "snippet.ts",
+};

@@ -108,7 +108,7 @@ def test_parse_error_and_unsupported_language() -> None:
     assert bad.summary.errors
     assert bad.summary.files_analyzed == 0
     assert any(d.location for d in bad.diagnostics)
-    unsupported = scan_snippet("const x = 1", "javascript")
+    unsupported = scan_snippet("package main", "go")
     assert unsupported.diagnostics[0].code == "UNSUPPORTED_LANGUAGE"
     assert unsupported.summary.files_analyzed == 0
 
@@ -139,11 +139,11 @@ def test_discovery_and_symlink_boundary(tmp_path: Path) -> None:
     (tmp_path / "ok.java").write_text("class D {}")
     (tmp_path / "skip.java").write_text("bad")
     (tmp_path / "external.java").symlink_to(ROOT / "fixtures/java/Vulnerable.java")
-    (tmp_path / "other.ts").write_text("let id: number")
+    (tmp_path / "other.go").write_text("package main")
     result = scan_path(tmp_path, ("skip.java",))
     assert result.summary.files_analyzed == 1
     assert {d.code for d in result.diagnostics} == {"SYMLINK_SKIPPED", "UNSUPPORTED_LANGUAGE"}
-    assert result.coverage.languages_detected == ["java", "typescript"]
+    assert result.coverage.languages_detected == ["go", "java"]
     assert scan_path(tmp_path / "external.java").summary.errors == 1
 
 
@@ -380,33 +380,52 @@ def test_conditional_budget() -> None:
     assert [d.code for d in result.diagnostics] == ["BRANCH_LIMIT"]
 
 
-def test_mixed_directory_and_explicit_language(tmp_path: Path) -> None:
+@pytest.mark.parametrize(
+    ("language_filter", "selected_file"), [("python", "demo.py"), ("typescript", "demo.mts")]
+)
+def test_mixed_directory_and_explicit_language(
+    tmp_path: Path, language_filter: str, selected_file: str
+) -> None:
     (tmp_path / "venv").mkdir()
     (tmp_path / "venv" / "dependency.py").write_text("broken(")
+    (tmp_path / ".next").mkdir()
+    (tmp_path / ".next" / "generated.js").write_text("broken(")
     (tmp_path / "demo.java").write_bytes((ROOT / "fixtures/java/Vulnerable.java").read_bytes())
     (tmp_path / "demo.py").write_bytes((ROOT / "fixtures/python/concatenated.py").read_bytes())
+    for language, extension, fixture in [
+        ("javascript", ".mjs", "concatenated.js"),
+        ("typescript", ".mts", "concatenated.ts"),
+    ]:
+        code = (ROOT / "fixtures" / language / fixture).read_bytes()
+        (tmp_path / f"demo{extension}").write_bytes(code)
     result = scan_path(tmp_path)
     assert (result.summary.files_analyzed, result.summary.findings, result.summary.errors) == (
-        2,
-        2,
+        4,
+        4,
         0,
     )
-    assert result.coverage.languages_detected == ["java", "python"]
+    assert result.coverage.languages_detected == ["java", "javascript", "python", "typescript"]
     assert result.coverage.supported_checks == ["CWE-89"]
-    assert {f.location.path for f in result.findings} == {"demo.py", "demo.java"}
+    assert {f.location.path for f in result.findings} == {
+        "demo.py",
+        "demo.java",
+        "demo.mjs",
+        "demo.mts",
+    }
+    assert sum("process.argv" in text for text in result.coverage.limitations) == 1
     assert any("sqlite3" in text for text in result.coverage.limitations)
     assert any("JDBC" in text or "Java" in text for text in result.coverage.limitations)
     cli = subprocess.run(
-        ["traceward", "scan", str(tmp_path), "--language", "python", "--format", "json"],
+        ["traceward", "scan", str(tmp_path), "--language", language_filter, "--format", "json"],
         capture_output=True,
         text=True,
     )
     assert cli.returncode == 1
     selected = ScanResult.model_validate_json(cli.stdout)
     assert selected.summary.files_analyzed == selected.summary.files_discovered == 1
-    assert selected.coverage.languages_detected == ["python"]
+    assert selected.coverage.languages_detected == [language_filter]
     assert not any("Java" in note for note in selected.coverage.limitations)
-    assert selected.findings == [f for f in result.findings if f.location.path == "demo.py"]
+    assert selected.findings == [f for f in result.findings if f.location.path == selected_file]
     mismatch = scan_path(tmp_path / "demo.py", language_filter="java")
     assert mismatch.summary.errors == 1
     assert "LANGUAGE_MISMATCH" in [item.code for item in mismatch.diagnostics]

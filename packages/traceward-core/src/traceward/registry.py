@@ -13,7 +13,7 @@ class Rule(BaseModel):
     id: str = Field(pattern=r"^[a-z]+\.[a-z0-9-]+\.[a-z0-9-]+$")
     version: str = Field(pattern=r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$")
     type: Literal["taint_rule"]
-    language: Literal["java", "python"]
+    language: Literal["java", "python", "javascript", "typescript"]
     cwe: str = Field(pattern=r"^CWE-[1-9]\d*$")
     maturity: Literal["experimental"]
     title: str = Field(min_length=1)
@@ -34,4 +34,8 @@ def load_rules(manifest: bytes) -> MappingProxyType[str, Rule]:
 RULES = load_rules(files("traceward").joinpath("rules.json").read_bytes())
 JAVA_SQL = RULES["java.sql.concatenated-untrusted-input"]
 PYTHON_SQL = RULES["python.sqlite.concatenated-input"]
+NODE_SQL = {
+    language: RULES[f"{language}.sqlite.concatenated-argv"]
+    for language in ("javascript", "typescript")
+}
 SUPPORTED_LANGUAGES = frozenset(rule.language for rule in RULES.values())
