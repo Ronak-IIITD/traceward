@@ -41,6 +41,7 @@ dev = [
 packages = ["packages/traceward-core/src/traceward", "services/api/traceward_api", "packages/traceward-ml/src/traceward_ml"]
 
 [tool.pytest.ini_options]
+pythonpath = ["."]
 testpaths = ["packages/traceward-core/tests", "services/api/tests", "scripts/datasets/tests"]
 
 [tool.ruff]

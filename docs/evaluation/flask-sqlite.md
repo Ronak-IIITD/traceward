@@ -48,3 +48,7 @@ FILES
 ## External evaluation before promotion
 
 Freeze the detector and grammar revisions. Label independent Flask projects with request arguments, string-built and parameterized queries, and unrelated objects named `request`. Preserve routes that need unsupported features as a separate coverage slice. Match findings to labeled source and sink spans, then report reviewed denominators for precision, recall, and skipped paths.
+
+The [OWASP BenchmarkPython baseline](owasp-python-cwe89.md) tracks gaps on a
+separate synthetic suite. The Flask holdout above remains the real-world
+evaluation gate.

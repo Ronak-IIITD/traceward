@@ -82,7 +82,7 @@ LIMITATIONS = {
         "Complex guards, loops, fields, receiver aliases and interprocedural flow are unsupported.",
     ),
     "python": (
-        "Experimental Python CWE-89 subset; no external precision/recall evaluation yet.",
+        "Experimental Python CWE-89 subset. Real-world precision and recall are unmeasured.",
         "Tracks input() and Flask request.args through string + into sqlite3 execute().",
         "Other web inputs, f-strings, branches and interprocedural flow are outside this rule.",
     ),
