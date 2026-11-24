@@ -12,9 +12,9 @@ Rules `java.sql.concatenated-untrusted-input` (0.3.0),
 `python.sqlite.concatenated-input` (0.2.0),
 `javascript.sqlite.concatenated-argv` (0.1.0) and
 `typescript.sqlite.concatenated-argv` (0.1.0) report
-`heuristic_candidate`, high severity, medium confidence. There is no independent
-external evaluation or production promotion. All scans are partial. See README
-for exact modeled methods and unsupported semantics. No ML models are enabled.
+`heuristic_candidate`, high severity, medium confidence. All scans are partial.
+Production promotion requires independent real-world evaluation. See README
+for the modeled methods and unsupported semantics. Live scans use static rules.
 
 Fixture results must not be described as real-world precision or recall. The
 research paper's synthetic macro-F1 is not a scanner performance measurement.
@@ -31,3 +31,7 @@ records the source hashes, diagnostics and the evaluation plan for both language
 The Flask quickstart query expression parsed in a minimal route. The tutorial
 blueprint stopped at an unsupported import. The [Flask SQLite compatibility check](evaluation/flask-sqlite.md)
 records both outcomes, their source hashes and the evaluation plan.
+
+The [OWASP BenchmarkPython baseline](evaluation/owasp-python-cwe89.md) measured
+0/5 recall on synthetic CWE-89 cases. All 16 files reported an unsupported
+statement before analysis reached their SQL paths.
