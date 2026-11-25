@@ -132,7 +132,7 @@ jobs:
           cache-suffix: api-wheels-v1
           prune-cache: false
           save-cache: false
-      - run: uv sync --locked
+      - run: uv sync --locked --no-default-groups --group sarif
       - name: Require setup in under 30 seconds
         run: bash "$GITHUB_WORKSPACE/scripts/ci/check_setup_budget.sh"
       - run: uv build --out-dir dist
