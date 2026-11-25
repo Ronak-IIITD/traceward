@@ -45,10 +45,7 @@ const fixes = {
   python: {
     description: "Untrusted input reaches a SQLite call through a concatenated SQL query.",
     before: 'db.execute("SELECT name FROM sqlite_schema WHERE name = " + name)',
-    after: [
-      'sql = "SELECT name FROM sqlite_schema WHERE name = ?"',
-      "db.execute(sql, (name,))",
-    ],
+    after: ['sql = "SELECT name FROM sqlite_schema WHERE name = ?"', "db.execute(sql, (name,))"],
   },
   javascript: nodeFix,
   typescript: nodeFix,
@@ -226,7 +223,11 @@ function FindingCard({
           <summary>Suggested fix</summary>
           <p>{finding.guidance}</p>
           <p className="rs-code-label">Example parameterized query</p>
-          <pre className="rs-diff" tabIndex={0} aria-label={`Example ${languageNames[language]} parameterization diff`}>
+          <pre
+            className="rs-diff"
+            tabIndex={0}
+            aria-label={`Example ${languageNames[language]} parameterization diff`}
+          >
             <code>
               <span className="rs-del">{`- ${fix.before}\n`}</span>
               {fix.after.map((line, i) => (
@@ -323,7 +324,13 @@ export default function ScanResults({
           <dd>{result ? lines : "—"}</dd>
         </div>
       </dl>
-      <div className="rs-scroll" aria-busy={busy} tabIndex={0} role="region" aria-label="Scan evidence">
+      <div
+        className="rs-scroll"
+        aria-busy={busy}
+        tabIndex={0}
+        role="region"
+        aria-label="Scan evidence"
+      >
         {busy ? (
           <div className="rs-pending">
             <h3>Tracing supported flows</h3>
@@ -383,8 +390,8 @@ export default function ScanResults({
                 <Glyph type="check" />
                 <h3>No SQL injection paths found</h3>
                 <p>
-                  This experimental rule checks a limited set of {languageName} flows. Unsupported paths still need
-                  review.
+                  This experimental rule checks a limited set of {languageName} flows. Unsupported
+                  paths still need review.
                 </p>
               </div>
             )}

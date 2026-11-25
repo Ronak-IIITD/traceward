@@ -25,6 +25,13 @@ The launch script installs the locked API and web dependencies as needed.
 It requires uv, Node.js 22 or later, and [Bun](https://bun.com/) 1.4.4 or later.
 The dashboard toolchain is verified on Linux x64.
 
+### Local pre-push checks
+
+Enable this repository's hooks once per clone with `git config --local core.hooksPath .githooks`.
+The pre-push hook checks the revisions being pushed. It checks formatting and lint
+on changed source files, then checks types across the affected Python or web project.
+The hook uses locked dependencies and tsrs for web types. GitHub still runs the full suite.
+
 ## Run locally
 
 Install [uv](https://docs.astral.sh/uv/), then from this directory:
