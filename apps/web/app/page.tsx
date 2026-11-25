@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import SourceEditor from "@/components/SourceEditor";
 import ScanResults from "@/components/ScanResults";
 import SignalArt from "@/components/SignalArt";
@@ -38,8 +38,8 @@ function Icon({ name, size = 16 }: { name: keyof typeof paths; size?: number }) 
 
 export default function Workspace() {
   const [language, setLanguage] = useState<Language>("java");
-  const [drafts, setDrafts] = useState(
-    () => Object.fromEntries(languages.map((item) => [item, examples[item].vulnerable])),
+  const [drafts, setDrafts] = useState(() =>
+    Object.fromEntries(languages.map((item) => [item, examples[item].vulnerable])),
   );
   const code = drafts[language];
   const languageName = languageNames[language];
@@ -76,7 +76,7 @@ export default function Workspace() {
     resetResults();
   }
 
-  async function scan(source: string, sourceLanguage: Language) {
+  const scan = useCallback(async (source: string, sourceLanguage: Language) => {
     if (inFlight.current || !source.trim() || new TextEncoder().encode(source).length > MAX_SOURCE)
       return;
     inFlight.current = true;
@@ -105,18 +105,18 @@ export default function Workspace() {
         workspace.current?.lastElementChild?.scrollIntoView({ block: "start" });
       }
     }
-  }
+  }, []);
 
   useEffect(() => {
-    function shortcut(event: KeyboardEvent) {
+    function handleScanShortcut(event: KeyboardEvent) {
       if (event.key === "Enter" && (event.metaKey || event.ctrlKey) && !event.isComposing) {
         event.preventDefault();
         if (!event.repeat) void scan(code, language);
       }
     }
-    document.addEventListener("keydown", shortcut);
-    return () => document.removeEventListener("keydown", shortcut);
-  }, [code, language]);
+    document.addEventListener("keydown", handleScanShortcut);
+    return () => document.removeEventListener("keydown", handleScanShortcut);
+  }, [code, language, scan]);
 
   function showLocation(location: Location) {
     if (!stale) setReveal((previous) => ({ location, nonce: (previous?.nonce ?? 0) + 1 }));
@@ -154,7 +154,9 @@ export default function Workspace() {
               }}
             >
               {languages.map((item) => (
-                <option key={item} value={item}>{languageNames[item]}</option>
+                <option key={item} value={item}>
+                  {languageNames[item]}
+                </option>
               ))}
             </select>
           </div>
@@ -215,7 +217,11 @@ export default function Workspace() {
               }
             >
               {size.toLocaleString("en-US")} B / 64 KiB{size > MAX_SOURCE ? " · Over limit" : ""}
-              <progress value={Math.min(size, MAX_SOURCE)} max={MAX_SOURCE} aria-label="Source size" />
+              <progress
+                value={Math.min(size, MAX_SOURCE)}
+                max={MAX_SOURCE}
+                aria-label="Source size"
+              />
             </label>
             <button
               className={"scan-submit " + (busy ? "scanning" : "")}

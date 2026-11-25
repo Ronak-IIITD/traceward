@@ -162,6 +162,10 @@ jobs:
   web:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        task: [checks, browser]
     env:
       NEXT_TELEMETRY_DISABLED: '1'
     defaults:
@@ -174,6 +178,7 @@ jobs:
           fetch-depth: 0
           filter: blob:none
       - uses: astral-sh/setup-uv@1e862dfacbd1d6d858c55d9b792c756523627244
+        if: matrix.task == 'browser'
         with:
           version: ${{ env.UV_VERSION }}
           python-version: '3.12'
@@ -190,22 +195,39 @@ jobs:
           path: apps/web/node_modules
           key: web-node-modules-v1-${{ runner.os }}-ubuntu2404-${{ runner.arch }}-${{ steps.node.outputs.version }}-bun${{ env.BUN_VERSION }}-${{ hashFiles('apps/web/bun.lock', 'apps/web/package.json') }}
       - run: bun install --frozen-lockfile --ignore-scripts
-      - run: bun audit --audit-level=high
+      - name: Format, lint and typecheck within 5 seconds
+        if: matrix.task == 'checks'
+        run: |
+          timeout 5s bash -c '
+            bun run format:check & format_pid=$!
+            bun run lint & lint_pid=$!
+            bun run typecheck & typecheck_pid=$!
+            failed=0
+            for pid in "$format_pid" "$lint_pid" "$typecheck_pid"; do
+              wait "$pid" || failed=1
+            done
+            exit "$failed"
+          '
+      - if: matrix.task == 'browser'
+        run: bun audit --audit-level=high
       - name: Seed web dependencies from the default branch
-        if: github.event_name == 'push' && github.ref_type == 'branch' && github.ref_name == github.event.repository.default_branch && steps.web-cache.outputs.cache-hit != 'true'
+        if: matrix.task == 'browser' && github.event_name == 'push' && github.ref_type == 'branch' && github.ref_name == github.event.repository.default_branch && steps.web-cache.outputs.cache-hit != 'true'
         uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: apps/web/node_modules
           key: ${{ steps.web-cache.outputs.cache-primary-key }}
-      - run: bun run build
-      - run: bun run typecheck
+      - if: matrix.task == 'browser'
+        run: bun run build
       # The Playwright suite uses the headless shell. Its browser launches
       # validate the GitHub runner's native libraries without a live apt install.
       - name: Install Chromium headless shell
+        if: matrix.task == 'browser'
         run: bun run playwright install --only-shell chromium
-      - run: bun run test
+      - name: Test the browser workspace within 60 seconds
+        if: matrix.task == 'browser'
+        run: timeout 60s bun run test
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && matrix.task == 'browser' }}
         with:
           name: browser-reports-${{ github.run_attempt }}
           path: |

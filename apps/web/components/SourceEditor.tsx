@@ -11,7 +11,12 @@ import {
 import { java } from "@codemirror/lang-java";
 import { javascript } from "@codemirror/lang-javascript";
 import { python } from "@codemirror/lang-python";
-import { bracketMatching, HighlightStyle, indentUnit, syntaxHighlighting } from "@codemirror/language";
+import {
+  bracketMatching,
+  HighlightStyle,
+  indentUnit,
+  syntaxHighlighting,
+} from "@codemirror/language";
 import {
   Compartment,
   EditorState,
@@ -118,10 +123,9 @@ function annotations(doc: Text, findings: Finding[] | undefined, selected: numbe
       if (!range || range.to <= range.from) continue;
       const endpoint = step.kind === "source" || step.kind === "sink";
       marks.push(
-        Decoration.mark({ class: endpoint ? "cm-evidence-" + step.kind : "cm-evidence-flow" }).range(
-          range.from,
-          range.to,
-        ),
+        Decoration.mark({
+          class: endpoint ? "cm-evidence-" + step.kind : "cm-evidence-flow",
+        }).range(range.from, range.to),
       );
       if (endpoint) {
         const start = doc.lineAt(range.from).from;
@@ -150,7 +154,15 @@ const flashField = StateField.define<DecorationSet>({
   provide: (field) => EditorView.decorations.from(field),
 });
 
-export default function SourceEditor({ code, language, onChange, wrap, findings, selected, reveal }: Props) {
+export default function SourceEditor({
+  code,
+  language,
+  onChange,
+  wrap,
+  findings,
+  selected,
+  reveal,
+}: Props) {
   const host = useRef<HTMLDivElement>(null);
   const editor = useRef<EditorView | null>(null);
   const initialDocument = useRef({ code, language });
@@ -213,11 +225,14 @@ export default function SourceEditor({ code, language, onChange, wrap, findings,
     }
   }, [code]);
   useEffect(() => {
-    editor.current?.dispatch({ effects: wrapping.reconfigure(wrap ? EditorView.lineWrapping : []) });
+    editor.current?.dispatch({
+      effects: wrapping.reconfigure(wrap ? EditorView.lineWrapping : []),
+    });
   }, [wrap]);
   useEffect(() => {
     const view = editor.current;
-    if (view) view.dispatch({ effects: annotate.of(annotations(view.state.doc, findings, selected)) });
+    if (view)
+      view.dispatch({ effects: annotate.of(annotations(view.state.doc, findings, selected)) });
   }, [findings, selected]);
   useEffect(() => {
     const view = editor.current;
@@ -235,7 +250,10 @@ export default function SourceEditor({ code, language, onChange, wrap, findings,
     view.focus();
     if (window.matchMedia("(max-width: 1023px)").matches)
       host.current?.scrollIntoView({ block: "center" });
-    const timer = window.setTimeout(() => view.dispatch({ effects: flash.of(Decoration.none) }), 220);
+    const timer = window.setTimeout(
+      () => view.dispatch({ effects: flash.of(Decoration.none) }),
+      220,
+    );
     return () => {
       window.clearTimeout(timer);
       if (editor.current === view) view.dispatch({ effects: flash.of(Decoration.none) });
