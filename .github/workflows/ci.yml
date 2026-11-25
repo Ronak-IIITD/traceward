@@ -197,17 +197,7 @@ jobs:
       - run: bun install --frozen-lockfile --ignore-scripts
       - name: Format, lint and typecheck within 5 seconds
         if: matrix.task == 'checks'
-        run: |
-          timeout 5s bash -c '
-            bun run format:check & format_pid=$!
-            bun run lint & lint_pid=$!
-            bun run typecheck & typecheck_pid=$!
-            failed=0
-            for pid in "$format_pid" "$lint_pid" "$typecheck_pid"; do
-              wait "$pid" || failed=1
-            done
-            exit "$failed"
-          '
+        run: timeout 5s bash ../../scripts/ci/check_web.sh
       - if: matrix.task == 'browser'
         run: bun audit --audit-level=high
       - name: Seed web dependencies from the default branch
