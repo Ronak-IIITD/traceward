@@ -13,6 +13,7 @@ permissions:
 
 env:
   BUN_VERSION: '1.4.4'
+  TEST_ORDER_SEED: ${{ github.run_id }}
   UV_VERSION: '0.13.7'
 
 jobs:
@@ -32,7 +33,7 @@ jobs:
       - run: uv lock --check
       - run: uv run --locked ruff format --check .
       - run: uv run --locked ruff check .
-      - run: uv run --locked --extra api mypy packages/traceward-core/src services/api/traceward_api
+      - run: uv run --locked --extra api mypy packages/traceward-core/src services/api/traceward_api conftest.py
       - name: Validate Actions workflows
         run: go run github.com/rhysd/actionlint/cmd/actionlint@v1.7.9
 
@@ -69,7 +70,8 @@ jobs:
           version: ${{ env.UV_VERSION }}
           python-version: ${{ matrix.python }}
       - run: uv sync --locked --extra api
-      - run: uv run --no-sync coverage run -m pytest -q --junitxml=ci-reports/junit.xml
+      - name: Run Python tests within 60 seconds
+        run: timeout 60s uv run --no-sync coverage run -m pytest -q --order-seed "$TEST_ORDER_SEED" --junitxml=ci-reports/junit.xml
       - name: Report and enforce 90% coverage including branches
         if: ${{ !cancelled() }}
         run: |
@@ -115,7 +117,7 @@ jobs:
               --format sarif --fail-on none --output "ci-reports/$fixture.sarif"
           done
           schema_path="$RUNNER_TEMP/sarif-schema-2.1.0.json"
-          curl --proto '=https' --fail --silent --show-error --retry 3 --max-time 30 \
+          curl --proto '=https' --fail --silent --show-error --max-time 30 \
             https://docs.oasis-open.org/sarif/sarif/v2.1.0/os/schemas/sarif-schema-2.1.0.json \
             --output "$schema_path"
           printf '%s  %s\n' ad6db49878699b091f3eeb765b6e29e92a34bad4da88664d000c923b549c3a25 "$schema_path" \
@@ -215,7 +217,7 @@ jobs:
         run: bun run playwright install --only-shell chromium
       - name: Test the browser workspace within 60 seconds
         if: matrix.task == 'browser'
-        run: timeout 60s bun run test
+        run: timeout 60s bun run test --fully-parallel --workers 2 --shuffle "$TEST_ORDER_SEED" --retries 0
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: ${{ !cancelled() && matrix.task == 'browser' }}
         with:
@@ -238,7 +240,9 @@ jobs:
         with:
           version: ${{ env.UV_VERSION }}
           python-version: '3.12'
-      - run: uv run --locked --extra api --extra ml pytest packages/traceward-ml/tests -q
+      - run: uv sync --locked --extra api --extra ml
+      - name: Run ML tests within 60 seconds
+        run: timeout 60s uv run --no-sync pytest packages/traceward-ml/tests -q --order-seed "$TEST_ORDER_SEED"
 
   release:
     name: Stage GitHub release
