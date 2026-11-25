@@ -1,0 +1,88 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+cd -- "$(git rev-parse --show-toplevel)"
+remote=$1
+
+check_revision() (
+  revision=$1
+  base=$2
+  scratch=$(mktemp -d)
+  trap 'rm -rf -- "$scratch"' EXIT
+  git diff --no-renames --name-only -z "$base" "$revision" > "$scratch/paths"
+
+  python_paths=()
+  web_format=()
+  web_lint=()
+  python_affected=false
+  web_types=false
+  web_all_source=false
+
+  while IFS= read -r -d '' path; do
+    exists=false
+    if git cat-file -e "$revision:$path" 2>/dev/null; then exists=true; fi
+    case "$path" in
+      *.py|*.pyi)
+        python_affected=true
+        if "$exists"; then python_paths+=("$path"); fi
+        ;;
+      pyproject.toml|uv.lock) python_affected=true ;;
+      apps/web/*)
+        relative=${path#apps/web/}
+        case "$relative" in
+          *.ts|*.tsx|*.js|*.jsx|*.mts|*.cts|*.mjs|*.cjs)
+            web_types=true
+            if "$exists"; then web_lint+=("$relative"); fi
+            ;;
+        esac
+        case "$relative" in
+          package.json|bun.lock|tsconfig.json|.oxlintrc.*) web_all_source=true ;;
+        esac
+        case "$relative" in
+          *.ts|*.tsx|*.js|*.jsx|*.mts|*.cts|*.mjs|*.cjs|*.json|*.jsonc|*.css|*.md|*.html|*.yml|*.yaml)
+            if "$exists"; then web_format+=("$relative"); fi
+            ;;
+        esac
+        ;;
+    esac
+  done < "$scratch/paths"
+
+  if ! "$python_affected" && ! "$web_types" && ! "$web_all_source" && ((${#web_format[@]} == 0)); then
+    return 0
+  fi
+
+  # Check the actual pushed tree, including when the checkout is dirty.
+  mkdir "$scratch/tree"
+  git archive "$revision" | tar -x -C "$scratch/tree"
+  cd -- "$scratch/tree"
+
+  if "$python_affected"; then
+    export UV_PROJECT_ENVIRONMENT="$PWD/.venv"
+    uv sync --quiet --locked --extra api
+    if ((${#python_paths[@]})); then
+      uv run --no-sync ruff format --check --force-exclude -- "${python_paths[@]}"
+      uv run --no-sync ruff check --force-exclude -- "${python_paths[@]}"
+    fi
+    uv run --no-sync mypy packages/traceward-core/src services/api/traceward_api
+  fi
+
+  if "$web_types" || "$web_all_source" || ((${#web_format[@]})); then
+    cd apps/web
+    bun install --frozen-lockfile --ignore-scripts --silent
+    if ((${#web_format[@]})); then bun run oxfmt --check -- "${web_format[@]}"; fi
+    if "$web_all_source"; then web_lint=(.); fi
+    if ((${#web_lint[@]})); then bun run oxlint --deny-warnings -- "${web_lint[@]}"; fi
+    if "$web_types" || "$web_all_source"; then NEXT_TELEMETRY_DISABLED=1 bun run typecheck:local; fi
+  fi
+)
+
+while read -r local_ref local_oid _ remote_oid; do
+  [[ "$local_ref" != '(delete)' ]] || continue
+  revision=$(git rev-parse --verify --quiet "$local_oid^{commit}") || continue
+  if ! git cat-file -e "$remote_oid^{commit}" 2>/dev/null; then
+    remote_oid=$(git rev-parse --verify --quiet "refs/remotes/$remote/HEAD" ||
+      git rev-parse --verify --quiet "refs/remotes/$remote/main" || true)
+  fi
+  base=$(git merge-base "$remote_oid" "$revision" 2>/dev/null || git mktree </dev/null)
+  check_revision "$revision" "$base"
+done

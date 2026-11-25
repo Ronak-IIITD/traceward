@@ -9,6 +9,7 @@
     "format:check": "oxfmt --check .",
     "lint": "oxlint --deny-warnings .",
     "typecheck": "next typegen && bun check --no-script",
+    "typecheck:local": "next typegen && tsrs --noEmit",
     "test": "playwright test"
   },
   "dependencies": {
@@ -31,6 +32,7 @@
     "@types/react-dom": "^19",
     "oxfmt": "0.80.0",
     "oxlint": "1.95.0",
+    "tsrs": "7.1.0-beta.tsrs5",
     "typescript": "^5.9"
   },
   "packageManager": "bun@1.4.4"
