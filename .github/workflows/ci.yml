@@ -33,6 +33,10 @@ jobs:
         with:
           version: ${{ env.UV_VERSION }}
           python-version: '3.12'
+          enable-cache: true
+          cache-suffix: api-wheels-v1
+          prune-cache: false
+          save-cache: false
       - run: uv sync --locked --extra api
       - name: Require setup in under 30 seconds
         run: bash "$GITHUB_WORKSPACE/scripts/ci/check_setup_budget.sh"
@@ -59,6 +63,7 @@ jobs:
         with:
           version: ${{ env.UV_VERSION }}
           python-version: '3.12'
+          enable-cache: false
       - name: Require setup in under 30 seconds
         run: bash "$GITHUB_WORKSPACE/scripts/ci/check_setup_budget.sh"
       - run: uv audit --locked
@@ -83,6 +88,11 @@ jobs:
         with:
           version: ${{ env.UV_VERSION }}
           python-version: ${{ matrix.python }}
+          # Seed the shared API cache once per Python version on the default branch.
+          enable-cache: true
+          cache-suffix: api-wheels-v1
+          prune-cache: false
+          save-cache: ${{ github.event_name == 'push' && github.ref_type == 'branch' && github.ref_name == github.event.repository.default_branch }}
       - run: uv sync --locked --extra api
       - name: Require setup in under 30 seconds
         run: bash "$GITHUB_WORKSPACE/scripts/ci/check_setup_budget.sh"
@@ -118,6 +128,10 @@ jobs:
         with:
           version: ${{ env.UV_VERSION }}
           python-version: '3.12'
+          enable-cache: true
+          cache-suffix: api-wheels-v1
+          prune-cache: false
+          save-cache: false
       - run: uv sync --locked
       - name: Require setup in under 30 seconds
         run: bash "$GITHUB_WORKSPACE/scripts/ci/check_setup_budget.sh"
@@ -210,6 +224,10 @@ jobs:
         with:
           version: ${{ env.UV_VERSION }}
           python-version: '3.12'
+          enable-cache: true
+          cache-suffix: api-wheels-v1
+          prune-cache: false
+          save-cache: false
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
           bun-version: ${{ env.BUN_VERSION }}
@@ -272,6 +290,10 @@ jobs:
         with:
           version: ${{ env.UV_VERSION }}
           python-version: '3.12'
+          enable-cache: true
+          cache-suffix: ml-wheels-v1
+          prune-cache: false
+          save-cache: ${{ github.event_name == 'push' && github.ref_type == 'branch' && github.ref_name == github.event.repository.default_branch }}
       - run: uv sync --locked --extra api --extra ml
       - name: Require setup in under 30 seconds
         run: bash "$GITHUB_WORKSPACE/scripts/ci/check_setup_budget.sh"
