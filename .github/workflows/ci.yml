@@ -168,7 +168,10 @@ jobs:
       - run: npm audit --prefix apps/web --audit-level=high
       - run: npm run build --prefix apps/web
       - run: npm run typecheck --prefix apps/web
-      - run: cd apps/web && npx playwright install --with-deps chromium
+      # The Playwright suite uses the headless shell. Its browser launches
+      # validate the GitHub runner's native libraries without a live apt install.
+      - name: Install Chromium headless shell
+        run: cd apps/web && npx --no-install playwright install --only-shell chromium
       - run: npm test --prefix apps/web
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: ${{ !cancelled() }}
