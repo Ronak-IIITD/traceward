@@ -189,7 +189,9 @@ python -m pytest
 ruff check .
 ruff format --check .
 python -m mypy packages services  # only if configured for the actual paths
-# UI (when present): npm ci && npm run lint && npm run typecheck && npm run build
+# UI: cd apps/web
+# bun install --frozen-lockfile --ignore-scripts
+# bun run format:check && bun run lint && bun run typecheck && bun run build
 
 git diff --check
 git status --short --branch
@@ -439,6 +441,12 @@ If research source materials or model artifacts are unavailable, state that hone
 - **UI/e2e:** supported flows and error states when the dashboard exists.
 
 New behaviors require tests in the same deliverable. Fix root causes rather than deleting tests or broadly weakening assertions. Do not make nondeterministic benchmark thresholds block CI without measurement and tolerance rationale.
+
+### Test isolation and reproducible order
+
+- Keep state local to each test. Use pytest `tmp_path` for files and databases, `monkeypatch` for process settings, and context managers or fixture teardown for resources. Do not rely on one test restoring state for another.
+- Browser tests share the production app and loopback API for the suite. Use Playwright's per-test browser context for storage, route mocks and settings. Put output in `testInfo.outputPath()` when multiple tests can write artifacts.
+- CI uses `TEST_ORDER_SEED` from the workflow run ID. Reproduce a Python order with `pytest --order-seed <id>` and a browser order with `bun run test --fully-parallel --workers 2 --shuffle <id>`. Fix order-dependent failures at the source.
 
 ---
 

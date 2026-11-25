@@ -21,7 +21,7 @@ class UserRepository {
         statement.setString(1, id);
         statement.executeQuery();
     }
-}`
+}`,
 };
 
 const pythonExamples = {
@@ -38,7 +38,7 @@ def find_table():
     db = sqlite3.connect(":memory:")
     name = input()
     query = "SELECT name FROM sqlite_schema WHERE name = ?"
-    db.execute(query, (name,))`
+    db.execute(query, (name,))`,
 };
 
 function nodeExamples(nameDeclaration: string) {

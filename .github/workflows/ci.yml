@@ -4,6 +4,8 @@ on:
     branches: ['**']
     tags: ['v*']
   pull_request:
+  merge_group:
+    types: [checks_requested]
   workflow_dispatch:
   schedule:
     - cron: '17 5 * * 1'
@@ -11,15 +13,25 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  # Supersede work for the same PR or topic branch only. Merge groups, release
+  # tags and default-branch runs each need their own complete result.
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event_name == 'pull_request' && github.ref || (github.event_name == 'push' && github.ref_type == 'branch' && github.ref_name != github.event.repository.default_branch) && github.ref || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref_type == 'branch' && github.ref_name != github.event.repository.default_branch) }}
+
 env:
   BUN_VERSION: '1.4.4'
+  TEST_ORDER_SEED: ${{ github.run_id }}
   UV_VERSION: '0.13.7'
 
 jobs:
   quality:
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    timeout-minutes: 2
     steps:
+      - name: Start setup clock
+        shell: bash
+        run: printf 'TRACEWARD_CI_SETUP_STARTED=%s\n' "$EPOCHSECONDS" >> "$GITHUB_ENV"
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           persist-credentials: false
@@ -29,17 +41,27 @@ jobs:
         with:
           version: ${{ env.UV_VERSION }}
           python-version: '3.12'
+          enable-cache: true
+          cache-suffix: api-wheels-v1
+          prune-cache: false
+          save-cache: false
+      - run: uv sync --locked --extra api
+      - name: Require setup in under 30 seconds
+        run: bash "$GITHUB_WORKSPACE/scripts/ci/check_setup_budget.sh"
       - run: uv lock --check
-      - run: uv run --locked ruff format --check .
-      - run: uv run --locked ruff check .
-      - run: uv run --locked --extra api mypy packages/traceward-core/src services/api/traceward_api
+      - run: uv run --no-sync ruff format --check .
+      - run: uv run --no-sync ruff check .
+      - run: uv run --no-sync mypy packages/traceward-core/src services/api/traceward_api conftest.py
       - name: Validate Actions workflows
         run: go run github.com/rhysd/actionlint/cmd/actionlint@v1.7.9
 
   audit:
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    timeout-minutes: 2
     steps:
+      - name: Start setup clock
+        shell: bash
+        run: printf 'TRACEWARD_CI_SETUP_STARTED=%s\n' "$EPOCHSECONDS" >> "$GITHUB_ENV"
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           persist-credentials: false
@@ -49,16 +71,22 @@ jobs:
         with:
           version: ${{ env.UV_VERSION }}
           python-version: '3.12'
+          enable-cache: false
+      - name: Require setup in under 30 seconds
+        run: bash "$GITHUB_WORKSPACE/scripts/ci/check_setup_budget.sh"
       - run: uv audit --locked
 
   tests:
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 2
     strategy:
       fail-fast: false
       matrix:
         python: ['3.11', '3.12', '3.13', '3.14']
     steps:
+      - name: Start setup clock
+        shell: bash
+        run: printf 'TRACEWARD_CI_SETUP_STARTED=%s\n' "$EPOCHSECONDS" >> "$GITHUB_ENV"
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           persist-credentials: false
@@ -68,8 +96,16 @@ jobs:
         with:
           version: ${{ env.UV_VERSION }}
           python-version: ${{ matrix.python }}
+          # Seed the shared API cache once per Python version on the default branch.
+          enable-cache: true
+          cache-suffix: api-wheels-v1
+          prune-cache: false
+          save-cache: ${{ github.event_name == 'push' && github.ref_type == 'branch' && github.ref_name == github.event.repository.default_branch }}
       - run: uv sync --locked --extra api
-      - run: uv run --no-sync coverage run -m pytest -q --junitxml=ci-reports/junit.xml
+      - name: Require setup in under 30 seconds
+        run: bash "$GITHUB_WORKSPACE/scripts/ci/check_setup_budget.sh"
+      - name: Run Python tests within 60 seconds
+        run: timeout 60s uv run --no-sync coverage run -m pytest -q --order-seed "$TEST_ORDER_SEED" --junitxml=ci-reports/junit.xml
       - name: Report and enforce 90% coverage including branches
         if: ${{ !cancelled() }}
         run: |
@@ -84,10 +120,13 @@ jobs:
 
   package:
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 2
     outputs:
       artifact_id: ${{ steps.upload.outputs.artifact-id }}
     steps:
+      - name: Start setup clock
+        shell: bash
+        run: printf 'TRACEWARD_CI_SETUP_STARTED=%s\n' "$EPOCHSECONDS" >> "$GITHUB_ENV"
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           persist-credentials: false
@@ -97,30 +136,37 @@ jobs:
         with:
           version: ${{ env.UV_VERSION }}
           python-version: '3.12'
+          enable-cache: true
+          cache-suffix: api-wheels-v1
+          prune-cache: false
+          save-cache: false
+      - run: uv sync --locked --no-default-groups --group sarif
+      - name: Require setup in under 30 seconds
+        run: bash "$GITHUB_WORKSPACE/scripts/ci/check_setup_budget.sh"
       - run: uv build --out-dir dist
       - name: Install and smoke-test wheel and source archive
         shell: bash
         run: |
           args=(dist)
           if [[ "$GITHUB_REF_TYPE" == tag ]]; then args+=(--tag "$GITHUB_REF_NAME"); fi
-          uv run --locked python scripts/ci/check_distributions.py "${args[@]}"
+          uv run --no-sync python scripts/ci/check_distributions.py "${args[@]}"
       - name: Generate and validate fixture SARIF
         shell: bash
         run: |
           mkdir -p ci-reports
-          uv run --locked traceward scan fixtures/java --format sarif --fail-on none --output ci-reports/java.sarif
-          uv run --locked traceward scan fixtures/python/concatenated.py --format sarif --fail-on none --output ci-reports/python.sarif
+          uv run --no-sync traceward scan fixtures/java --format sarif --fail-on none --output ci-reports/java.sarif
+          uv run --no-sync traceward scan fixtures/python/concatenated.py --format sarif --fail-on none --output ci-reports/python.sarif
           for fixture in flask-sqlite javascript typescript; do
-            uv run --locked traceward scan "fixtures/$fixture" \
+            uv run --no-sync traceward scan "fixtures/$fixture" \
               --format sarif --fail-on none --output "ci-reports/$fixture.sarif"
           done
           schema_path="$RUNNER_TEMP/sarif-schema-2.1.0.json"
-          curl --proto '=https' --fail --silent --show-error --retry 3 --max-time 30 \
+          curl --proto '=https' --fail --silent --show-error --max-time 30 \
             https://docs.oasis-open.org/sarif/sarif/v2.1.0/os/schemas/sarif-schema-2.1.0.json \
             --output "$schema_path"
           printf '%s  %s\n' ad6db49878699b091f3eeb765b6e29e92a34bad4da88664d000c923b549c3a25 "$schema_path" \
             | sha256sum --check --strict
-          uv run --locked python - "$schema_path" <<'PY'
+          uv run --no-sync python - "$schema_path" <<'PY'
           import json
           import sys
           from pathlib import Path
@@ -161,22 +207,35 @@ jobs:
 
   web:
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 2
+    strategy:
+      fail-fast: false
+      matrix:
+        task: [checks, browser]
     env:
       NEXT_TELEMETRY_DISABLED: '1'
     defaults:
       run:
         working-directory: apps/web
     steps:
+      - name: Start setup clock
+        shell: bash
+        working-directory: ${{ github.workspace }}
+        run: printf 'TRACEWARD_CI_SETUP_STARTED=%s\n' "$EPOCHSECONDS" >> "$GITHUB_ENV"
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           persist-credentials: false
           fetch-depth: 0
           filter: blob:none
       - uses: astral-sh/setup-uv@1e862dfacbd1d6d858c55d9b792c756523627244
+        if: matrix.task == 'browser'
         with:
           version: ${{ env.UV_VERSION }}
           python-version: '3.12'
+          enable-cache: true
+          cache-suffix: api-wheels-v1
+          prune-cache: false
+          save-cache: false
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
           bun-version: ${{ env.BUN_VERSION }}
@@ -190,22 +249,32 @@ jobs:
           path: apps/web/node_modules
           key: web-node-modules-v1-${{ runner.os }}-ubuntu2404-${{ runner.arch }}-${{ steps.node.outputs.version }}-bun${{ env.BUN_VERSION }}-${{ hashFiles('apps/web/bun.lock', 'apps/web/package.json') }}
       - run: bun install --frozen-lockfile --ignore-scripts
-      - run: bun audit --audit-level=high
+      - if: matrix.task == 'browser'
+        run: uv sync --project ../.. --locked --extra api
+      # Real browser launches validate the runner's native libraries.
+      - name: Install Chromium headless shell
+        if: matrix.task == 'browser'
+        run: bun run playwright install --only-shell chromium
+      - name: Require setup in under 30 seconds
+        run: bash "$GITHUB_WORKSPACE/scripts/ci/check_setup_budget.sh"
+      - name: Format, lint and typecheck within 5 seconds
+        if: matrix.task == 'checks'
+        run: timeout 5s bash ../../scripts/ci/check_web.sh
+      - if: matrix.task == 'browser'
+        run: bun audit --audit-level=high
       - name: Seed web dependencies from the default branch
-        if: github.event_name == 'push' && github.ref_type == 'branch' && github.ref_name == github.event.repository.default_branch && steps.web-cache.outputs.cache-hit != 'true'
+        if: matrix.task == 'browser' && github.event_name == 'push' && github.ref_type == 'branch' && github.ref_name == github.event.repository.default_branch && steps.web-cache.outputs.cache-hit != 'true'
         uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: apps/web/node_modules
           key: ${{ steps.web-cache.outputs.cache-primary-key }}
-      - run: bun run build
-      - run: bun run typecheck
-      # The Playwright suite uses the headless shell. Its browser launches
-      # validate the GitHub runner's native libraries without a live apt install.
-      - name: Install Chromium headless shell
-        run: bun run playwright install --only-shell chromium
-      - run: bun run test
+      - if: matrix.task == 'browser'
+        run: bun run build
+      - name: Test the browser workspace within 60 seconds
+        if: matrix.task == 'browser'
+        run: timeout 60s bun run test --fully-parallel --workers 2 --shuffle "$TEST_ORDER_SEED" --retries 0
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && matrix.task == 'browser' }}
         with:
           name: browser-reports-${{ github.run_attempt }}
           path: |
@@ -215,8 +284,11 @@ jobs:
 
   ml:
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 2
     steps:
+      - name: Start setup clock
+        shell: bash
+        run: printf 'TRACEWARD_CI_SETUP_STARTED=%s\n' "$EPOCHSECONDS" >> "$GITHUB_ENV"
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           persist-credentials: false
@@ -226,12 +298,37 @@ jobs:
         with:
           version: ${{ env.UV_VERSION }}
           python-version: '3.12'
-      - run: uv run --locked --extra api --extra ml pytest packages/traceward-ml/tests -q
+          enable-cache: true
+          cache-suffix: ml-wheels-v1
+          prune-cache: false
+          save-cache: ${{ github.event_name == 'push' && github.ref_type == 'branch' && github.ref_name == github.event.repository.default_branch }}
+      - run: uv sync --locked --extra api --extra ml
+      - name: Require setup in under 30 seconds
+        run: bash "$GITHUB_WORKSPACE/scripts/ci/check_setup_budget.sh"
+      - name: Run ML tests within 60 seconds
+        run: timeout 60s uv run --no-sync pytest packages/traceward-ml/tests -q --order-seed "$TEST_ORDER_SEED"
+
+  full-ci:
+    name: Full CI
+    if: ${{ always() }}
+    needs: [quality, audit, tests, package, web, ml]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions: {}
+    env:
+      JOB_RESULTS: ${{ toJSON(needs.*.result) }}
+    steps:
+      - name: Require all suite jobs to succeed
+        run: |
+          if ! jq -e 'length == 6 and all(.[]; . == "success")' <<< "$JOB_RESULTS"; then
+            echo "::error::Every full suite job must succeed. Results: $JOB_RESULTS"
+            exit 1
+          fi
 
   release:
     name: Stage GitHub release
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
-    needs: [quality, audit, tests, package, web, ml]
+    needs: [full-ci, package]
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     permissions:

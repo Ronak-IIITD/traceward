@@ -1,0 +1,40 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "react", "nextjs", "jsx-a11y", "import", "promise", "node"],
+  "categories": { "correctness": "error", "suspicious": "error", "perf": "error" },
+  "ignorePatterns": [
+    "node_modules/**",
+    ".next/**",
+    "next-env.d.ts",
+    "playwright-report/**",
+    "test-results/**",
+  ],
+  "rules": {
+    "react/react-in-jsx-scope": "off",
+    "import/no-unassigned-import": ["error", { "allow": ["**/*.css"] }],
+  },
+  "overrides": [
+    {
+      // Platform-specific shortcuts are read on the client after hydration.
+      // The source controls use an explicitly named button group.
+      "files": ["app/page.tsx"],
+      "rules": { "react/set-state-in-effect": "off", "jsx-a11y/prefer-tag-over-role": "off" },
+    },
+    {
+      // Keep keyboard access and status announcements. These ordered, stateless
+      // evidence lists do not have unique keys in the scanner response.
+      "files": ["components/ScanResults.tsx"],
+      "rules": {
+        "jsx-a11y/prefer-tag-over-role": "off",
+        "jsx-a11y/no-noninteractive-tabindex": "off",
+        "react/no-array-index-key": "off",
+      },
+    },
+    {
+      // Read a stream in order and stop as soon as the size bound is exceeded.
+      // The browser test also reads one row at a time for useful failure context.
+      "files": ["app/api/v1/scans/snippet/route.ts", "tests/workspace.spec.ts"],
+      "rules": { "no-await-in-loop": "off" },
+    },
+  ],
+}
