@@ -22,7 +22,8 @@ Open **Suggested fix** for a copyable parameterized query. Use **Ctrl+Enter**
 clean result for the selected rule. The dashboard includes diagnostics, coverage
 details, and JSON copy and export. Stop both local servers with Ctrl+C.
 The launch script installs the locked API and web dependencies as needed.
-It requires uv and Node.js 22 or later with npm.
+It requires uv, Node.js 22 or later, and [Bun](https://bun.com/) 1.4.4 or later.
+The dashboard toolchain is verified on Linux x64.
 
 ## Run locally
 

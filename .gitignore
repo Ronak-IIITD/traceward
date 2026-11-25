@@ -27,6 +27,7 @@ ci-reports/
 
 node_modules/
 .next/
+/apps/web/next-env.d.ts
 playwright-report/
 test-results/
 *.tsbuildinfo
