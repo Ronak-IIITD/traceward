@@ -1,12 +1,17 @@
 import asyncio
 import json
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
+import traceward_api.app as api
+from fastapi import Request, Response
 from fastapi.testclient import TestClient
+from starlette.types import Message
 from traceward.models import ScanResult
 from traceward_api.app import MAX_BODY, MAX_SOURCE, app
+from traceward_api.limits import MAX_RESULT
 
 client = TestClient(app)
 ENDPOINT = "/api/v1/scans/snippet"
@@ -48,6 +53,7 @@ def test_cli_and_api_agree(tmp_path: Path, name: str, count: int) -> None:
     assert cli.returncode == count
     response = client.post(ENDPOINT, json={"language": language, "code": code})
     assert response.status_code == 200
+    assert response.headers["cache-control"] == "no-store"
     result = ScanResult.model_validate(response.json())
     assert result.summary.findings == count
     cli_result = ScanResult.model_validate_json(cli.stdout)
@@ -111,6 +117,7 @@ def test_source_is_analyzed_without_running_it(tmp_path: Path, language: str) ->
 def test_validation_errors(data: dict, status: int, error: str) -> None:
     response = client.post(ENDPOINT, json=data)
     assert response.status_code == status
+    assert response.headers["cache-control"] == "no-store"
     detail = response.json()["error"]
     assert detail["code"] == error and detail["request_id"]
     assert "private" not in response.text
@@ -161,4 +168,83 @@ def test_failed_worker_returns_transient_error_and_recovers(
     assert response.status_code == 503
     assert response.json()["error"]["code"] == "SCAN_FAILED"
     assert "private path" not in response.text
+    assert client.post(ENDPOINT, json=payload).status_code == 200
+
+
+@pytest.mark.parametrize("body_complete", [False, True])
+def test_disconnect_releases_slot_and_reaps_started_worker(
+    monkeypatch: pytest.MonkeyPatch, body_complete: bool
+) -> None:
+    create_process = asyncio.create_subprocess_exec
+    payload = json.dumps({"language": "java", "code": "class A {}"}).encode()
+
+    async def exercise() -> None:
+        started = asyncio.Event()
+        process = None
+        slots = asyncio.Semaphore(1)
+        monkeypatch.setattr(api, "slots", slots)
+
+        async def spawn(*args, **kwargs):
+            nonlocal process
+            process = await create_process(
+                sys.executable, "-c", "import time; time.sleep(30)", **kwargs
+            )
+            started.set()
+            return process
+
+        async def receive() -> Message:
+            if body_complete:
+                await started.wait()
+            return {"type": "http.disconnect"}
+
+        messages = [{"type": "http.request", "body": payload, "more_body": not body_complete}]
+
+        async def receive_request() -> Message:
+            return messages.pop() if messages else await receive()
+
+        monkeypatch.setattr(asyncio, "create_subprocess_exec", spawn)
+        request = Request(
+            {"type": "http", "headers": [(b"content-type", b"application/json")]},
+            receive_request,
+        )
+        async with asyncio.timeout(4):
+            result = await api.scan(request, Response())
+        assert isinstance(result, Response) and result.status_code == 400
+        assert not slots.locked()
+        if body_complete:
+            assert process is not None and process.returncode is not None
+        else:
+            assert process is None
+
+    asyncio.run(exercise())
+
+
+@pytest.mark.parametrize(
+    ("program", "status", "error"),
+    [
+        (f"import sys; sys.stdout.buffer.write(b'x' * {MAX_RESULT + 1})", 503, "SCAN_FAILED"),
+        ("import time; time.sleep(30)", 504, "SCAN_TIMEOUT"),
+    ],
+)
+def test_worker_bounds_return_structured_errors_and_reap_child(
+    monkeypatch: pytest.MonkeyPatch, program: str, status: int, error: str
+) -> None:
+    create_process = asyncio.create_subprocess_exec
+    children: list[asyncio.subprocess.Process] = []
+
+    async def spawn(*args, **kwargs):
+        child = await create_process(sys.executable, "-c", program, **kwargs)
+        children.append(child)
+        return child
+
+    if status == 504:
+        monkeypatch.setattr(api, "WORKER_TIMEOUT", 0.1)
+    with monkeypatch.context() as patch:
+        patch.setattr(asyncio, "create_subprocess_exec", spawn)
+        payload = {"language": "java", "code": "class A {}"}
+        response = client.post(ENDPOINT, json=payload)
+    assert response.status_code == status
+    assert response.json()["error"]["code"] == error
+    assert len(children) == 1 and children[0].returncode is not None
+    monkeypatch.setattr(api, "WORKER_TIMEOUT", 5)
     assert client.post(ENDPOINT, json=payload).status_code == 200
