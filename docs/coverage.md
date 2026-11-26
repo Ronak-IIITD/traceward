@@ -16,6 +16,16 @@ Rules `java.sql.concatenated-untrusted-input` (0.3.0),
 Production promotion requires independent real-world evaluation. See README
 for the modeled methods and unsupported semantics. Live scans use static rules.
 
+The mixed-project regression suite runs on every PR. It exercises the installed
+CLI against one synthetic checkout with paired Java, Python, Flask, JavaScript,
+and TypeScript cases. It checks binding and comment hard negatives, excluded
+paths, malformed inputs, and reproducible JSON/SARIF finding identity and evidence.
+Run it with `uv run --locked --extra api pytest packages/traceward-core/tests/test_project_scan.py`.
+
+For a repo-level review, scan a local checkout you are authorized to inspect.
+Pick a reviewed parameterized query and a known finding within the documented
+rule scope. Compare the reported source, sink, and line numbers with the checked-out revision.
+
 Fixture results must not be described as real-world precision or recall. The
 research paper's synthetic macro-F1 is not a scanner performance measurement.
 
