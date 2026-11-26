@@ -99,8 +99,12 @@ in the scan's diagnostics with HTTP 200. Invalid submissions receive a structure
 HTTP error with a request ID. The service accepts 64 KiB of UTF-8 source and up to
 256 KiB of JSON per request, with two simultaneous submissions per server process.
 Each scan runs in a disposable subprocess with CPU, memory and wall-time limits.
-The service keeps source and results in memory for the request. Health, version,
-capabilities and model status are available under `/api/v1/`.
+The API accepts at most 2 MiB of worker output. When its HTTP client
+disconnects, it stops and reaps the worker before releasing the scan slot.
+Scan responses include
+`Cache-Control: no-store`, and the service keeps source and results in memory for
+the request. Health, version, capabilities and model status are available under
+`/api/v1/`.
 
 ## Detection and limits
 

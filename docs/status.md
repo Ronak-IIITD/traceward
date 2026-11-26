@@ -6,7 +6,8 @@ Progress is tracked through working features and release gates. The previous
 60% number counted initial issues equally and did not measure product completion.
 
 - Java, Python, JavaScript and TypeScript CLI scans with JSON and SARIF 2.1.0 reports.
-- Bounded FastAPI snippet endpoint and CLI/API parity.
+- Bounded FastAPI snippet endpoint and CLI/API parity. Disconnected clients
+  release scan slots after worker cleanup, and scan responses prohibit caching.
 - Next.js scan workspace with evidence selection, diagnostics and JSON export.
 - Offline SVM, Random Forest and XGBoost research harness, safe JSON SVM inference,
   provenance checks, train-only TF-IDF and repository-family split validation.
