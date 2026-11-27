@@ -228,6 +228,7 @@ jobs:
           fetch-depth: 0
           filter: blob:none
       - uses: astral-sh/setup-uv@1e862dfacbd1d6d858c55d9b792c756523627244
+        id: browser-uv
         if: matrix.task == 'browser'
         with:
           version: ${{ env.UV_VERSION }}
@@ -249,7 +250,11 @@ jobs:
           path: apps/web/node_modules
           key: web-node-modules-v1-${{ runner.os }}-ubuntu2404-${{ runner.arch }}-${{ steps.node.outputs.version }}-bun${{ env.BUN_VERSION }}-${{ hashFiles('apps/web/bun.lock', 'apps/web/package.json') }}
       - run: bun install --frozen-lockfile --ignore-scripts
-      - if: matrix.task == 'browser'
+      - name: Install locked Python dependencies for browser tests
+        if: matrix.task == 'browser'
+        env:
+          # The exact lockfile cache includes the isolated build requirements.
+          UV_OFFLINE: ${{ steps.browser-uv.outputs.cache-hit == 'true' && '1' || '0' }}
         run: uv sync --project ../.. --locked --extra api
       # Real browser launches validate the runner's native libraries.
       - name: Install Chromium headless shell
