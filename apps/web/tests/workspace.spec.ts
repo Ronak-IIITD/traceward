@@ -1,11 +1,15 @@
 import { test, expect } from "@playwright/test";
+import { signInToWorkspace } from "./auth-fixture";
+
+test.beforeEach(async ({ page }) => {
+  await signInToWorkspace(page);
+});
 
 test("real scanner finds input flow, selects sink and exports same JSON", async ({ page }) => {
   let requests = 0;
   page.on("request", (request) => {
     if (request.url().endsWith("/api/v1/scans/snippet")) requests++;
   });
-  await page.goto("/");
   await expect(page.getByRole("heading", { name: "Scan workspace", exact: true })).toBeVisible();
   expect(requests).toBe(0);
   await page.getByRole("button", { name: "Scan Java", exact: true }).click();
@@ -28,7 +32,6 @@ test("real scanner finds input flow, selects sink and exports same JSON", async 
 });
 
 test("safe parameterization and invalid syntax get distinct results", async ({ page }) => {
-  await page.goto("/");
   await page.getByRole("button", { name: "Parameterized", exact: true }).click();
   await page.getByRole("button", { name: "Scan Java", exact: true }).click();
   await expect(
@@ -41,7 +44,6 @@ test("safe parameterization and invalid syntax get distinct results", async ({ p
 });
 
 test("explicit failures and input limits stay actionable", async ({ page }) => {
-  await page.goto("/");
   await page.route("**/api/v1/scans/snippet", (route) =>
     route.fulfill({
       status: 503,
@@ -60,12 +62,12 @@ test("explicit failures and input limits stay actionable", async ({ page }) => {
 
 test("methodology and mobile workspace remain usable", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto("/");
   await expect(page.getByRole("button", { name: "Scan Java", exact: true })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.screenshot({ path: "test-results/workspace-mobile.png", fullPage: true });
   await page.getByRole("link", { name: "Coverage & methods" }).click();
   await expect(page.getByRole("heading", { name: "Know what was analyzed." })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Sign out" })).toBeVisible();
   for (const language of ["Java", "Python", "JavaScript", "TypeScript"]) {
     const capability = page.getByRole("row").filter({
       has: page.getByRole("cell", { name: language, exact: true }),
@@ -85,7 +87,6 @@ for (const { label, other, path } of [
     context,
   }) => {
     await context.grantPermissions(["clipboard-read", "clipboard-write"]);
-    await page.goto("/");
     const selector = page.getByRole("combobox", { name: "Language" });
     await selector.selectOption({ label });
     const editor = page.getByRole("textbox", { name: `${label} source code` });
@@ -124,8 +125,8 @@ for (const { label, other, path } of [
   });
 }
 
-test("proxy rejects oversized requests", async ({ request }) => {
-  const response = await request.post("/api/v1/scans/snippet", {
+test("proxy rejects oversized requests", async ({ page }) => {
+  const response = await page.request.post("/api/v1/scans/snippet", {
     headers: { "content-type": "application/json" },
     data: " ".repeat(256 * 1024 + 1),
   });
@@ -146,7 +147,6 @@ test("example CTA moves from idle through loading to selectable real evidence", 
     await hold;
     await route.continue();
   });
-  await page.goto("/");
   await expect(page.getByRole("heading", { name: "Ready to trace" })).toBeVisible();
   await page.screenshot({ path: "test-results/workspace-empty.png", fullPage: true });
   await page.getByRole("button", { name: "Try the vulnerable example" }).click();
@@ -173,7 +173,6 @@ test("example CTA moves from idle through loading to selectable real evidence", 
 test("editor supports wrap, indentation, keyboard exit and shortcut, and retry after failure", async ({
   page,
 }) => {
-  await page.goto("/");
   const editor = page.getByRole("textbox", { name: "Java source code" });
   const wrap = page.getByRole("button", { name: "Soft wrap" });
   await wrap.click();
@@ -204,7 +203,6 @@ test("editor supports wrap, indentation, keyboard exit and shortcut, and retry a
 });
 
 test("UTF-8 trace locations select the right source for multiple findings", async ({ page }) => {
-  await page.goto("/");
   const editor = page.getByRole("textbox", { name: "Java source code" });
   await editor.fill(
     [
@@ -241,7 +239,6 @@ test("switching languages preserves drafts and provides SQLite evidence and reme
   context,
 }) => {
   await context.grantPermissions(["clipboard-read", "clipboard-write"]);
-  await page.goto("/");
   const selector = page.getByRole("combobox", { name: "Language" });
   const java = page.getByRole("textbox", { name: "Java source code" });
   await java.fill("class KeepMyDraft {}");
@@ -285,7 +282,6 @@ def lookup():
     db = sqlite3.connect(':memory:')
     name = request.args.get('name', '')`;
 
-  await page.goto("/");
   await page.getByRole("combobox", { name: "Language" }).selectOption("python");
   const editor = page.getByRole("textbox", { name: "Python source code" });
   const scan = page.getByRole("button", { name: "Scan Python", exact: true });

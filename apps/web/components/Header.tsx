@@ -2,16 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { signOut } from "@/app/login/actions";
 
-const destinations = [
-  { href: "/", title: "Scan workspace" },
-  { href: "/methodology", title: "Coverage & methods" },
-];
-
-export default function Header() {
+export default function Header({ signedIn }: { signedIn: boolean }) {
   const pathname = usePathname();
+  const home = pathname === "/";
+  const workspace = pathname === "/workspace";
   return (
-    <header className="tw-header">
+    <header className={home ? "tw-header tw-header-landing" : "tw-header"}>
       <div className="tw-header-inner">
         <Link href="/" className="tw-wordmark" aria-label="TraceWard home">
           <svg className="tw-mark" viewBox="0 0 32 36" aria-hidden="true" fill="none">
@@ -26,16 +24,28 @@ export default function Header() {
           TraceWard
         </Link>
         <nav className="tw-navigation" aria-label="Main">
-          {destinations.map(({ href, title }) => (
-            <Link key={href} href={href} aria-current={pathname === href ? "page" : undefined}>
-              {title}
+          {signedIn && (
+            <Link href="/workspace" aria-current={workspace ? "page" : undefined}>
+              Scan workspace
             </Link>
-          ))}
+          )}
+          <Link href="/methodology" aria-current={pathname === "/methodology" ? "page" : undefined}>
+            Coverage &amp; methods
+          </Link>
         </nav>
-        <span className="tw-local">
-          <i aria-hidden="true" />
-          Local workspace
-        </span>
+        {signedIn ? (
+          <form action={signOut} className="tw-account">
+            <button type="submit">Sign out</button>
+          </form>
+        ) : (
+          <Link
+            href="/login"
+            className="tw-account"
+            aria-current={pathname === "/login" ? "page" : undefined}
+          >
+            Sign in
+          </Link>
+        )}
       </div>
     </header>
   );

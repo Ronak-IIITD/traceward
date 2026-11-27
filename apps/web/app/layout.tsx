@@ -1,18 +1,20 @@
 import type { Metadata } from "next";
 import Header from "@/components/Header";
+import { hasWorkspaceSession } from "@/lib/workspace-session";
 import "./globals.css";
 import "./navigation.css";
+import "./public.css";
 
 export const metadata: Metadata = {
   title: "TraceWard · Code security workspace",
   description: "Inspect SQL injection candidates in Java, Python, JavaScript, and TypeScript.",
 };
 
-export default function Layout({ children }: { children: React.ReactNode }) {
+export default async function Layout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <body>
-        <Header />
+        <Header signedIn={await hasWorkspaceSession()} />
         {children}
         <footer className="tw-footer">
           <span>

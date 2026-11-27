@@ -15,8 +15,9 @@ From the repository root, run:
 ./start.sh
 ```
 
-Open <http://127.0.0.1:3000>, choose a language, and select **Try the vulnerable
-example**. Select a finding or trace step to highlight its source in the editor.
+Open <http://127.0.0.1:3000>, select **Open workspace**, and sign in with the key
+printed in the terminal that started TraceWard. Choose a language and select
+**Try the vulnerable example**. Select a finding or trace step to highlight its source in the editor.
 Open **Suggested fix** for a copyable parameterized query. Use **Ctrl+Enter**
 (**Cmd+Enter** on macOS) to scan your own code. Load **Parameterized** to see the
 clean result for the selected rule. The dashboard includes diagnostics, coverage
@@ -24,6 +25,13 @@ details, and JSON copy and export. Stop both local servers with Ctrl+C.
 The launch script installs the locked API and web dependencies as needed.
 It requires uv, Node.js 22 or later, and [Bun](https://bun.com/) 1.4.4 or later.
 The dashboard toolchain is verified on Linux x64.
+
+Each interactive launch generates a fresh workspace key. For a non-interactive
+launch or when starting Next.js separately, set `TRACEWARD_WORKSPACE_KEY` to a
+private, random 32–256 byte value. The session expires after eight hours. A new
+key invalidates previous sessions. Run the web app and scanner on loopback for
+local use. For an HTTPS environment, set `TRACEWARD_SECURE_COOKIES=1` to require
+HTTPS for the session cookie.
 
 ### Local pre-push checks
 

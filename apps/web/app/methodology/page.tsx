@@ -183,7 +183,7 @@ export default function Methodology() {
           </section>
         </aside>
       </div>
-      <Link className="tw-return" href="/">
+      <Link className="tw-return" href="/workspace">
         Return to scan workspace <span aria-hidden="true">→</span>
       </Link>
     </main>

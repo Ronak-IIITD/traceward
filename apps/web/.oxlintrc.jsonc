@@ -16,9 +16,8 @@
   "overrides": [
     {
       // Platform-specific shortcuts are read on the client after hydration.
-      // The source controls use an explicitly named button group.
-      "files": ["app/page.tsx"],
-      "rules": { "react/set-state-in-effect": "off", "jsx-a11y/prefer-tag-over-role": "off" },
+      "files": ["components/Workspace.tsx"],
+      "rules": { "react/set-state-in-effect": "off" },
     },
     {
       // Keep keyboard access and status announcements. These ordered, stateless
