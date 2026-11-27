@@ -9,15 +9,37 @@ import time
 import tomllib
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from urllib.error import URLError
+from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 ROOT = Path(__file__).resolve().parents[2]
 
 
-def check_http(
-    bin_dir: Path, work: Path, cases: list[tuple[str, str, list[dict[str, object]]]]
-) -> None:
+def check_rejected_input(endpoint: str) -> None:
+    marker = "traceward-release-submission"
+    oversized = json.dumps(
+        {"language": "python", "code": "é" * (32 * 1024) + marker}, ensure_ascii=False
+    ).encode()
+    malformed = f'{{"language":"python","code":"{marker}'.encode()
+    for body, status, code in [
+        (oversized, 413, "INPUT_TOO_LARGE"),
+        (malformed, 422, "INVALID_INPUT"),
+    ]:
+        request = Request(endpoint, body, {"Content-Type": "application/json"})
+        try:
+            response = urlopen(request, timeout=10)
+        except HTTPError as error:
+            response = error
+        with response:
+            assert response.status == status, (code, response.status)
+            assert response.headers["Cache-Control"] == "no-store", code
+            payload = response.read()
+        assert marker.encode() not in payload, code
+        detail = json.loads(payload)["error"]
+        assert detail["code"] == code and detail["request_id"], code
+
+
+def check_http(bin_dir: Path, work: Path, cases: list[tuple[str, str, dict[str, object]]]) -> None:
     with socket.socket() as listener:
         listener.bind(("127.0.0.1", 0))
         base = f"http://127.0.0.1:{listener.getsockname()[1]}/api/v1"
@@ -44,16 +66,27 @@ def check_http(
                     time.sleep(0.1)
             else:
                 raise TimeoutError("Installed API did not become ready")
-            for language, code, findings in cases:
+            endpoint = base + "/scans/snippet"
+            check_rejected_input(endpoint)
+            for language, code, cli_report in cases:
                 request = Request(
-                    base + "/scans/snippet",
+                    endpoint,
                     json.dumps({"language": language, "code": code}).encode(),
                     {"Content-Type": "application/json"},
                 )
                 with urlopen(request, timeout=10) as response:
+                    assert response.status == 200, language
+                    assert response.headers["Cache-Control"] == "no-store", language
                     report = json.load(response)
-                assert report["summary"]["files_analyzed"] == 1
-                assert not report["diagnostics"] and report["findings"] == findings
+                for field in (
+                    "schema_version",
+                    "scanner",
+                    "coverage",
+                    "summary",
+                    "diagnostics",
+                    "findings",
+                ):
+                    assert report[field] == cli_report[field], (language, field)
         finally:
             server.terminate()
             server.wait(timeout=10)
@@ -72,8 +105,7 @@ def check(package: Path, version: str) -> None:
             ).strip()
             == f"TraceWard {version}"
         )
-        api_cases = []
-        for language, path, expected in [
+        fixtures = [
             ("java", "java/Safe.java", 0),
             ("java", "java/Vulnerable.java", 1),
             ("python", "python/parameterized.py", 0),
@@ -84,10 +116,15 @@ def check(package: Path, version: str) -> None:
             ("javascript", "javascript/concatenated.js", 1),
             ("typescript", "typescript/parameterized.ts", 0),
             ("typescript", "typescript/concatenated.ts", 1),
-        ]:
-            fixture = ROOT / "fixtures" / path
-            code = fixture.read_text(encoding="utf-8")
-            source = work / f"snippet{fixture.suffix}"
+        ]
+        cases = [
+            (language, Path(path).suffix, (ROOT / "fixtures" / path).read_text("utf-8"), expected)
+            for language, path, expected in fixtures
+        ]
+        cases.append(("python", ".py", "def broken(:\n", 2))
+        api_cases = []
+        for language, suffix, code, expected in cases:
+            source = work / f"snippet{suffix}"
             source.write_text(code, encoding="utf-8")
             cli = subprocess.run(
                 [bin_dir / "traceward", "scan", source.name, "--format", "json"],
@@ -95,11 +132,18 @@ def check(package: Path, version: str) -> None:
                 capture_output=True,
             )
             assert cli.returncode == expected, cli.stderr
-            result = json.loads(cli.stdout)
-            findings = result["findings"]
-            assert result["summary"]["files_analyzed"] == 1
-            assert not result["diagnostics"] and len(findings) == expected
-            api_cases.append((language, code, findings))
+            report = json.loads(cli.stdout)
+            assert report["coverage"]["partial"] is True
+            if expected == 2:
+                assert report["summary"]["files_analyzed"] == 0
+                assert report["summary"]["errors"] and report["findings"] == []
+                diagnostic = report["diagnostics"][0]
+                assert diagnostic["code"] == "PARSE_ERROR" and diagnostic["location"]
+            else:
+                assert report["summary"]["files_analyzed"] == 1
+                assert report["summary"]["errors"] == 0 and not report["diagnostics"]
+                assert len(report["findings"]) == expected
+            api_cases.append((language, code, report))
         subprocess.run(
             [*install, f"traceward-core[api] @ {package.as_uri()}"], cwd=work, check=True
         )

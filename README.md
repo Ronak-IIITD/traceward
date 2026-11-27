@@ -229,6 +229,9 @@ Each version must reach 90% combined line and branch coverage, including subproc
 JUnit and coverage XML reports are available as workflow artifacts for 14 days.
 Separate jobs validate the workflow, check formatting and types, audit locked dependencies,
 and install the wheel and source archive in fresh environments for CLI and HTTP smoke tests.
+Those installs must agree on findings, coverage, and parse diagnostics. The HTTP checks
+also verify that malformed and oversized submissions return structured errors without
+echoing submitted code and that scan responses prohibit caching.
 
 A pushed tag matching the package version, such as `v0.1.0`, stages a **draft GitHub
 Release** after all jobs pass. The draft contains the tested wheel, source archive,
