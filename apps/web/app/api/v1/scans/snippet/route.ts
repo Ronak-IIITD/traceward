@@ -1,11 +1,18 @@
 import { NextRequest } from "next/server";
+import { isWorkspaceSession, sessionCookie } from "@/lib/workspace-session";
 
 export const runtime = "nodejs";
 const MAX_BODY = 256 * 1024;
 const error = (status: number, code: string, message: string) =>
-  Response.json({ error: { code, message, request_id: crypto.randomUUID() } }, { status });
+  Response.json(
+    { error: { code, message, request_id: crypto.randomUUID() } },
+    { status, headers: { "cache-control": "no-store" } },
+  );
 
 export async function POST(request: NextRequest) {
+  if (!isWorkspaceSession(request.cookies.get(sessionCookie)?.value)) {
+    return error(401, "AUTH_REQUIRED", "Sign in to the workspace to scan source code.");
+  }
   if (
     request.headers.get("content-type")?.split(";")[0].trim().toLowerCase() !== "application/json"
   )

@@ -11,6 +11,10 @@ Discovery skips symlinks and opens final components with `O_NOFOLLOW`; it reject
 devices/FIFOs before reading. Parent-directory replacement races are not fully
 isolated. Use stable local checkouts. Native parsers remain an untrusted-input
 attack surface despite byte/time limits. The local HTTP service caps request and source bytes and simultaneous scans.
+The web workspace and its scan proxy require a workspace key and use a signed,
+expiring HTTP-only session cookie. This provides single-operator access for the
+local web app. The underlying Python API is a separate loopback service intended
+for direct local use. Keep it on a private interface.
 Each snippet runs in a disposable Linux subprocess with a five-second wall deadline,
 a CPU limit and a 256 MiB address-space limit. The worker inherits the server user’s
 filesystem and network permissions. Public hosting still requires deployment
