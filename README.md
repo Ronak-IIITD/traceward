@@ -161,7 +161,7 @@ tracks `request.args["key"]` and `request.args.get("key")` inside a top-level
 function, including a positional string default. It recognizes a single `@app.get("/path")` or
 `@app.route("/path")` on a function when the module constructs that app with
 `Flask(__name__)` or a literal string. Other request attributes, typed conversion,
-f-strings, branches and cross-function flow remain outside the rule. Consult the
+branches and cross-function flow remain outside the rule. Consult the
 diagnostics when an unsupported statement ends the modeled path. Flask itself
 is unnecessary for scanning. [Flask request data](https://flask.palletsprojects.com/en/stable/quickstart/#accessing-request-data)
 
@@ -175,8 +175,25 @@ model. They follow `process.argv[2]` and later literal indexes through top-level
 constructed `DatabaseSync` from a named `node:sqlite` import. Constant prepared
 queries can bind positional values separately. Check the diagnostics when an
 unsupported statement ends the modeled path. Coverage is limited to straight-line
-module code, with web request sources, CommonJS, receiver aliases, functions, and
-template interpolation outside this slice. [Node.js SQLite reference](https://nodejs.org/download/release/v24.11.1/docs/api/sqlite.html)
+module code, with web request sources, CommonJS, receiver aliases and functions
+outside this slice. [Node.js SQLite reference](https://nodejs.org/download/release/v24.11.1/docs/api/sqlite.html)
+
+Python f-strings and untagged JavaScript/TypeScript template literals also carry
+modeled string input into SQL text. Every embedded expression must resolve to
+a known string under the existing local-flow model. Python conversion flags
+(`!s`, `!r`, `!a`), format specifications, debug fields (`{value=}`), tagged
+templates and non-string or unresolved substitutions stop the path with a diagnostic.
+Constant templates and interpolated values passed separately as bound parameters
+do not trigger a finding. Binding other values does not make an interpolated SQL
+template safe. The trace records string assembly as a `concatenation` step labeled
+`f-string` or `template literal`, retaining one actual source path when several
+inputs contribute. It never evaluates embedded expressions at runtime.
+[Python f-string semantics](https://docs.python.org/3/reference/lexical_analysis.html#f-strings) ·
+[ECMAScript template literal semantics](https://tc39.es/ecma262/multipage/ecmascript-language-expressions.html#sec-template-literals-runtime-semantics-evaluation)
+
+Run `uv run traceward scan fixtures/sql-interpolation --format json` to compare
+the three interpolated queries with their parameterized counterparts. Expected:
+three experimental candidates across six files, exit status 1.
 
 All results declare **partial coverage**. No supported findings does not certify
 security. Coverage outside the documented CWE-89 cases remains on the roadmap.

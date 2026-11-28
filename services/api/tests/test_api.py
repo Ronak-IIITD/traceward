@@ -36,6 +36,12 @@ FIXTURES = Path(__file__).resolve().parents[3] / "fixtures"
         ("javascript/parameterized.js", 0),
         ("typescript/concatenated.ts", 1),
         ("typescript/parameterized.ts", 0),
+        ("sql-interpolation/python/interpolated.py", 1),
+        ("sql-interpolation/python/parameterized.py", 0),
+        ("sql-interpolation/javascript/interpolated.js", 1),
+        ("sql-interpolation/javascript/parameterized.js", 0),
+        ("sql-interpolation/typescript/interpolated.ts", 1),
+        ("sql-interpolation/typescript/parameterized.ts", 0),
     ],
 )
 def test_cli_and_api_agree(tmp_path: Path, name: str, count: int) -> None:

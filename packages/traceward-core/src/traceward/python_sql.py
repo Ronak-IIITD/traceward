@@ -324,6 +324,12 @@ class PythonAnalysis:
             return Value() if value.receiver or value.flask_app else value
         if plain_string(node):
             return Value(is_string=True)
+        if node.type == "string" and text(node.named_child(0)).lower().rstrip(b"\"'") in {
+            b"f",
+            b"fr",
+            b"rf",
+        }:
+            return self.f_string(node, scope, depth)
         if node.type in {"integer", "none", "true", "false"}:
             return Value()
         if node.type == "parenthesized_expression":
@@ -356,6 +362,36 @@ class PythonAnalysis:
             ):
                 return self.source(node, "flask.request.args")
         raise Unsupported(node, "Unsupported Python expression; remaining path skipped.")
+
+    def f_string(self, node: Node, scope: Scope, depth: int) -> Value:
+        witness = Value(is_string=True)
+        for part in children(node):
+            if part.type != "interpolation":
+                continue
+            expression = part.child_by_field_name("expression")
+            if (
+                expression is None
+                or part.child_by_field_name("type_conversion") is not None
+                or part.child_by_field_name("format_specifier") is not None
+                or any(child.type == "=" for child in part.children)
+            ):
+                raise Unsupported(
+                    part, "F-string conversions, format specs and debug fields are unsupported."
+                )
+            value = self.evaluate(expression, scope, depth + 1)
+            if not value.is_string:
+                raise Unsupported(part, "Expected a known string in an f-string field.")
+            # Check every field, but retain one actual source path rather than
+            # splicing independent sources into a fabricated sequence.
+            if not witness.flow and value.flow:
+                witness = value
+        if witness.flow:
+            return self.extend(
+                witness,
+                FlowNode(kind="concatenation", symbol="f-string", location=self.location(node)),
+                node,
+            )
+        return witness
 
     def source(self, node: Node, symbol: str) -> Value:
         step = FlowNode(kind="source", symbol=symbol, location=self.location(node))

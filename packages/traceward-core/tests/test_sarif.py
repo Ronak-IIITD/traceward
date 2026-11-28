@@ -149,7 +149,7 @@ def test_flask_query_parameter_trace_in_sarif() -> None:
     (rule,) = analysis["tool"]["driver"]["rules"]
     (finding,) = analysis["results"]
     assert rule["id"] == finding["ruleId"] == "python.sqlite.concatenated-input"
-    assert rule["properties"]["ruleVersion"] == "0.2.0"
+    assert rule["properties"]["ruleVersion"] == "0.3.0"
     (code_flow,) = finding["codeFlows"]
     (thread,) = code_flow["threadFlows"]
     source, *_, sink = thread["locations"]

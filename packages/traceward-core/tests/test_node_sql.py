@@ -112,7 +112,7 @@ def test_only_concatenated_input_reaching_sql_text_counts(statement: str) -> Non
         f"another.prepare({QUERY});",
         f"db.exec({QUERY}, extra);",
         "db.exec(3);",
-        "db.exec(`SELECT ${process.argv[2]}`);",
+        "db.exec(sql`SELECT ${process.argv[2]}`);",
         'new DatabaseSync(":memory:", options);',
         "const { name } = unknown;",
     ],

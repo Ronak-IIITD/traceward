@@ -70,7 +70,7 @@ export default function Methodology() {
                 receivers.
               </dd>
             </dl>
-            <h3>Python query concatenation</h3>
+            <h3>Python query construction</h3>
             <code className="tw-rule-id">python.sqlite.concatenated-input</code>
             <dl className="tw-method-steps">
               <dt>Source</dt>
@@ -83,7 +83,8 @@ export default function Methodology() {
               </dd>
               <dt>Propagation</dt>
               <dd>
-                Straight-line assignments and string concatenation with <code>+</code>.
+                Straight-line assignments, string concatenation with <code>+</code>, and f-strings
+                whose fields resolve to known strings.
               </dd>
               <dt>Sink</dt>
               <dd>
@@ -91,7 +92,7 @@ export default function Methodology() {
                 <code>db.cursor()</code>. Bind values separately using placeholders.
               </dd>
             </dl>
-            <h3>JavaScript and TypeScript query concatenation</h3>
+            <h3>JavaScript and TypeScript query construction</h3>
             <code className="tw-rule-id">javascript.sqlite.concatenated-argv</code>{" "}
             <code className="tw-rule-id">typescript.sqlite.concatenated-argv</code>
             <dl className="tw-method-steps">
@@ -101,7 +102,8 @@ export default function Methodology() {
               </dd>
               <dt>Propagation</dt>
               <dd>
-                Top-level declarations and string concatenation with <code>+</code>.
+                Top-level declarations, string concatenation with <code>+</code>, and untagged
+                template literals whose substitutions resolve to known strings.
               </dd>
               <dt>Sink</dt>
               <dd>
@@ -132,13 +134,14 @@ export default function Methodology() {
               </li>
               <li>
                 Flask route coverage requires a direct Flask app and one <code>@app.get()</code> or{" "}
-                <code>@app.route()</code> decorator with a literal path. Request bodies, f-strings,
-                branches, and flows across functions fall outside the Python rule’s scope.
+                <code>@app.route()</code> decorator with a literal path. Request bodies, branches,
+                f-string conversions, format specs, debug fields, and flows across functions fall
+                outside the Python rule’s scope.
               </li>
               <li>
-                The JavaScript and TypeScript rules cover straight-line Node.js scripts. Template
-                interpolation, web request inputs, other database drivers, and cross-function flows
-                are outside their scope.
+                The JavaScript and TypeScript rules cover straight-line Node.js scripts. Tagged
+                templates, non-string substitutions, web request inputs, other database drivers, and
+                cross-function flows are outside their scope.
               </li>
             </ul>
           </section>
