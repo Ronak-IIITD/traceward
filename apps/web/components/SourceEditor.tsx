@@ -11,12 +11,7 @@ import {
 import { java } from "@codemirror/lang-java";
 import { javascript } from "@codemirror/lang-javascript";
 import { python } from "@codemirror/lang-python";
-import {
-  bracketMatching,
-  HighlightStyle,
-  indentUnit,
-  syntaxHighlighting,
-} from "@codemirror/language";
+import { bracketMatching, indentUnit, syntaxHighlighting } from "@codemirror/language";
 import {
   Compartment,
   EditorState,
@@ -36,9 +31,9 @@ import {
   lineNumbers,
   type DecorationSet,
 } from "@codemirror/view";
-import { tags } from "@lezer/highlight";
 import type { Finding, Location } from "@/lib/contracts";
 import { languageNames, type Language } from "@/lib/examples";
+import { syntaxTheme } from "./editor-theme";
 import "./editor.css";
 
 const languageExtensions = {
@@ -57,16 +52,6 @@ type Props = {
   selected: number;
   reveal: { location: Location; nonce: number } | null;
 };
-
-const syntax = HighlightStyle.define([
-  { tag: [tags.keyword, tags.modifier], color: "#c9abf6" },
-  { tag: [tags.typeName, tags.className, tags.namespace], color: "#87d7d5" },
-  { tag: [tags.function(tags.variableName), tags.function(tags.propertyName)], color: "#a4c9fb" },
-  { tag: [tags.string, tags.character], color: "#b2d99d" },
-  { tag: [tags.number, tags.bool, tags.null], color: "#f1bd88" },
-  { tag: tags.comment, color: "#93a8b6", fontStyle: "italic" },
-  { tag: [tags.operator, tags.punctuation], color: "#a4b5c3" },
-]);
 
 const wrapping = new Compartment();
 const encoder = new TextEncoder();
@@ -184,7 +169,7 @@ export default function SourceEditor({
           highlightActiveLine(),
           languageExtensions[initial.language](),
           bracketMatching(),
-          syntaxHighlighting(syntax),
+          syntaxHighlighting(syntaxTheme),
           history(),
           indentUnit.of("    "),
           EditorState.tabSize.of(4),
