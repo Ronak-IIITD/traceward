@@ -21,7 +21,7 @@ colors:
   on-primary-entry: "#09251c"
   primary-hover-workspace: "#99f2d2"
   primary-hover-entry: "#a1f4d8"
-  field-border: "#56606a"
+  field-border: "#66717c"
   editor-bg: "#0e1519"
   editor-text: "#dae5ed"
   editor-active-line: "#1b282d"
@@ -214,6 +214,8 @@ This is an extraction of the implementation at `7db1908`, checked at desktop
 (1440 × 1000) and mobile (390 × 844). The frontmatter records observed values;
 its spacing and radius names describe repeated dimensions, not new CSS variables.
 No light theme, universal modular type scale, or global spacing API is implemented.
+The field boundary, bracket highlight, font loading, and narrow control wrapping
+include the subsequent accessibility audit corrections.
 
 Source map:
 [foundation and workspace](apps/web/app/globals.css),
@@ -243,18 +245,18 @@ Descriptive labels below lead; token keys and CSS names retain the implementatio
 
 ### Neutral
 
-| Descriptive label | Token / CSS property        | Use                                                                                            |
-| ----------------- | --------------------------- | ---------------------------------------------------------------------------------------------- |
-| Graphite canvas   | `bg` / `--bg`               | Page background and recessed groups.                                                           |
-| Graphite panel    | `panel` / `--panel`         | Editor/results shells, methodology cards, and the key field.                                   |
-| Graphite surface  | `surface` / `--surface`     | Findings, metric strip, result states, and secondary actions.                                  |
-| Raised graphite   | `raised` / `--raised`       | Hover fills, pressed example selection, and meter track.                                       |
-| Slate rule        | `line` / `--line`           | Container boundaries and dividers.                                                             |
-| Quiet slate rule  | `line-soft` / `--line-soft` | Lower-emphasis internal divisions.                                                             |
-| Frost text        | `text` / `--text`           | Main headings and readable foreground.                                                         |
-| Silver text       | `secondary` / `--secondary` | Supporting content and standard button labels. This is a text role, not a second brand accent. |
-| Muted slate text  | `muted` / `--muted`         | Captions, locations, inactive navigation, and helper text.                                     |
-| Field outline     | `field-border`              | The local sign-in field's resting border.                                                      |
+| Descriptive label | Token / CSS property              | Use                                                                                            |
+| ----------------- | --------------------------------- | ---------------------------------------------------------------------------------------------- |
+| Graphite canvas   | `bg` / `--bg`                     | Page background and recessed groups.                                                           |
+| Graphite panel    | `panel` / `--panel`               | Editor/results shells, methodology cards, and the key field.                                   |
+| Graphite surface  | `surface` / `--surface`           | Findings, metric strip, result states, and secondary actions.                                  |
+| Raised graphite   | `raised` / `--raised`             | Hover fills, pressed example selection, and meter track.                                       |
+| Slate rule        | `line` / `--line`                 | Container boundaries and dividers.                                                             |
+| Quiet slate rule  | `line-soft` / `--line-soft`       | Lower-emphasis internal divisions.                                                             |
+| Frost text        | `text` / `--text`                 | Main headings and readable foreground.                                                         |
+| Silver text       | `secondary` / `--secondary`       | Supporting content and standard button labels. This is a text role, not a second brand accent. |
+| Muted slate text  | `muted` / `--muted`               | Captions, locations, inactive navigation, and helper text.                                     |
+| Field outline     | `field-border` / `--field-border` | The sign-in field's resting border, with at least 3:1 contrast against its adjacent surfaces.  |
 
 ### Status and evidence
 
@@ -406,6 +408,8 @@ Restrained and technical: compact labels, clear boundaries, and direct state fee
 - **Scan primary:** mint fill, deep ink label, `rounded.control`, and the
   `button-primary` padding. Its label uses weight (680); a small bordered keyboard
   shortcut hint sits beside it.
+  The scan label stays on one line; its action row wraps when needed rather than
+  squeezing the label or clipping the action.
 - **Entry primary:** a related mint variant for public links and sign-in, with
   a minimum height (45px), larger horizontal gap (16px), and its own hover colors.
   The arrow shifts diagonally on hover (2px in each axis).
@@ -454,7 +458,9 @@ through `aria-describedby` and `aria-invalid`; there is no separate red-border r
 
 The language picker remains a native select styled as a compact file-type label.
 Code entry is CodeMirror, not a textarea. Its focused outline sits inside the
-editor (offset −2px). Soft wrap is a toggle; Tab indents, and Escape then Tab
+editor (offset −2px). Focused matching brackets use frost text on the existing
+green-grey highlight, overriding CodeMirror's default bracket treatment.
+Soft wrap is a toggle; Tab indents, and Escape then Tab
 allows keyboard exit. There is no existing checkbox, radio, or dialog component
 family to document.
 
@@ -471,7 +477,9 @@ treatment and a quiet privacy statement.
 The example selector is one recessed, bordered fieldset with `rounded.segment`.
 Its compact buttons are transparent until selected; `aria-pressed="true"` uses
 raised graphite with frost text. Vulnerable, Parameterized, and Clear remain
-explicit text actions. The separate Wrap toggle uses mint text while pressed.
+explicit text actions. The group wraps when enlarged text spacing needs another
+row, keeping every action reachable at narrow widths. The separate Wrap toggle
+uses mint text while pressed.
 
 ### Evidence trace and result states
 

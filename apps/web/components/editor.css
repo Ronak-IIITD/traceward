@@ -1,11 +1,3 @@
-@font-face {
-  font-family: "Geist Mono";
-  src: url("../node_modules/next/dist/next-devtools/server/font/geist-mono-latin.woff2")
-    format("woff2");
-  font-weight: 100 900;
-  font-display: swap;
-}
-
 .source-editor {
   flex: 1 1 auto;
   width: 100%;
@@ -62,7 +54,8 @@
 .source-editor .cm-content::selection {
   background: #315d69;
 }
-.source-editor .cm-matchingBracket {
+.source-editor .cm-editor.cm-focused .cm-matchingBracket {
+  color: var(--text);
   background: #38514b;
   outline: 1px solid #6c9c8c;
 }
