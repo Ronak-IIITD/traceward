@@ -1,0 +1,762 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-28T08:06:00.407Z",
+  "title": "Design System: TraceWard",
+  "extensions": {
+    "colorMeta": {
+      "primary": {
+        "role": "primary",
+        "displayName": "Signal mint",
+        "tonalRamp": [
+          "oklch(15% 0.04846 167.406)",
+          "oklch(25% 0.08077 167.406)",
+          "oklch(35% 0.11308 167.406)",
+          "oklch(45% 0.12923 167.406)",
+          "oklch(58% 0.12923 167.406)",
+          "oklch(72% 0.12923 167.406)",
+          "oklch(85% 0.09692 167.406)",
+          "oklch(95% 0.03231 167.406)"
+        ]
+      },
+      "bg": {
+        "role": "neutral",
+        "displayName": "Graphite canvas",
+        "tonalRamp": [
+          "oklch(15% 0.00000 0.000)",
+          "oklch(25% 0.00000 0.000)",
+          "oklch(35% 0.00000 0.000)",
+          "oklch(45% 0.00000 0.000)",
+          "oklch(58% 0.00000 0.000)",
+          "oklch(72% 0.00000 0.000)",
+          "oklch(85% 0.00000 0.000)",
+          "oklch(95% 0.00000 0.000)"
+        ]
+      },
+      "panel": {
+        "role": "neutral",
+        "displayName": "Graphite panel",
+        "tonalRamp": [
+          "oklch(15% 0.00000 0.000)",
+          "oklch(25% 0.00000 0.000)",
+          "oklch(35% 0.00000 0.000)",
+          "oklch(45% 0.00000 0.000)",
+          "oklch(58% 0.00000 0.000)",
+          "oklch(72% 0.00000 0.000)",
+          "oklch(85% 0.00000 0.000)",
+          "oklch(95% 0.00000 0.000)"
+        ]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Graphite surface",
+        "tonalRamp": [
+          "oklch(15% 0.00000 0.000)",
+          "oklch(25% 0.00000 0.000)",
+          "oklch(35% 0.00000 0.000)",
+          "oklch(45% 0.00000 0.000)",
+          "oklch(58% 0.00000 0.000)",
+          "oklch(72% 0.00000 0.000)",
+          "oklch(85% 0.00000 0.000)",
+          "oklch(95% 0.00000 0.000)"
+        ]
+      },
+      "raised": {
+        "role": "neutral",
+        "displayName": "Raised graphite",
+        "tonalRamp": [
+          "oklch(15% 0.00000 0.000)",
+          "oklch(25% 0.00000 0.000)",
+          "oklch(35% 0.00000 0.000)",
+          "oklch(45% 0.00000 0.000)",
+          "oklch(58% 0.00000 0.000)",
+          "oklch(72% 0.00000 0.000)",
+          "oklch(85% 0.00000 0.000)",
+          "oklch(95% 0.00000 0.000)"
+        ]
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "Slate rule",
+        "tonalRamp": [
+          "oklch(15% 0.00000 0.000)",
+          "oklch(25% 0.00000 0.000)",
+          "oklch(35% 0.00000 0.000)",
+          "oklch(45% 0.00000 0.000)",
+          "oklch(58% 0.00000 0.000)",
+          "oklch(72% 0.00000 0.000)",
+          "oklch(85% 0.00000 0.000)",
+          "oklch(95% 0.00000 0.000)"
+        ]
+      },
+      "line-soft": {
+        "role": "neutral",
+        "displayName": "Quiet slate rule",
+        "tonalRamp": [
+          "oklch(15% 0.00000 0.000)",
+          "oklch(25% 0.00000 0.000)",
+          "oklch(35% 0.00000 0.000)",
+          "oklch(45% 0.00000 0.000)",
+          "oklch(58% 0.00000 0.000)",
+          "oklch(72% 0.00000 0.000)",
+          "oklch(85% 0.00000 0.000)",
+          "oklch(95% 0.00000 0.000)"
+        ]
+      },
+      "text": {
+        "role": "neutral",
+        "displayName": "Frost text",
+        "tonalRamp": [
+          "oklch(15% 0.00000 0.000)",
+          "oklch(25% 0.00000 0.000)",
+          "oklch(35% 0.00000 0.000)",
+          "oklch(45% 0.00000 0.000)",
+          "oklch(58% 0.00000 0.000)",
+          "oklch(72% 0.00000 0.000)",
+          "oklch(85% 0.00000 0.000)",
+          "oklch(95% 0.00000 0.000)"
+        ]
+      },
+      "secondary": {
+        "role": "neutral",
+        "displayName": "Silver text",
+        "tonalRamp": [
+          "oklch(15% 0.00000 0.000)",
+          "oklch(25% 0.00000 0.000)",
+          "oklch(35% 0.00000 0.000)",
+          "oklch(45% 0.00000 0.000)",
+          "oklch(58% 0.00000 0.000)",
+          "oklch(72% 0.00000 0.000)",
+          "oklch(85% 0.00000 0.000)",
+          "oklch(95% 0.00000 0.000)"
+        ]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Muted slate text",
+        "tonalRamp": [
+          "oklch(15% 0.00000 0.000)",
+          "oklch(25% 0.00000 0.000)",
+          "oklch(35% 0.00000 0.000)",
+          "oklch(45% 0.00000 0.000)",
+          "oklch(58% 0.00000 0.000)",
+          "oklch(72% 0.00000 0.000)",
+          "oklch(85% 0.00000 0.000)",
+          "oklch(95% 0.00000 0.000)"
+        ]
+      },
+      "amber": {
+        "role": "semantic",
+        "displayName": "Caution amber",
+        "tonalRamp": [
+          "oklch(15% 0.03893 80.818)",
+          "oklch(25% 0.06489 80.818)",
+          "oklch(35% 0.09084 80.818)",
+          "oklch(45% 0.10382 80.818)",
+          "oklch(58% 0.10382 80.818)",
+          "oklch(72% 0.10382 80.818)",
+          "oklch(85% 0.07787 80.818)",
+          "oklch(95% 0.02596 80.818)"
+        ]
+      },
+      "critical": {
+        "role": "semantic",
+        "displayName": "Critical rose",
+        "tonalRamp": [
+          "oklch(15% 0.05442 9.921)",
+          "oklch(25% 0.09071 9.921)",
+          "oklch(35% 0.12699 9.921)",
+          "oklch(45% 0.14513 9.921)",
+          "oklch(58% 0.14513 9.921)",
+          "oklch(72% 0.14513 9.921)",
+          "oklch(85% 0.10885 9.921)",
+          "oklch(95% 0.03628 9.921)"
+        ]
+      },
+      "high": {
+        "role": "semantic",
+        "displayName": "High-risk coral",
+        "tonalRamp": [
+          "oklch(15% 0.04532 31.137)",
+          "oklch(25% 0.07553 31.137)",
+          "oklch(35% 0.10574 31.137)",
+          "oklch(45% 0.12085 31.137)",
+          "oklch(58% 0.12085 31.137)",
+          "oklch(72% 0.12085 31.137)",
+          "oklch(85% 0.09063 31.137)",
+          "oklch(95% 0.03021 31.137)"
+        ]
+      },
+      "low": {
+        "role": "semantic",
+        "displayName": "Low-severity periwinkle",
+        "tonalRamp": [
+          "oklch(15% 0.03265 263.017)",
+          "oklch(25% 0.05441 263.017)",
+          "oklch(35% 0.07618 263.017)",
+          "oklch(45% 0.08706 263.017)",
+          "oklch(58% 0.08706 263.017)",
+          "oklch(72% 0.08706 263.017)",
+          "oklch(85% 0.06529 263.017)",
+          "oklch(95% 0.02176 263.017)"
+        ]
+      },
+      "info": {
+        "role": "semantic",
+        "displayName": "Information blue",
+        "tonalRamp": [
+          "oklch(15% 0.02849 224.673)",
+          "oklch(25% 0.04748 224.673)",
+          "oklch(35% 0.06647 224.673)",
+          "oklch(45% 0.07597 224.673)",
+          "oklch(58% 0.07597 224.673)",
+          "oklch(72% 0.07597 224.673)",
+          "oklch(85% 0.05698 224.673)",
+          "oklch(95% 0.01899 224.673)"
+        ]
+      },
+      "on-primary-workspace": {
+        "role": "neutral",
+        "displayName": "Deep mint ink · scan",
+        "tonalRamp": [
+          "oklch(15% 0.01569 171.604)",
+          "oklch(25% 0.02614 171.604)",
+          "oklch(35% 0.03660 171.604)",
+          "oklch(45% 0.04183 171.604)",
+          "oklch(58% 0.04183 171.604)",
+          "oklch(72% 0.04183 171.604)",
+          "oklch(85% 0.03137 171.604)",
+          "oklch(95% 0.01046 171.604)"
+        ]
+      },
+      "on-primary-entry": {
+        "role": "neutral",
+        "displayName": "Deep mint ink · entry",
+        "tonalRamp": [
+          "oklch(15% 0.01431 168.836)",
+          "oklch(25% 0.02385 168.836)",
+          "oklch(35% 0.03338 168.836)",
+          "oklch(45% 0.03815 168.836)",
+          "oklch(58% 0.03815 168.836)",
+          "oklch(72% 0.03815 168.836)",
+          "oklch(85% 0.02862 168.836)",
+          "oklch(95% 0.00954 168.836)"
+        ]
+      },
+      "primary-hover-workspace": {
+        "role": "primary",
+        "displayName": "Pale mint feedback · scan",
+        "tonalRamp": [
+          "oklch(15% 0.03644 169.257)",
+          "oklch(25% 0.06074 169.257)",
+          "oklch(35% 0.08503 169.257)",
+          "oklch(45% 0.09718 169.257)",
+          "oklch(58% 0.09718 169.257)",
+          "oklch(72% 0.09718 169.257)",
+          "oklch(85% 0.07288 169.257)",
+          "oklch(95% 0.02429 169.257)"
+        ]
+      },
+      "primary-hover-entry": {
+        "role": "primary",
+        "displayName": "Pale mint feedback · entry",
+        "tonalRamp": [
+          "oklch(15% 0.03375 170.961)",
+          "oklch(25% 0.05626 170.961)",
+          "oklch(35% 0.07876 170.961)",
+          "oklch(45% 0.09001 170.961)",
+          "oklch(58% 0.09001 170.961)",
+          "oklch(72% 0.09001 170.961)",
+          "oklch(85% 0.06751 170.961)",
+          "oklch(95% 0.02250 170.961)"
+        ]
+      },
+      "field-border": {
+        "role": "neutral",
+        "displayName": "Field outline",
+        "tonalRamp": [
+          "oklch(15% 0.00762 248.294)",
+          "oklch(25% 0.01271 248.294)",
+          "oklch(35% 0.01779 248.294)",
+          "oklch(45% 0.02033 248.294)",
+          "oklch(58% 0.02033 248.294)",
+          "oklch(72% 0.02033 248.294)",
+          "oklch(85% 0.01525 248.294)",
+          "oklch(95% 0.00508 248.294)"
+        ]
+      },
+      "editor-bg": {
+        "role": "neutral",
+        "displayName": "Editor graphite",
+        "tonalRamp": [
+          "oklch(15% 0.00000 0.000)",
+          "oklch(25% 0.00000 0.000)",
+          "oklch(35% 0.00000 0.000)",
+          "oklch(45% 0.00000 0.000)",
+          "oklch(58% 0.00000 0.000)",
+          "oklch(72% 0.00000 0.000)",
+          "oklch(85% 0.00000 0.000)",
+          "oklch(95% 0.00000 0.000)"
+        ]
+      },
+      "editor-text": {
+        "role": "neutral",
+        "displayName": "Code foreground",
+        "tonalRamp": [
+          "oklch(15% 0.00000 0.000)",
+          "oklch(25% 0.00000 0.000)",
+          "oklch(35% 0.00000 0.000)",
+          "oklch(45% 0.00000 0.000)",
+          "oklch(58% 0.00000 0.000)",
+          "oklch(72% 0.00000 0.000)",
+          "oklch(85% 0.00000 0.000)",
+          "oklch(95% 0.00000 0.000)"
+        ]
+      },
+      "editor-active-line": {
+        "role": "neutral",
+        "displayName": "Active-line graphite",
+        "tonalRamp": [
+          "oklch(15% 0.00753 223.663)",
+          "oklch(25% 0.01255 223.663)",
+          "oklch(35% 0.01757 223.663)",
+          "oklch(45% 0.02008 223.663)",
+          "oklch(58% 0.02008 223.663)",
+          "oklch(72% 0.02008 223.663)",
+          "oklch(85% 0.01506 223.663)",
+          "oklch(95% 0.00502 223.663)"
+        ]
+      },
+      "editor-selection": {
+        "role": "neutral",
+        "displayName": "Selection teal",
+        "tonalRamp": [
+          "oklch(15% 0.01963 217.556)",
+          "oklch(25% 0.03272 217.556)",
+          "oklch(35% 0.04580 217.556)",
+          "oklch(45% 0.05235 217.556)",
+          "oklch(58% 0.05235 217.556)",
+          "oklch(72% 0.05235 217.556)",
+          "oklch(85% 0.03926 217.556)",
+          "oklch(95% 0.01309 217.556)"
+        ]
+      },
+      "editor-reveal": {
+        "role": "neutral",
+        "displayName": "Reveal teal",
+        "tonalRamp": [
+          "oklch(15% 0.01730 179.901)",
+          "oklch(25% 0.02883 179.901)",
+          "oklch(35% 0.04037 179.901)",
+          "oklch(45% 0.04613 179.901)",
+          "oklch(58% 0.04613 179.901)",
+          "oklch(72% 0.04613 179.901)",
+          "oklch(85% 0.03460 179.901)",
+          "oklch(95% 0.01153 179.901)"
+        ]
+      },
+      "evidence-source": {
+        "role": "semantic",
+        "displayName": "Source amber",
+        "tonalRamp": [
+          "oklch(15% 0.04403 77.613)",
+          "oklch(25% 0.07338 77.613)",
+          "oklch(35% 0.10273 77.613)",
+          "oklch(45% 0.11741 77.613)",
+          "oklch(58% 0.11741 77.613)",
+          "oklch(72% 0.11741 77.613)",
+          "oklch(85% 0.08806 77.613)",
+          "oklch(95% 0.02935 77.613)"
+        ]
+      },
+      "evidence-sink": {
+        "role": "semantic",
+        "displayName": "Sink rose",
+        "tonalRamp": [
+          "oklch(15% 0.05373 19.952)",
+          "oklch(25% 0.08955 19.952)",
+          "oklch(35% 0.12538 19.952)",
+          "oklch(45% 0.14329 19.952)",
+          "oklch(58% 0.14329 19.952)",
+          "oklch(72% 0.14329 19.952)",
+          "oklch(85% 0.10746 19.952)",
+          "oklch(95% 0.03582 19.952)"
+        ]
+      },
+      "syntax-keyword": {
+        "role": "syntax",
+        "displayName": "Keyword violet",
+        "tonalRamp": [
+          "oklch(15% 0.04074 302.363)",
+          "oklch(25% 0.06791 302.363)",
+          "oklch(35% 0.09507 302.363)",
+          "oklch(45% 0.10865 302.363)",
+          "oklch(58% 0.10865 302.363)",
+          "oklch(72% 0.10865 302.363)",
+          "oklch(85% 0.08149 302.363)",
+          "oklch(95% 0.02716 302.363)"
+        ]
+      },
+      "syntax-type": {
+        "role": "syntax",
+        "displayName": "Type teal",
+        "tonalRamp": [
+          "oklch(15% 0.02949 193.701)",
+          "oklch(25% 0.04915 193.701)",
+          "oklch(35% 0.06881 193.701)",
+          "oklch(45% 0.07864 193.701)",
+          "oklch(58% 0.07864 193.701)",
+          "oklch(72% 0.07864 193.701)",
+          "oklch(85% 0.05898 193.701)",
+          "oklch(95% 0.01966 193.701)"
+        ]
+      },
+      "syntax-function": {
+        "role": "syntax",
+        "displayName": "Function blue",
+        "tonalRamp": [
+          "oklch(15% 0.03043 256.075)",
+          "oklch(25% 0.05071 256.075)",
+          "oklch(35% 0.07099 256.075)",
+          "oklch(45% 0.08114 256.075)",
+          "oklch(58% 0.08114 256.075)",
+          "oklch(72% 0.08114 256.075)",
+          "oklch(85% 0.06085 256.075)",
+          "oklch(95% 0.02028 256.075)"
+        ]
+      },
+      "syntax-string": {
+        "role": "syntax",
+        "displayName": "String leaf",
+        "tonalRamp": [
+          "oklch(15% 0.03407 134.865)",
+          "oklch(25% 0.05678 134.865)",
+          "oklch(35% 0.07949 134.865)",
+          "oklch(45% 0.09085 134.865)",
+          "oklch(58% 0.09085 134.865)",
+          "oklch(72% 0.09085 134.865)",
+          "oklch(85% 0.06813 134.865)",
+          "oklch(95% 0.02271 134.865)"
+        ]
+      },
+      "syntax-literal": {
+        "role": "syntax",
+        "displayName": "Literal peach",
+        "tonalRamp": [
+          "oklch(15% 0.03417 66.549)",
+          "oklch(25% 0.05695 66.549)",
+          "oklch(35% 0.07973 66.549)",
+          "oklch(45% 0.09112 66.549)",
+          "oklch(58% 0.09112 66.549)",
+          "oklch(72% 0.09112 66.549)",
+          "oklch(85% 0.06834 66.549)",
+          "oklch(95% 0.02278 66.549)"
+        ]
+      },
+      "syntax-comment": {
+        "role": "syntax",
+        "displayName": "Comment blue-grey",
+        "tonalRamp": [
+          "oklch(15% 0.01166 237.134)",
+          "oklch(25% 0.01943 237.134)",
+          "oklch(35% 0.02720 237.134)",
+          "oklch(45% 0.03109 237.134)",
+          "oklch(58% 0.03109 237.134)",
+          "oklch(72% 0.03109 237.134)",
+          "oklch(85% 0.02332 237.134)",
+          "oklch(95% 0.00777 237.134)"
+        ]
+      },
+      "syntax-punctuation": {
+        "role": "syntax",
+        "displayName": "Punctuation slate",
+        "tonalRamp": [
+          "oklch(15% 0.01033 242.906)",
+          "oklch(25% 0.01722 242.906)",
+          "oklch(35% 0.02410 242.906)",
+          "oklch(45% 0.02754 242.906)",
+          "oklch(58% 0.02754 242.906)",
+          "oklch(72% 0.02754 242.906)",
+          "oklch(85% 0.02066 242.906)",
+          "oklch(95% 0.00689 242.906)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "display",
+        "purpose": "Landing headline."
+      },
+      "display-mobile": {
+        "displayName": "display mobile",
+        "purpose": "Landing headline at the public stacking breakpoint."
+      },
+      "headline": {
+        "displayName": "headline",
+        "purpose": "Workspace heading."
+      },
+      "headline-read": {
+        "displayName": "headline read",
+        "purpose": "Methodology heading."
+      },
+      "headline-entry": {
+        "displayName": "headline entry",
+        "purpose": "Sign-in heading."
+      },
+      "title": {
+        "displayName": "title",
+        "purpose": "Results panel heading."
+      },
+      "title-finding": {
+        "displayName": "title finding",
+        "purpose": "Finding and result-state headings."
+      },
+      "body": {
+        "displayName": "body",
+        "purpose": "Global interface copy."
+      },
+      "body-detail": {
+        "displayName": "body detail",
+        "purpose": "Result descriptions and diagnostics."
+      },
+      "label": {
+        "displayName": "label",
+        "purpose": "Result status and metric labels."
+      },
+      "label-kicker": {
+        "displayName": "label kicker",
+        "purpose": "Public uppercase kicker."
+      },
+      "code": {
+        "displayName": "code",
+        "purpose": "CodeMirror source text."
+      },
+      "metric": {
+        "displayName": "metric",
+        "purpose": "Scan summary values."
+      }
+    },
+    "shadows": [
+      {
+        "name": "workspace-shell",
+        "value": "0 3px 12px #0002",
+        "purpose": "Low-opacity ambient panel depth."
+      },
+      {
+        "name": "trace-marker-ring",
+        "value": "0 0 0 2px var(--surface)",
+        "purpose": "Connector isolation; not an elevation level."
+      }
+    ],
+    "motion": [
+      {
+        "name": "control-transition",
+        "value": "160ms",
+        "purpose": "Base button feedback; navigation specifies ease."
+      },
+      {
+        "name": "entry-and-finding",
+        "value": "180ms",
+        "purpose": "Entry action transitions and finding entrance; findings use ease-out."
+      },
+      {
+        "name": "panel-enter",
+        "value": "190ms ease-out",
+        "purpose": "Workspace shell entrance, translateY(3px) to rest."
+      },
+      {
+        "name": "scan-pulse",
+        "value": "220ms ease-in-out infinite alternate",
+        "purpose": "Busy scan icon opacity pulse."
+      },
+      {
+        "name": "source-reveal",
+        "value": "220ms",
+        "purpose": "Temporary source highlight timeout."
+      },
+      {
+        "name": "finding-stagger",
+        "value": "24ms; maximum 96ms",
+        "purpose": "Delay increases through the first five finding indexes."
+      },
+      {
+        "name": "landing-enter",
+        "value": "470ms ease-out",
+        "purpose": "Public copy entrance when no reduced motion is requested."
+      },
+      {
+        "name": "landing-depth",
+        "value": "linear; scroll range 0 680px; scale(1.035)",
+        "purpose": "Feature-gated public image scroll animation."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "0.01ms; iteration-count: 1",
+        "purpose": "Global reduction; result cards also disable entrance animation."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "public-trace-small",
+        "value": "390px"
+      },
+      {
+        "name": "results-small",
+        "value": "480px"
+      },
+      {
+        "name": "workspace-controls-small",
+        "value": "620px"
+      },
+      {
+        "name": "navigation-stack",
+        "value": "640px"
+      },
+      {
+        "name": "public-stack",
+        "value": "760px"
+      },
+      {
+        "name": "methodology-stack",
+        "value": "820px"
+      },
+      {
+        "name": "public-column-ratio",
+        "value": "920px"
+      },
+      {
+        "name": "workspace-stack",
+        "value": "1023px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Scan primary",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The workspace scan action, with a technical keyboard hint. Loading and disabled labels come from the application.",
+      "html": "<button class=\"ds-scan\"><svg aria-hidden=\"true\" width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.65\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m7 4 13 8-13 8Z\"/></svg>Scan Java<kbd>Ctrl ↵</kbd></button>",
+      "css": ".ds-scan { display: inline-flex; align-items: center; justify-content: center; gap: 7px; border: 1px solid var(--line, #333a42); border-radius: 7px; padding: 7px 12px; font: 680 13px/1.55 Geist, Inter, system-ui, sans-serif; cursor: pointer; text-decoration: none; transition: background 160ms, border-color 160ms, transform 160ms; } .ds-scan:focus-visible { outline: 2px solid var(--accent, #69e6ba); outline-offset: 3px; } .ds-scan:active:enabled { transform: translateY(1px); } .ds-scan:disabled { opacity: .5; cursor: not-allowed; } .ds-scan { background: var(--accent, #69e6ba); color: #092a21; border-color: transparent; padding: 9px 12px; } .ds-scan:hover:enabled { background: #99f2d2; color: #052217; border-color: transparent; } .ds-scan kbd { font: 11px \"Geist Mono\", \"JetBrains Mono\", ui-monospace, monospace; margin-left: 4px; padding: 2px 4px; border: 1px solid #26745766; border-radius: 4px; }"
+    },
+    {
+      "name": "Entry primary",
+      "kind": "button",
+      "refersTo": "button-entry",
+      "description": "Public workspace entry and sign-in use this related primary variant. The arrow is the existing text glyph.",
+      "html": "<a class=\"ds-entry\" href=\"#workspace\">Open workspace <span aria-hidden=\"true\">↗</span></a>",
+      "css": ".ds-entry { display: inline-flex; align-items: center; justify-content: center; gap: 16px; min-height: 45px; padding: 0 15px; border: 1px solid transparent; border-radius: 7px; background: var(--accent, #69e6ba); color: #09251c; text-decoration: none; font: 680 14px/1.55 Geist, Inter, system-ui, sans-serif; transition: background-color 180ms, color 180ms, transform 180ms; } .ds-entry:hover { color: #072017; background: #a1f4d8; } .ds-entry span { font-size: 17px; line-height: 1; transition: transform 180ms; } .ds-entry:hover span { transform: translate(2px, -2px); } .ds-entry:focus-visible { outline: 2px solid var(--accent, #69e6ba); outline-offset: 3px; }"
+    },
+    {
+      "name": "Secondary button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "The foundation button treatment: a quiet outlined action.",
+      "html": "<button class=\"ds-secondary\">Retry scan</button>",
+      "css": ".ds-secondary { display: inline-flex; align-items: center; justify-content: center; gap: 7px; border: 1px solid var(--line, #333a42); border-radius: 7px; padding: 7px 12px; font: 550 13px/1.55 Geist, Inter, system-ui, sans-serif; cursor: pointer; text-decoration: none; transition: background 160ms, border-color 160ms, transform 160ms; } .ds-secondary:focus-visible { outline: 2px solid var(--accent, #69e6ba); outline-offset: 3px; } .ds-secondary:active:enabled { transform: translateY(1px); } .ds-secondary:disabled { opacity: .5; cursor: not-allowed; } .ds-secondary { background: var(--surface, #1b2026); color: var(--secondary, #ccd2d8); } .ds-secondary:hover:enabled { color: var(--text, #f1f4f6); background: var(--raised, #242a31); border-color: #55606a; }"
+    },
+    {
+      "name": "Ghost report action",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Copy and export controls stay transparent until hover.",
+      "html": "<button class=\"ds-tool\">Copy JSON</button>",
+      "css": ".ds-tool { display: inline-flex; align-items: center; justify-content: center; gap: 7px; border: 1px solid var(--line, #333a42); border-radius: 7px; padding: 7px 12px; font: 550 12px/1.5 Geist, Inter, system-ui, sans-serif; cursor: pointer; text-decoration: none; transition: background 160ms, border-color 160ms, transform 160ms; } .ds-tool:focus-visible { outline: 2px solid var(--accent, #69e6ba); outline-offset: 3px; } .ds-tool:active:enabled { transform: translateY(1px); } .ds-tool:disabled { opacity: .5; cursor: not-allowed; } .ds-tool { gap: 8px; background: transparent; color: var(--text, #f1f4f6); } .ds-tool:hover:enabled { background: var(--raised, #242a31); border-color: var(--muted, #a2adb7); } @media (prefers-reduced-motion: reduce) { .ds-tool:active { transform: none; } }"
+    },
+    {
+      "name": "Workspace-key field",
+      "kind": "input",
+      "refersTo": "input-key",
+      "description": "A native password field and Show/Hide control within one focus boundary. The preview is static; the application wires the visibility toggle.",
+      "html": "<label class=\"ds-key-label\" for=\"ds-workspace-key\">Workspace key</label><div class=\"ds-key\"><input id=\"ds-workspace-key\" type=\"password\" aria-describedby=\"ds-key-hint\"/><button class=\"ds-toggle\" type=\"button\">Show</button></div><p class=\"ds-key-hint\" id=\"ds-key-hint\">Use your configured key or the key printed when you started TraceWard.</p>",
+      "css": ".ds-key-label { display: block; margin-bottom: 6px; color: var(--text, #f1f4f6); font: 650 13px/1.55 Geist, Inter, system-ui, sans-serif; } .ds-key { display: flex; align-items: stretch; overflow: hidden; border: 1px solid #56606a; border-radius: 7px; background: var(--panel, #15191e); } .ds-key:focus-within { border-color: var(--accent, #69e6ba); outline: 2px solid var(--accent, #69e6ba); outline-offset: 2px; } .ds-key input { width: 100%; min-width: 0; padding: 11px 12px; color: var(--text, #f1f4f6); background: transparent; border: 0; font: 400 15px/1.55 \"Geist Mono\", \"JetBrains Mono\", ui-monospace, monospace; } .ds-key input:focus { outline: 0; } .ds-toggle { min-width: 58px; border: 0; border-left: 1px solid var(--line, #333a42); border-radius: 0; padding: 7px 12px; background: transparent; color: var(--secondary, #ccd2d8); font: 550 13px/1.55 Geist, Inter, system-ui, sans-serif; cursor: pointer; transition: background 160ms, border-color 160ms, transform 160ms; } .ds-toggle:hover:enabled { color: var(--text, #f1f4f6); background: var(--raised, #242a31); border-color: #55606a; } .ds-toggle:focus-visible { outline: 2px solid var(--accent, #69e6ba); outline-offset: -3px; } .ds-toggle:active:enabled { transform: translateY(1px); } .ds-key-hint { margin: 10px 0 0; color: var(--muted, #a2adb7); font: 400 13px/1.55 Geist, Inter, system-ui, sans-serif; }"
+    },
+    {
+      "name": "Workspace navigation",
+      "kind": "nav",
+      "refersTo": "navigation",
+      "description": "Text links with a current-page underline. The full header supplies the sticky blurred surface and account action.",
+      "html": "<nav class=\"ds-nav\" aria-label=\"Main\"><a href=\"#workspace\" aria-current=\"page\">Scan workspace</a><a href=\"#methodology\">Coverage &amp; methods</a></nav>",
+      "css": ".ds-nav { display: flex; align-items: stretch; gap: 24px; min-height: 64px; } .ds-nav a { display: inline-flex; align-items: center; position: relative; padding: 0 2px; color: var(--muted, #a2adb7); font: 550 13px/1.55 Geist, Inter, system-ui, sans-serif; text-decoration: none; transition: color 160ms ease; } .ds-nav a:hover, .ds-nav a[aria-current] { color: var(--text, #f1f4f6); } .ds-nav a[aria-current]::after { content: ''; position: absolute; background: var(--accent, #69e6ba); bottom: -1px; height: 2px; inset-inline: 0; } .ds-nav a:focus-visible { outline: 2px solid var(--accent, #69e6ba); outline-offset: 3px; } @media (max-width: 640px) { .ds-nav { gap: 20px; min-height: 40px; } .ds-nav a { min-height: 40px; } }"
+    },
+    {
+      "name": "High-severity tag",
+      "kind": "chip",
+      "refersTo": "chip-high",
+      "description": "A non-interactive severity label. CWE and confidence are separate text, not implied by this tint.",
+      "html": "<span class=\"ds-severity\" data-severity=\"high\">High</span>",
+      "css": ".ds-severity { display: inline-block; color: var(--high, #ff9d8b); text-transform: uppercase; font: 700 10px/1.5 \"Geist Mono\", \"JetBrains Mono\", ui-monospace, monospace; letter-spacing: .06em; border: 1px solid color-mix(in srgb, currentColor 35%, transparent); background: color-mix(in srgb, currentColor 9%, transparent); padding: 2px 7px; border-radius: 5px; }"
+    },
+    {
+      "name": "Finding card",
+      "kind": "card",
+      "refersTo": "card-finding",
+      "description": "One finding, its location, confidence and expandable evidence. This example shows the selected border and heading control.",
+      "html": "<article class=\"ds-finding\" data-selected=\"true\"><div class=\"ds-tags\"><span class=\"ds-card-severity\">High</span><span>CWE-89</span><span>medium confidence</span></div><h3><button class=\"ds-card-title\" aria-expanded=\"true\" aria-controls=\"ds-card-evidence\">Potential SQL injection in a SQLite query<svg aria-hidden=\"true\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\"><path d=\"M5 12h14m-5-5 5 5-5 5\"/></svg></button></h3><code class=\"ds-location\">snippet.py:6</code><p id=\"ds-card-evidence\">Untrusted input contributes to SQL text passed to a SQLite call.</p></article>",
+      "css": ".ds-finding { border: 1px solid var(--line, #333a42); border-radius: 9px; padding: 16px; background: var(--surface, #1b2026); color: var(--text, #f1f4f6); font: 400 15px/1.55 Geist, Inter, system-ui, sans-serif; } .ds-finding[data-selected='true'] { border-color: color-mix(in srgb, var(--high, #ff9d8b) 38%, var(--line, #333a42)); } .ds-tags { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; color: var(--muted, #a2adb7); font: 400 11px/1.5 \"Geist Mono\", \"JetBrains Mono\", ui-monospace, monospace; } .ds-tags > span + span + span { margin-left: auto; } .ds-card-severity { color: var(--high, #ff9d8b); text-transform: uppercase; font-size: 10px; font-weight: 700; letter-spacing: .06em; border: 1px solid color-mix(in srgb, currentColor 35%, transparent); background: color-mix(in srgb, currentColor 9%, transparent); padding: 2px 7px; border-radius: 5px; } .ds-finding h3 { font: 700 18px/1.3 Geist, Inter, system-ui, sans-serif; letter-spacing: -.035em; margin: 12px 0 4px; } .ds-card-title { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; padding: 0; color: inherit; border: 0; border-radius: 3px; font: inherit; letter-spacing: inherit; background: transparent; text-align: left; cursor: pointer; transition: transform 160ms; } .ds-card-title svg { flex: none; color: var(--muted, #a2adb7); } .ds-card-title:hover svg { color: var(--accent, #69e6ba); } .ds-card-title:active { transform: translateY(1px); } .ds-card-title:focus-visible { outline: 2px solid var(--accent, #69e6ba); outline-offset: 3px; } .ds-location { font: 400 11px/1.6 \"Geist Mono\", \"JetBrains Mono\", ui-monospace, monospace; color: var(--muted, #a2adb7); overflow-wrap: anywhere; } .ds-finding p { font: 400 13px/1.6 Geist, Inter, system-ui, sans-serif; color: var(--muted, #a2adb7); margin: 12px 0 0; }"
+    },
+    {
+      "name": "Evidence trace",
+      "kind": "custom",
+      "refersTo": "trace-row",
+      "description": "Connected source-to-sink buttons reveal code locations in the application. The sample uses illustrative symbols and line numbers.",
+      "html": "<ol class=\"ds-trace\"><li data-kind=\"source\"><button><span>Source</span><code>input</code><small>L4</small></button></li><li data-kind=\"assignment\"><button><span>Assignment</span><code>name</code><small>L4</small></button></li><li data-kind=\"sink\"><button><span>Sink</span><code>sqlite3.Connection.execute</code><small>L6</small></button></li></ol>",
+      "css": ".ds-trace { list-style: none; padding: 0; margin: 0 0 16px; } .ds-trace li { position: relative; padding-left: 18px; } .ds-trace li::before { content: ''; position: absolute; left: 4px; top: 0; bottom: 0; border-left: 1px solid var(--line, #333a42); } .ds-trace li:first-child::before { top: 50%; } .ds-trace li:last-child::before { bottom: 50%; } .ds-trace li::after { content: ''; position: absolute; left: 1px; top: calc(50% - 3px); width: 7px; height: 7px; border-radius: 50%; background: var(--muted, #a2adb7); box-shadow: 0 0 0 2px var(--surface, #1b2026); } .ds-trace li[data-kind='source']::after { background: var(--amber, #f4ca80); } .ds-trace li[data-kind='sink']::after { background: var(--high, #ff9d8b); } .ds-trace button { display: grid; grid-template-columns: 78px minmax(0, 1fr) auto; align-items: baseline; gap: 8px; width: 100%; padding: 6px; min-height: 30px; text-align: left; border: 0; border-radius: 4px; background: transparent; color: var(--secondary, #ccd2d8); font: 550 13px/1.55 Geist, Inter, system-ui, sans-serif; cursor: pointer; transition: background 160ms, transform 160ms; } .ds-trace button:hover:enabled { background: var(--raised, #242a31); } .ds-trace button:active:enabled { transform: translateY(1px); } .ds-trace button:disabled { opacity: .5; cursor: not-allowed; } .ds-trace button:focus-visible { outline: 2px solid var(--accent, #69e6ba); outline-offset: 3px; } .ds-trace span, .ds-trace small { font-size: 11px; color: var(--muted, #a2adb7); } .ds-trace code { color: var(--text, #f1f4f6); font: 550 12px/1.55 \"Geist Mono\", \"JetBrains Mono\", ui-monospace, monospace; overflow-wrap: anywhere; } .ds-trace small { font-family: \"Geist Mono\", \"JetBrains Mono\", ui-monospace, monospace; } @media (max-width: 480px) { .ds-trace button { grid-template-columns: minmax(0, 1fr) auto; gap: 2px 6px; } .ds-trace span { grid-column: 1/-1; } }"
+    },
+    {
+      "name": "Example selector",
+      "kind": "custom",
+      "refersTo": "segmented-control",
+      "description": "A recessed fieldset groups source examples. Pressed state is semantic; this preview does not run the example actions.",
+      "html": "<fieldset class=\"ds-segments\" aria-label=\"Source controls\"><button aria-pressed=\"true\">Vulnerable</button><button aria-pressed=\"false\">Parameterized</button><button>Clear</button></fieldset>",
+      "css": ".ds-segments { display: flex; align-items: stretch; min-inline-size: 0; gap: 2px; margin: 0; padding: 2px; background: var(--bg, #0d1013); border: 1px solid var(--line, #333a42); border-radius: 8px; } .ds-segments button { display: inline-flex; align-items: center; justify-content: center; gap: 7px; border: 1px solid transparent; border-radius: 7px; padding: 4px 8px; background: transparent; color: var(--secondary, #ccd2d8); font: 550 12px/1.55 Geist, Inter, system-ui, sans-serif; cursor: pointer; transition: background 160ms, border-color 160ms, transform 160ms; } .ds-segments button[aria-pressed='true'] { color: var(--text, #f1f4f6); background: var(--raised, #242a31); } .ds-segments button:hover:enabled { color: var(--text, #f1f4f6); background: var(--raised, #242a31); border-color: #55606a; } .ds-segments button:active:enabled { transform: translateY(1px); } .ds-segments button:disabled { opacity: .5; cursor: not-allowed; } .ds-segments button:focus-visible { outline: 2px solid var(--accent, #69e6ba); outline-offset: 3px; } @media (max-width: 620px) { .ds-segments button { padding-inline: 5px; gap: 4px; } }"
+    }
+  ],
+  "narrative": {
+    "northStar": "Evidence notebook",
+    "overview": "TraceWard places source code beside an inspectable record of what the scanner\nobserved. The visual language is calm and technical: dark graphite surfaces,\nclear type, compact controls, and distinct source, propagation, and sink marks.\nThe workspace gives evidence room without turning each datum into a separate card.\n\nComponents feel restrained and technical. Tonal layers with subtle ambient depth\nseparate the working areas; borders and typography carry most of the hierarchy.\nThe public landing and sign-in pages use the existing lighthouse image and larger\ntype. That imagery is a page-specific expression, not a background for the scanner.",
+    "keyCharacteristics": [
+      "One dark theme, a signal-mint action accent, and separate status colors.",
+      "Geist for interface text; Geist Mono for the editor and explicit technical labels.",
+      "Rounded rectangular controls, thin dividers, and closely grouped evidence.",
+      "Text labels alongside status color, with visible focus and reduced-motion handling."
+    ],
+    "rules": [
+      {
+        "name": "The Evidence Color Rule",
+        "body": "Pair color with a label, marker, underline, or explicit state text. Preserve the distinction between severity, confidence, and completion.",
+        "section": "colors"
+      },
+      {
+        "name": "The Technical Label Rule",
+        "body": "Keep symbols, paths, metrics, and editor text distinct from narrative copy. Do not turn ordinary prose or every heading into monospace.",
+        "section": "typography"
+      },
+      {
+        "name": "The Tonal Depth Rule",
+        "body": "Reuse tonal steps and existing dividers before introducing another shadow. Keep the workspace shell shadow distinct from evidence markers.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Reviewable State Rule",
+        "body": "Retain “No SQL injection paths found,” diagnostics, and partial-coverage explanations as separate states. A green icon alone is not an analysis result.",
+        "section": "components"
+      }
+    ],
+    "dos": [
+      "Do reuse the graphite hierarchy and signal mint while keeping status roles separate.",
+      "Do preserve visible text for severity, confidence, completion, errors, and partial coverage.",
+      "Do reuse the current font stacks, variable weights, control corners, and focus treatment.",
+      "Do keep source, trace, location, and remediation connected in the workspace.",
+      "Do match the relevant surface's responsive rules and respect reduced-motion preferences.",
+      "Do update this extraction and its sidecar when the underlying visual implementation changes."
+    ],
+    "donts": [
+      "Don't present a clean or completed scan as a security certification.",
+      "Don't claim a light theme, strict spacing grid, or component state that the code does not implement.",
+      "Don't treat preview swatch ramps as shipped application tokens.",
+      "Don't replace the separate scan/entry action colors with one invented shared variant.",
+      "Don't expand the landing page's lighthouse treatment into every application panel.",
+      "Don't hide source-selection controls, focus indicators, or diagnostic explanations for visual simplicity."
+    ]
+  }
+}
