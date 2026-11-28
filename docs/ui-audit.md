@@ -7,7 +7,7 @@ Baseline: `e18ec3c`. Scope: landing, sign-in, workspace, and methodology.
 
 **Pass after fixes.** The interface retains the Evidence notebook identity:
 graphite surfaces, mint actions, Geist typography, and inspectable source-to-sink
-evidence. Four verified implementation issues were corrected without replacing
+evidence. Five verified implementation issues were corrected without replacing
 the design, copy, navigation, or scanner behavior.
 
 ## Audit health score
@@ -17,7 +17,7 @@ performance benchmark.
 
 | Dimension                |    Before |     After | Evidence                                                                                                                                            |
 | ------------------------ | --------: | --------: | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Accessibility            |       2/4 |       3/4 | Field boundary and focused bracket contrast corrected; keyboard navigation and native selection remain functional.                                  |
+| Accessibility            |       2/4 |       3/4 | Field, selected-example and focused bracket contrast corrected; keyboard navigation and native selection remain functional.                         |
 | Performance              |       3/4 |       3/4 | No performance defect established by source inspection; existing compact WebP and locally bundled fonts retained. No load-time benchmark performed. |
 | Theming                  |       3/4 |       3/4 | Documented palette preserved; the field outline now has a shared token. Local values remain intentional parts of the extracted system.              |
 | Responsive design        |       2/4 |       3/4 | Narrow controls remain reachable with increased text spacing; 63 rendered samples show no page overflow or clipped toolbar controls.                |
@@ -26,7 +26,7 @@ performance benchmark.
 
 ## Executive summary
 
-Four actionable findings: **0 P0, 3 P1, 1 P2, 0 P3**. All four are fixed and
+Five actionable findings: **0 P0, 4 P1, 1 P2, 0 P3**. All five are fixed and
 covered by browser regressions. No confirmed issue remains open within the
 checked scope. Generic detector notices are assessed separately below.
 
@@ -74,6 +74,21 @@ checked scope. Generic detector notices are assessed separately below.
   foreground/background contrast against 4.5:1 after actual source navigation.
 - **Suggested command:** `$impeccable harden` — completed in this change.
 
+### [P1] Selected example lacked a visible state indicator
+
+- **Location:** [workspace styles](../apps/web/app/globals.css), pressed example
+  buttons.
+- **Category:** Accessibility / Theming.
+- **Impact:** The selected example relied on a graphite fill with approximately
+  1.32:1 contrast against its surroundings. Low-vision users could miss which
+  example matched the editor, despite the readable button labels.
+  [WCAG 1.4.11](https://www.w3.org/WAI/WCAG22/Understanding/non-text-contrast.html).
+- **Fix:** Give the selected example an existing signal mint border. The indicator
+  contrasts above 3:1 against both adjacent surfaces without changing dimensions.
+  The regression checks both examples and cleared selection for all four
+  languages; DESIGN.md and its component preview record the selected border.
+- **Suggested command:** `$impeccable colorize` — completed in this change.
+
 ### [P2] Public technical typography used a fallback face
 
 - **Location:** [global font declarations](../apps/web/app/globals.css) and
@@ -90,7 +105,7 @@ checked scope. Generic detector notices are assessed separately below.
 ## Patterns and detector triage
 
 - The fixes address containment under user text settings, CSS specificity at the
-  editor-library boundary, and route-level font availability.
+  editor-library boundary, visible selected states, and route-level font availability.
 - The bundled detector ran against source and rendered public routes before and
   after the fixes. It still emits generic notices about Geist/Geist Mono, tracked
   kickers, small technical captions, and occasional single-word line endings.
@@ -111,6 +126,8 @@ checked scope. Generic detector notices are assessed separately below.
 - `bun run test --fully-parallel --workers 2 --shuffle 281128 --retries 0`:
   **26 passed**, including nine audit regressions. The relevant tests failed on
   the baseline for route font loading, clipped controls, and focused brackets.
+  The added example-state assertion also reproduced the 1.32:1 indicator before
+  its correction.
 - Configured web format, lint, type checks and the production build passed.
 - Four page routes were sampled at widths 320, 360, 390, 620, 640, 641, 760, 768,
   820, 920, 1023, 1024, 1280 and 1440px. Additional finding/text-spacing states

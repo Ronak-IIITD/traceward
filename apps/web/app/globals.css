@@ -253,6 +253,7 @@ svg {
 .segments button[aria-pressed="true"] {
   color: var(--text);
   background: var(--raised);
+  border-color: var(--accent);
 }
 .file-row {
   display: flex;

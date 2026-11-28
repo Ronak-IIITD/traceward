@@ -476,7 +476,8 @@ treatment and a quiet privacy statement.
 
 The example selector is one recessed, bordered fieldset with `rounded.segment`.
 Its compact buttons are transparent until selected; `aria-pressed="true"` uses
-raised graphite with frost text. Vulnerable, Parameterized, and Clear remain
+raised graphite with frost text and a signal mint border that makes the selected
+state visible against adjacent graphite surfaces. Vulnerable, Parameterized, and Clear remain
 explicit text actions. The group wraps when enlarged text spacing needs another
 row, keeping every action reachable at narrow widths. The separate Wrap toggle
 uses mint text while pressed.

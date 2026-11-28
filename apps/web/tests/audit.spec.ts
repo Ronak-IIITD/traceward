@@ -69,6 +69,32 @@ for (const language of ["Java", "Python", "JavaScript", "TypeScript"]) {
         "* { letter-spacing: .12em !important; word-spacing: .16em !important; line-height: 1.5 !important; } p { margin-bottom: 2em !important; }",
     });
     await page.getByRole("combobox", { name: "Language" }).selectOption({ label: language });
+    async function checkSelectedExample(name: string) {
+      const selected = page.getByRole("button", { name, exact: true });
+      await expect(selected).toHaveAttribute("aria-pressed", "true");
+      await expect
+        .poll(async () => {
+          const colors = await selected.evaluate((button) => {
+            const style = getComputedStyle(button);
+            return {
+              border: style.borderColor,
+              inner: style.backgroundColor,
+              outer: getComputedStyle(button.parentElement!).backgroundColor,
+            };
+          });
+          const borderContrast = colors.border.startsWith("rgba")
+            ? 1
+            : Math.min(
+                contrast(colors.border, colors.inner),
+                contrast(colors.border, colors.outer),
+              );
+          return Math.max(borderContrast, contrast(colors.inner, colors.outer));
+        })
+        .toBeGreaterThanOrEqual(3);
+    }
+    await checkSelectedExample("Vulnerable");
+    await page.getByRole("button", { name: "Parameterized", exact: true }).tap();
+    await checkSelectedExample("Parameterized");
     const clipped = await page
       .locator(".workspace > .panel")
       .first()
@@ -87,6 +113,7 @@ for (const language of ["Java", "Python", "JavaScript", "TypeScript"]) {
       });
     expect(clipped, language).toEqual([]);
     await page.getByRole("button", { name: "Clear", exact: true }).tap();
+    await expect(page.locator('.segments button[aria-pressed="true"]')).toHaveCount(0);
     await expect(page.getByRole("textbox", { name: `${language} source code` })).toHaveText("");
     await expect(
       page.getByRole("button", { name: `Scan ${language}`, exact: true }),
