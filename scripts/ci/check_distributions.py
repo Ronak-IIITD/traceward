@@ -116,6 +116,12 @@ def check(package: Path, version: str) -> None:
             ("javascript", "javascript/concatenated.js", 1),
             ("typescript", "typescript/parameterized.ts", 0),
             ("typescript", "typescript/concatenated.ts", 1),
+            ("python", "sql-interpolation/python/parameterized.py", 0),
+            ("python", "sql-interpolation/python/interpolated.py", 1),
+            ("javascript", "sql-interpolation/javascript/parameterized.js", 0),
+            ("javascript", "sql-interpolation/javascript/interpolated.js", 1),
+            ("typescript", "sql-interpolation/typescript/parameterized.ts", 0),
+            ("typescript", "sql-interpolation/typescript/interpolated.ts", 1),
         ]
         cases = [
             (language, Path(path).suffix, (ROOT / "fixtures" / path).read_text("utf-8"), expected)

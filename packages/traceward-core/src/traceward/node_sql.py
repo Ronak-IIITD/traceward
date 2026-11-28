@@ -252,10 +252,8 @@ class NodeSqlAnalysis:
                 return value if value.kind == "string" else Value()
         if node.type == "string":
             return Value("string")
-        if node.type == "template_string" and not any(
-            child.type == "template_substitution" for child in _nodes(node)
-        ):
-            return Value("string")
+        if node.type == "template_string":
+            return self.template(node, depth)
         if node.type in {"number", "true", "false", "null"}:
             return Value()
         if node.type == "subscript_expression":
@@ -275,6 +273,23 @@ class NodeSqlAnalysis:
         if node.type == "call_expression":
             return self.call(node, depth)
         raise Unsupported(node, "Unsupported Node.js expression; remaining path skipped.")
+
+    def template(self, node: Node, depth: int) -> Value:
+        witness = Value("string")
+        for part in _nodes(node):
+            if part.type != "template_substitution":
+                continue
+            (expression,) = _nodes(part)
+            value = self.evaluate(expression, depth + 1)
+            if value.kind != "string":
+                raise Unsupported(part, "Expected a known string in a template substitution.")
+            # All substitutions must resolve; evidence retains one witnessed
+            # source path, as it does for binary string concatenation.
+            if not witness.flow and value.flow:
+                witness = value
+        if witness.flow:
+            return self.extend(witness, node, "concatenation", "template literal")
+        return witness
 
     def argv(self, node: Node) -> Value:
         receiver = node.child_by_field_name("object")

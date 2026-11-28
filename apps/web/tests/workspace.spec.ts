@@ -1,4 +1,6 @@
 import { test, expect } from "@playwright/test";
+import { readFileSync } from "node:fs";
+import { resolve as resolvePath } from "node:path";
 import { signInToWorkspace } from "./auth-fixture";
 
 test.beforeEach(async ({ page }) => {
@@ -133,6 +135,41 @@ test("proxy rejects oversized requests", async ({ page }) => {
   expect(response.status()).toBe(413);
   expect((await response.json()).error.code).toBe("INPUT_TOO_LARGE");
 });
+
+for (const { language, label, extension, symbol } of [
+  { language: "python", label: "Python", extension: "py", symbol: "f-string" },
+  { language: "javascript", label: "JavaScript", extension: "js", symbol: "template literal" },
+  { language: "typescript", label: "TypeScript", extension: "ts", symbol: "template literal" },
+]) {
+  test(`${label} interpolation reveals real source and template spans`, async ({ page }) => {
+    const source = readFileSync(
+      resolvePath(
+        __dirname,
+        `../../../fixtures/sql-interpolation/${language}/interpolated.${extension}`,
+      ),
+      "utf8",
+    );
+    await page.getByRole("combobox", { name: "Language" }).selectOption({ label });
+    await page.getByRole("textbox", { name: `${label} source code` }).fill(source);
+    await page.getByRole("button", { name: `Scan ${label}`, exact: true }).click();
+    await page
+      .getByRole("button", {
+        name: `source ${language === "python" ? "input" : "process.argv"} Line 4`,
+        exact: true,
+      })
+      .click();
+    expect(await page.evaluate(() => window.getSelection()?.toString())).toBe(
+      language === "python" ? 'input("Table name: ")' : "process.argv[2]",
+    );
+    const template = page.getByRole("button", { name: `concatenation ${symbol} Line 5` });
+    await template.click();
+    const line = source.split("\n")[4];
+    const expected =
+      language === "python" ? line.slice(line.indexOf('f"')) : line.slice(line.indexOf("`"), -1);
+    expect(await page.evaluate(() => window.getSelection()?.toString())).toBe(expected);
+    await expect(page.getByRole("heading", { name: "Diagnostics", exact: true })).toHaveCount(0);
+  });
+}
 
 test("example CTA moves from idle through loading to selectable real evidence", async ({
   page,

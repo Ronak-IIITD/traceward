@@ -66,6 +66,30 @@ PAIRS = (
         4,
         6,
     ),
+    Pair(
+        "sql-interpolation/python/interpolated.py",
+        "sql-interpolation/python/parameterized.py",
+        "interpolation/python",
+        "python.sqlite.concatenated-input",
+        4,
+        6,
+    ),
+    Pair(
+        "sql-interpolation/javascript/interpolated.js",
+        "sql-interpolation/javascript/parameterized.js",
+        "interpolation/js",
+        "javascript.sqlite.concatenated-argv",
+        4,
+        6,
+    ),
+    Pair(
+        "sql-interpolation/typescript/interpolated.ts",
+        "sql-interpolation/typescript/parameterized.ts",
+        "interpolation/ts",
+        "typescript.sqlite.concatenated-argv",
+        4,
+        6,
+    ),
 )
 
 
@@ -130,9 +154,9 @@ def test_project_golden_findings_and_sarif_parity(project: Path) -> None:
     result = ScanResult.model_validate_json(json_run.stdout)
     assert result.source.kind == "directory"
     assert result.summary.model_dump() == {
-        "files_discovered": 10,
-        "files_analyzed": 10,
-        "findings": 5,
+        "files_discovered": 2 * len(PAIRS),
+        "files_analyzed": 2 * len(PAIRS),
+        "findings": len(PAIRS),
         "errors": 0,
     }
     assert result.coverage.partial
@@ -198,12 +222,12 @@ def test_project_errors_preserve_findings_and_override_exit_policy(
     assert run.returncode == 2
     (report,) = json.loads(run.stdout)["runs"]
     assert report["properties"]["summary"] == {
-        "files_discovered": 11,
-        "files_analyzed": 10,
-        "findings": 5,
+        "files_discovered": 2 * len(PAIRS) + 1,
+        "files_analyzed": 2 * len(PAIRS),
+        "findings": len(PAIRS),
         "errors": 1,
     }
-    assert len(report["results"]) == 5
+    assert len(report["results"]) == len(PAIRS)
     (invocation,) = report["invocations"]
     assert not invocation["executionSuccessful"] and invocation["exitCode"] == 2
     errors = [item for item in invocation["toolExecutionNotifications"] if item["level"] == "error"]

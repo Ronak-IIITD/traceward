@@ -43,7 +43,7 @@ const fixes = {
     ],
   },
   python: {
-    description: "Untrusted input reaches a SQLite call through a concatenated SQL query.",
+    description: "Untrusted input contributes to SQL text passed to a SQLite call.",
     before: 'db.execute("SELECT name FROM sqlite_schema WHERE name = " + name)',
     after: ['sql = "SELECT name FROM sqlite_schema WHERE name = ?"', "db.execute(sql, (name,))"],
   },

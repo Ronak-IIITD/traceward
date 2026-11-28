@@ -3,18 +3,26 @@
 | Language | Parse support | CWE-89 detection | Other planned CWEs | Maturity |
 |---|---|---|---|---|
 | Java | Tree-sitter Java 0.23.5 | Method-local servlet input to JDBC concatenation, including simple conditionals and try-with-resources | Unsupported | Experimental |
-| Python | Tree-sitter Python 0.25.0 | Built-in input and Flask query parameters through string concatenation to a SQLite connection or cursor execute call | Unsupported | Experimental |
-| JavaScript | Tree-sitter JavaScript 0.25.0 | Node.js command-line input through string concatenation to `node:sqlite` `DatabaseSync.prepare` or `exec` | Unsupported | Experimental |
+| Python | Tree-sitter Python 0.25.0 | Built-in input and Flask query parameters through string concatenation or supported f-strings to a SQLite connection or cursor execute call | Unsupported | Experimental |
+| JavaScript | Tree-sitter JavaScript 0.25.0 | Node.js command-line input through string concatenation or supported untagged templates to `node:sqlite` `DatabaseSync.prepare` or `exec` | Unsupported | Experimental |
 | TypeScript | Tree-sitter TypeScript/TSX 0.23.2 | Same Node.js SQLite model with simple typed bindings | Unsupported | Experimental |
 | Go, C, C++ | Not implemented | Unsupported | Unsupported | Planned |
 
 Rules `java.sql.concatenated-untrusted-input` (0.3.0),
-`python.sqlite.concatenated-input` (0.2.0),
-`javascript.sqlite.concatenated-argv` (0.1.0) and
-`typescript.sqlite.concatenated-argv` (0.1.0) report
+`python.sqlite.concatenated-input` (0.3.0),
+`javascript.sqlite.concatenated-argv` (0.2.0) and
+`typescript.sqlite.concatenated-argv` (0.2.0) report
 `heuristic_candidate`, high severity, medium confidence. All scans are partial.
 Production promotion requires independent real-world evaluation. See README
 for the modeled methods and unsupported semantics. Live scans use static rules.
+
+Interpolation requires known string expressions. Python conversions, format
+specifications and debug fields, tagged templates, and non-string or unresolved
+substitutions produce diagnostics. Nested interpolation shares the existing
+expression-depth and evidence budgets. Evidence follows one witnessed input
+through string assembly; it does not combine independent source paths. These
+extensions remain experimental pending independent evaluation of interpolation
+cases, including parameter binding and framework-specific template tags.
 
 The mixed-project regression suite runs on every PR. It exercises the installed
 CLI against one synthetic checkout with paired Java, Python, Flask, JavaScript,

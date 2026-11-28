@@ -29,6 +29,9 @@ Progress is tracked through working features and release gates. The previous
 - Installable `traceward-core`, pinned uv environment, CLI and typed result model.
 - Tree-sitter Java, Python, JavaScript and TypeScript parsers with UTF-8 byte spans.
 - Experimental CWE-89 rules for Java servlet/JDBC, Python console and Flask/SQLite, and Node.js command-line SQLite flows.
+- Python f-strings and JavaScript/TypeScript untagged templates with known string
+  fields carry source evidence into SQLite queries. Unsupported conversions and
+  substitutions stop the affected path with a diagnostic.
 - Bounded file discovery, JSON/text reports, deterministic finding fingerprints.
 - Regression suite, lint, strict type check, schema and CI workflow.
 

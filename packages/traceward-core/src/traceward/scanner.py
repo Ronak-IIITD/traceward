@@ -71,8 +71,9 @@ ADAPTERS: dict[str, Callable[[bytes, str], SourceAnalysis]] = {
     "typescript": partial(NodeSqlAnalysis, language="typescript"),
 }
 NODE_LIMITATIONS = (
-    "Tracks process.argv through string + to prepare() or exec() on a local SQLite DatabaseSync.",
-    "Limited to top-level const flow. Branches and template interpolation are unsupported.",
+    "Tracks process.argv through string + and untagged templates to local SQLite prepare()/exec().",
+    "Template substitutions must be known strings. Tagged templates and coercions are unsupported.",
+    "Limited to top-level const flow. Branches and interprocedural flow are unsupported.",
 )
 LIMITATIONS = {
     "java": (
@@ -83,8 +84,10 @@ LIMITATIONS = {
     ),
     "python": (
         "Experimental Python CWE-89 subset. Real-world precision and recall are unmeasured.",
-        "Tracks input() and Flask request.args through string + into sqlite3 execute().",
-        "Other web inputs, f-strings, branches and interprocedural flow are outside this rule.",
+        "Tracks input() and Flask request.args through + and f-strings to sqlite3 execute() calls.",
+        "F-string fields must be known strings. "
+        "Conversions, format specs and debug fields are unsupported.",
+        "Other web inputs, branches and interprocedural flow are outside this rule.",
     ),
     "javascript": (
         "Experimental JavaScript CWE-89 subset; no external precision/recall evaluation yet.",

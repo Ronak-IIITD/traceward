@@ -75,7 +75,7 @@ def test_utf8_byte_offsets_match_submitted_source() -> None:
         SETUP + 'db = sqlite3.connect(":memory:", factory=other)',
         'db = sqlite3.connect(":memory:")',
         SETUP + "if allowed:\n    pass",
-        SETUP + 'value = f"SELECT {input()}"',
+        SETUP + 'value = f"SELECT {input()!r}"',
         SETUP + "cursor = db.cursor(factory=other)",
         SETUP + "value = transform(input())",
         SETUP + "value = input(42)",
