@@ -320,7 +320,7 @@ button.entry-primary:hover:enabled {
   display: flex;
   align-items: stretch;
   overflow: hidden;
-  border: 1px solid #56606a;
+  border: 1px solid var(--field-border);
   border-radius: 7px;
   background: var(--panel);
 }
